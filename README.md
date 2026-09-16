@@ -251,3 +251,45 @@ cambiarlas en el primer ingreso.
 Las pruebas de `pruebas/seguridad.py` comprueban los 21 controles anteriores:
 acceso sin sesion, mensajes genericos, bloqueo por intentos fallidos, denegacion
 por rol en cada modulo, contenido de la bitacora y cierre de sesion.
+
+---
+
+## Modulo de caja
+
+Accesible con el rol **Caja**. Tres pestanas:
+
+- **Cuotas mensuales.** Se generan con un boton para el mes seleccionado, tomando el monto
+  del expediente de cada interno activo. No se duplican si ya existen. Caja registra el cobro
+  de cada una.
+- **Donaciones.** Con el origen que pide el enunciado: empresa internacional, empresa
+  nacional, gobierno y persona particular.
+- **Gastos.** Egresos operativos por categoria: energia electrica, agua, alimentacion,
+  mantenimiento, insumos, personal y otros.
+
+Estos movimientos son tesoreria interna del asilo y viven en `db_asilo`. El microservicio
+`ms-costos` administra unicamente lo que se cobra al familiar por los servicios de la
+fundacion: consultas, examenes y medicamentos.
+
+## Reportes
+
+Los siete informes del enunciado, en `/reportes`. Cada uno admite filtro por interno y por
+rango de fechas, y tiene boton de impresion que genera un PDF con membrete desde el navegador.
+
+| Reporte | Qué muestra | Roles |
+|---|---|---|
+| Costos por cita | Costo de cada cita con consulta, examenes y medicamentos, y el ahorro de la fundacion | Caja, medicos |
+| Analisis medico por paciente | Ficha medica, motivo de ingreso, diagnosticos, examenes y medicamentos | Medicos, enfermeria |
+| Cobros por paciente | Cobros por rango de fechas con el detalle de cada gasto medico | Caja |
+| Pagos a la fundacion | Facturado, pagado y deuda actual, agrupado por tipo de servicio | Caja |
+| Entradas: donaciones y cobros | Donaciones, cuotas y cobros frente a los gastos del periodo | Caja |
+| Examenes realizados | Examenes solicitados por interno y sus resultados | Caja, medicos, laboratorio |
+| Medicamentos aplicados | Medicamentos indicados y entregados, mas los permanentes | Caja, medicos, farmacia |
+
+El administrador accede a todos.
+
+### Verificacion
+
+`pruebas/caja_reportes.py` comprueba 36 puntos: el flujo clinico que alimenta los reportes,
+el registro y las validaciones de caja, la generacion y cobro de cuotas sin duplicados, los
+siete reportes, las cifras con descuento aplicado, el filtro por rango de fechas y la
+restriccion por rol.

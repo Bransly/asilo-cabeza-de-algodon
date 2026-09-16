@@ -225,3 +225,45 @@ Con el sistema recién levantado, mostrar la **pantalla de login**.
 Si hay tiempo, mostrar que la autorización está en el servidor y no solo en la
 pantalla: con la sesión de caja abierta, enviar a mano una petición a una ruta de
 médico y ver que el sistema la rechaza y la registra en la bitácora.
+
+---
+
+## Sección adicional: caja y reportes (insertar después del minuto 11:00)
+
+Entrar como `caja`.
+
+### Caja
+
+> "El asilo se sostiene con donaciones y con la cuota mensual que pagan los familiares,
+> y hay que fiscalizar contra los gastos. Este es el módulo de caja."
+
+1. **Cuotas mensuales.** Pulsar el botón de generar las cuotas del mes. Señalar que el monto
+   sale del expediente de cada interno y que si se pulsa otra vez no se duplican. Cobrar una.
+2. **Donaciones.** Registrar una con origen "Empresa nacional". Mencionar los cuatro orígenes
+   que pide el enunciado.
+3. **Gastos.** Registrar el pago de energía eléctrica.
+
+### Reportes
+
+Ir a **Reportes**.
+
+> "Aquí están los siete informes que pide el enunciado. Cada uno filtra por interno y por
+> rango de fechas."
+
+Mostrar dos o tres, no los siete, para no alargar:
+
+- **Costos por cita:** señalar una fila y leer las cifras. La consulta de Q350 quedó en
+  Q227.50 por el 35% de descuento de la fundación.
+- **Entradas, donaciones y cobros:** mostrar el total de entradas frente a los gastos y la
+  diferencia del periodo.
+- **Análisis médico por paciente:** mostrar que trae la ficha, el motivo de ingreso, los
+  diagnósticos y los medicamentos, tal como pide el enunciado.
+
+Pulsar **Imprimir o guardar PDF** en cualquiera de ellos.
+
+> "Cada reporte se imprime con membrete, la fecha de generación y el usuario que lo generó."
+
+Cerrar la sección señalando el control de acceso:
+
+> "Y los reportes también respetan los roles: el laboratorio no puede abrir el reporte de
+> pagos a la fundación, porque no le corresponde información financiera."

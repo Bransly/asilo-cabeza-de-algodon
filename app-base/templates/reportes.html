@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block titulo %}Reportes - Asilo Cabeza de Algodon{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta">
+  <div class="tarjeta-titulo">
+    Reportes del sistema
+    <div class="dato fw-normal">
+      Seleccione el reporte, el interno cuando corresponda y el rango de fechas.
+    </div>
+  </div>
+  <div class="p-3">
+    <div class="row g-3">
+      {% for clave, r in reportes.items() %}
+      <div class="col-md-6">
+        <div class="kpi h-100">
+          <div class="fw-semibold">{{ r.titulo }}</div>
+          <div class="dato mb-2">{{ r.descripcion }}</div>
+          <form method="get" action="{{ url_for('ver_reporte', clave=clave) }}"
+                class="row g-2 align-items-end">
+            {% if r.paciente %}
+            <div class="col-12">
+              <label class="form-label small">Interno</label>
+              <select name="paciente_id" class="form-select form-select-sm" required>
+                {% for p in pacientes %}
+                  <option value="{{ p.id }}">{{ p.nombre }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            {% endif %}
+            {% if clave != 'analisis-medico' %}
+            <div class="col-6">
+              <label class="form-label small">Desde</label>
+              <input type="date" name="desde" class="form-control form-control-sm">
+            </div>
+            <div class="col-6">
+              <label class="form-label small">Hasta</label>
+              <input type="date" name="hasta" class="form-control form-control-sm">
+            </div>
+            {% endif %}
+            <div class="col-12">
+              <button class="btn btn-sm btn-success w-100">Generar reporte</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if not reportes %}
+      <p class="text-muted mb-0">Su rol no tiene reportes asignados.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

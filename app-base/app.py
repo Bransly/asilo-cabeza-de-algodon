@@ -9,7 +9,7 @@ Este archivo es solo la capa de presentacion: recibe HTTP, llama a la capa de
 negocio y devuelve una plantilla. No contiene reglas de negocio ni SQL.
 """
 import os
-from datetime import timedelta
+from datetime import date, datetime, timedelta
 
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 
@@ -17,9 +17,15 @@ from auth import (
     AutenticacionService, ErrorAutenticacion, requiere_rol, usuario_actual,
 )
 from database import Sesion, crear_tablas
-from models import ETIQUETA_ROL, EstadoSolicitud, RolUsuario
+from models import (
+    ETIQUETA_GASTO, ETIQUETA_ORIGEN, ETIQUETA_ROL, CategoriaGasto,
+    EstadoSolicitud, OrigenDonacion, RolUsuario,
+)
+from reportes import MESES, ReporteService
 from semilla import cargar_datos_iniciales
-from services import AtencionService, ConsultaService, ErrorNegocio, PacienteService
+from services import (
+    AtencionService, CajaService, ConsultaService, ErrorNegocio, PacienteService,
+)
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "clave-de-desarrollo-asilo")
@@ -459,6 +465,235 @@ def eliminar_cargo(cargo_id: int):
     except Exception as error:
         flash(f"No se pudo eliminar. {error}", "danger")
     return volver("expediente", paciente_id=paciente_id)
+
+
+# ==================================================================== Caja
+def _fecha(texto):
+    """Convierte el texto de un filtro de fecha; devuelve None si viene vacio."""
+    if not texto:
+        return None
+    try:
+        return datetime.strptime(texto, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+@app.route("/caja")
+@requiere_rol(R.CAJA)
+def caja():
+    servicio = CajaService(request.sesion)
+    consultas = ConsultaService(request.sesion)
+    hoy = date.today()
+    anio = request.args.get("anio", type=int) or hoy.year
+    mes = request.args.get("mes", type=int) or hoy.month
+
+    donaciones = servicio.donaciones.listar()
+    gastos = servicio.gastos.listar()
+    cuotas = servicio.cuotas.listar(anio=anio, mes=mes)
+
+    return render_template(
+        "caja.html",
+        donaciones=donaciones, gastos=gastos, cuotas=cuotas,
+        anio=anio, mes=mes, meses=MESES,
+        origenes=[(o.value, ETIQUETA_ORIGEN[o]) for o in OrigenDonacion],
+        categorias=[(c.value, ETIQUETA_GASTO[c]) for c in CategoriaGasto],
+        etiqueta_origen=ETIQUETA_ORIGEN, etiqueta_gasto=ETIQUETA_GASTO,
+        total_donaciones=servicio.donaciones.total(),
+        total_gastos=servicio.gastos.total(),
+        total_cuotas=servicio.cuotas.total_cobrado(anio, mes),
+        pendiente_cuotas=servicio.cuotas.total_pendiente(anio, mes),
+        hoy=hoy.isoformat(),
+        estado_servicios=consultas.estado_servicios(),
+    )
+
+
+@app.post("/caja/donaciones")
+@requiere_rol(R.CAJA)
+def registrar_donacion():
+    servicio = CajaService(request.sesion)
+    try:
+        donacion = servicio.registrar_donacion(
+            request.form.to_dict(), session.get("usuario_nombre", ""))
+        AutenticacionService(request.sesion).registrar(
+            "REGISTRA_DONACION", "Donacion", donacion.id, "EXITO",
+            f"{donacion.donante} Q{donacion.monto:.2f}")
+        flash(f"Donacion registrada: {donacion.donante}, Q{donacion.monto:,.2f}.", "success")
+    except (ErrorNegocio, ValueError, KeyError) as error:
+        flash(str(error), "danger")
+    return volver("caja")
+
+
+@app.post("/donaciones/<int:donacion_id>/eliminar")
+@requiere_rol(R.CAJA)
+def eliminar_donacion(donacion_id: int):
+    servicio = CajaService(request.sesion)
+    try:
+        donacion = servicio.eliminar_donacion(donacion_id)
+        AutenticacionService(request.sesion).registrar(
+            "ELIMINA_DONACION", "Donacion", donacion_id, "EXITO", donacion.donante)
+        flash("Donacion eliminada.", "success")
+    except ErrorNegocio as error:
+        flash(str(error), "danger")
+    return volver("caja")
+
+
+@app.post("/caja/gastos")
+@requiere_rol(R.CAJA)
+def registrar_gasto():
+    servicio = CajaService(request.sesion)
+    try:
+        gasto = servicio.registrar_gasto(
+            request.form.to_dict(), session.get("usuario_nombre", ""))
+        AutenticacionService(request.sesion).registrar(
+            "REGISTRA_GASTO", "Gasto", gasto.id, "EXITO",
+            f"{gasto.descripcion} Q{gasto.monto:.2f}")
+        flash(f"Gasto registrado: {gasto.descripcion}, Q{gasto.monto:,.2f}.", "success")
+    except (ErrorNegocio, ValueError, KeyError) as error:
+        flash(str(error), "danger")
+    return volver("caja")
+
+
+@app.post("/gastos/<int:gasto_id>/eliminar")
+@requiere_rol(R.CAJA)
+def eliminar_gasto(gasto_id: int):
+    servicio = CajaService(request.sesion)
+    try:
+        servicio.eliminar_gasto(gasto_id)
+        AutenticacionService(request.sesion).registrar(
+            "ELIMINA_GASTO", "Gasto", gasto_id, "EXITO")
+        flash("Gasto eliminado.", "success")
+    except ErrorNegocio as error:
+        flash(str(error), "danger")
+    return volver("caja")
+
+
+@app.post("/caja/cuotas")
+@requiere_rol(R.CAJA)
+def generar_cuotas():
+    servicio = CajaService(request.sesion)
+    anio = request.form.get("anio", type=int)
+    mes = request.form.get("mes", type=int)
+    try:
+        creadas = servicio.generar_cuotas_del_mes(anio, mes)
+        if creadas:
+            flash(f"Se generaron {creadas} cuotas para {MESES[mes]} de {anio}.", "success")
+        else:
+            flash("Las cuotas de ese mes ya estaban generadas.", "warning")
+    except (ErrorNegocio, TypeError) as error:
+        flash(str(error), "danger")
+    return volver("caja", anio=anio, mes=mes)
+
+
+@app.post("/cuotas/<int:cuota_id>/cobrar")
+@requiere_rol(R.CAJA)
+def cobrar_cuota(cuota_id: int):
+    servicio = CajaService(request.sesion)
+    try:
+        cuota = servicio.cobrar_cuota(cuota_id)
+        AutenticacionService(request.sesion).registrar(
+            "COBRA_CUOTA", "CuotaMensual", cuota_id, "EXITO",
+            f"{cuota.paciente.nombre} Q{cuota.monto:.2f}")
+        flash(f"Cuota cobrada: {cuota.paciente.nombre}, Q{cuota.monto:,.2f}.", "success")
+    except ErrorNegocio as error:
+        flash(str(error), "danger")
+    return volver("caja", anio=request.form.get("anio", type=int),
+                  mes=request.form.get("mes", type=int))
+
+
+# ================================================================ Reportes
+REPORTES = {
+    "costos-por-cita": {
+        "titulo": "Costos por cita",
+        "descripcion": "Costo de cada cita del interno, con examenes y medicamentos.",
+        "paciente": True, "roles": ["CAJA", "MEDICO_GENERAL", "MEDICO_ESPECIALISTA"]},
+    "analisis-medico": {
+        "titulo": "Analisis medico por paciente",
+        "descripcion": "Ficha medica, motivo de ingreso, diagnosticos y medicamentos.",
+        "paciente": True, "roles": ["MEDICO_GENERAL", "MEDICO_ESPECIALISTA", "ENFERMERIA"]},
+    "cobros-por-paciente": {
+        "titulo": "Cobros por paciente",
+        "descripcion": "Cobros por rango de fechas con el detalle de cada gasto medico.",
+        "paciente": True, "roles": ["CAJA"]},
+    "pagos-fundacion": {
+        "titulo": "Pagos a la fundacion",
+        "descripcion": "Lo facturado, lo pagado y la deuda actual con la fundacion.",
+        "paciente": False, "roles": ["CAJA"]},
+    "entradas": {
+        "titulo": "Entradas: donaciones y cobros",
+        "descripcion": "Ingresos del asilo comparados con los gastos del periodo.",
+        "paciente": False, "roles": ["CAJA"]},
+    "examenes-por-paciente": {
+        "titulo": "Examenes realizados",
+        "descripcion": "Examenes de laboratorio solicitados y sus resultados.",
+        "paciente": True, "roles": ["CAJA", "MEDICO_GENERAL", "MEDICO_ESPECIALISTA",
+                                    "LABORATORIO"]},
+    "medicamentos-por-paciente": {
+        "titulo": "Medicamentos aplicados",
+        "descripcion": "Medicamentos indicados y entregados al interno.",
+        "paciente": True, "roles": ["CAJA", "MEDICO_GENERAL", "MEDICO_ESPECIALISTA",
+                                    "FARMACIA"]},
+}
+
+
+@app.route("/reportes")
+@requiere_rol()
+def reportes():
+    servicio = PacienteService(request.sesion)
+    consultas = ConsultaService(request.sesion)
+    rol = session.get("rol")
+    disponibles = {clave: datos for clave, datos in REPORTES.items()
+                   if rol == "ADMINISTRADOR" or rol in datos["roles"]}
+    return render_template(
+        "reportes.html", reportes=disponibles, pacientes=servicio.listar(),
+        estado_servicios=consultas.estado_servicios())
+
+
+@app.route("/reportes/<clave>")
+@requiere_rol()
+def ver_reporte(clave: str):
+    definicion = REPORTES.get(clave)
+    rol = session.get("rol")
+    if definicion is None:
+        flash("El reporte solicitado no existe.", "danger")
+        return volver("reportes")
+    if rol != "ADMINISTRADOR" and rol not in definicion["roles"]:
+        AutenticacionService(request.sesion).registrar(
+            "ACCESO_DENEGADO", "Reporte", None, "DENEGADO", f"Rol {rol} pidio {clave}")
+        flash("Su rol no tiene permiso para consultar ese reporte.", "danger")
+        return volver("reportes")
+
+    consultas = ConsultaService(request.sesion)
+    servicio = ReporteService(request.sesion, consultas.costos)
+    paciente_id = request.args.get("paciente_id", type=int)
+    desde = _fecha(request.args.get("desde"))
+    hasta = _fecha(request.args.get("hasta"))
+
+    if definicion["paciente"] and not paciente_id:
+        flash("Seleccione el interno para generar ese reporte.", "warning")
+        return volver("reportes")
+
+    comunes = {"estado_servicios": consultas.estado_servicios(),
+               "clave": clave, "definicion": definicion,
+               "paciente_id": paciente_id,
+               "desde": request.args.get("desde", ""),
+               "hasta": request.args.get("hasta", ""),
+               "pacientes": PacienteService(request.sesion).listar(),
+               "generado": datetime.now()}
+
+    if clave == "analisis-medico":
+        datos = servicio.analisis_medico(paciente_id)
+        return render_template("reporte_ficha.html", datos=datos, **comunes)
+
+    generadores = {
+        "costos-por-cita": lambda: servicio.costos_por_cita(paciente_id, desde, hasta),
+        "cobros-por-paciente": lambda: servicio.cobros_por_paciente(paciente_id, desde, hasta),
+        "pagos-fundacion": lambda: servicio.pagos_a_la_fundacion(desde, hasta),
+        "entradas": lambda: servicio.entradas(desde, hasta),
+        "examenes-por-paciente": lambda: servicio.examenes_por_paciente(paciente_id, desde, hasta),
+        "medicamentos-por-paciente": lambda: servicio.medicamentos_por_paciente(
+            paciente_id, desde, hasta),
+    }
+    return render_template("reporte_tabla.html", datos=generadores[clave](), **comunes)
 
 
 if __name__ == "__main__":

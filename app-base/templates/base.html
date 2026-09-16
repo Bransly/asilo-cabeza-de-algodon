@@ -87,6 +87,16 @@
              href="{{ url_for('farmacia') }}">Farmacia</a>
         </li>
         {% endif %}
+        {% if admin or rol == 'CAJA' %}
+        <li class="nav-item">
+          <a class="nav-link {{ 'activo' if actual == 'caja' }}"
+             href="{{ url_for('caja') }}">Caja</a>
+        </li>
+        {% endif %}
+        <li class="nav-item">
+          <a class="nav-link {{ 'activo' if actual in ['reportes', 'ver_reporte'] }}"
+             href="{{ url_for('reportes') }}">Reportes</a>
+        </li>
         {% if admin %}
         <li class="nav-item">
           <a class="nav-link {{ 'activo' if actual == 'bitacora' }}"

@@ -302,3 +302,94 @@ class RegistroBitacora(Base):
     detalle: Mapped[str] = mapped_column(String(300), default="")
     direccion_ip: Mapped[str] = mapped_column(String(45), default="")
     fecha: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, index=True)
+
+
+# --------------------------------------------------------- Caja del asilo
+class OrigenDonacion(str, enum.Enum):
+    """Origenes que menciona el enunciado para las donaciones."""
+
+    EMPRESA_INTERNACIONAL = "EMPRESA_INTERNACIONAL"
+    EMPRESA_NACIONAL = "EMPRESA_NACIONAL"
+    GOBIERNO = "GOBIERNO"
+    PARTICULAR = "PARTICULAR"
+
+
+class CategoriaGasto(str, enum.Enum):
+    ENERGIA_ELECTRICA = "ENERGIA_ELECTRICA"
+    AGUA = "AGUA"
+    ALIMENTACION = "ALIMENTACION"
+    MANTENIMIENTO = "MANTENIMIENTO"
+    INSUMOS = "INSUMOS"
+    PERSONAL = "PERSONAL"
+    OTROS = "OTROS"
+
+
+ETIQUETA_ORIGEN = {
+    OrigenDonacion.EMPRESA_INTERNACIONAL: "Empresa internacional",
+    OrigenDonacion.EMPRESA_NACIONAL: "Empresa nacional",
+    OrigenDonacion.GOBIERNO: "Gobierno",
+    OrigenDonacion.PARTICULAR: "Persona particular",
+}
+
+ETIQUETA_GASTO = {
+    CategoriaGasto.ENERGIA_ELECTRICA: "Energia electrica",
+    CategoriaGasto.AGUA: "Agua",
+    CategoriaGasto.ALIMENTACION: "Alimentacion",
+    CategoriaGasto.MANTENIMIENTO: "Mantenimiento",
+    CategoriaGasto.INSUMOS: "Insumos",
+    CategoriaGasto.PERSONAL: "Personal",
+    CategoriaGasto.OTROS: "Otros",
+}
+
+
+class Donacion(Base):
+    """
+    Ingreso que recibe el asilo. El enunciado pide distinguir el origen:
+    empresas internacionales, nacionales, gobierno y personas particulares.
+    """
+
+    __tablename__ = "donaciones"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    origen: Mapped[OrigenDonacion] = mapped_column(Enum(OrigenDonacion), nullable=False)
+    donante: Mapped[str] = mapped_column(String(150), nullable=False)
+    monto: Mapped[float] = mapped_column(Float, nullable=False)
+    fecha: Mapped[date] = mapped_column(Date, default=date.today, index=True)
+    descripcion: Mapped[str] = mapped_column(String(300), default="")
+    recibo: Mapped[str] = mapped_column(String(40), default="")
+    registrada_por: Mapped[str] = mapped_column(String(120), default="")
+
+
+class Gasto(Base):
+    """Egreso operativo del asilo: luz, agua, alimentacion, mantenimiento."""
+
+    __tablename__ = "gastos"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    categoria: Mapped[CategoriaGasto] = mapped_column(Enum(CategoriaGasto), nullable=False)
+    descripcion: Mapped[str] = mapped_column(String(300), nullable=False)
+    monto: Mapped[float] = mapped_column(Float, nullable=False)
+    fecha: Mapped[date] = mapped_column(Date, default=date.today, index=True)
+    comprobante: Mapped[str] = mapped_column(String(40), default="")
+    registrado_por: Mapped[str] = mapped_column(String(120), default="")
+
+
+class CuotaMensual(Base):
+    """
+    Cuota que paga el familiar por tener al interno en el asilo. Se genera una
+    por interno y por mes, y se marca como pagada cuando caja recibe el pago.
+    """
+
+    __tablename__ = "cuotas_mensuales"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    paciente_id: Mapped[int] = mapped_column(ForeignKey("pacientes.id"))
+    anio: Mapped[int] = mapped_column(Integer, nullable=False)
+    mes: Mapped[int] = mapped_column(Integer, nullable=False)
+    monto: Mapped[float] = mapped_column(Float, nullable=False)
+
+    pagada: Mapped[bool] = mapped_column(Boolean, default=False)
+    fecha_pago: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    observaciones: Mapped[str] = mapped_column(String(200), default="")
+
+    paciente: Mapped["Paciente"] = relationship()

@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+{% block titulo %}Caja - Asilo Cabeza de Algodon{% endblock %}
+
+{% block contenido %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="kpi">
+      <div class="kpi-etiqueta">Donaciones recibidas</div>
+      <div class="kpi-valor monto text-success">Q{{ '%.2f'|format(total_donaciones) }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="kpi">
+      <div class="kpi-etiqueta">Cuotas cobradas del mes</div>
+      <div class="kpi-valor monto text-success">Q{{ '%.2f'|format(total_cuotas) }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="kpi {{ 'kpi-principal' if pendiente_cuotas > 0 }}">
+      <div class="kpi-etiqueta">Cuotas pendientes del mes</div>
+      <div class="kpi-valor monto">Q{{ '%.2f'|format(pendiente_cuotas) }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="kpi">
+      <div class="kpi-etiqueta">Gastos registrados</div>
+      <div class="kpi-valor monto">Q{{ '%.2f'|format(total_gastos) }}</div>
+    </div>
+  </div>
+</div>
+
+<ul class="nav nav-tabs mb-3" role="tablist">
+  <li class="nav-item">
+    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#panelCuotas">
+      Cuotas mensuales</button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#panelDonaciones">
+      Donaciones</button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#panelGastos">
+      Gastos</button>
+  </li>
+</ul>
+
+<div class="tab-content">
+
+  <!-- ------------------------------------------------ Cuotas mensuales -->
+  <div class="tab-pane fade show active" id="panelCuotas">
+    <div class="tarjeta">
+      <div class="tarjeta-titulo d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span>Cuotas de {{ meses[mes]|capitalize }} de {{ anio }}</span>
+        <form method="get" action="{{ url_for('caja') }}" class="d-flex gap-2">
+          <select name="mes" class="form-select form-select-sm" style="width:auto">
+            {% for numero in range(1, 13) %}
+              <option value="{{ numero }}" {% if numero == mes %}selected{% endif %}>
+                {{ meses[numero]|capitalize }}</option>
+            {% endfor %}
+          </select>
+          <input type="number" name="anio" value="{{ anio }}" class="form-control form-control-sm"
+                 style="width:100px" min="2020" max="2100">
+          <button class="btn btn-sm btn-outline-secondary">Ver</button>
+        </form>
+      </div>
+      <div class="p-3">
+        {% if cuotas %}
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Interno</th><th>Familiar responsable</th>
+                <th class="text-end">Monto</th><th>Estado</th>
+                <th>Fecha de pago</th><th class="text-end">Accion</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in cuotas %}
+              <tr>
+                <td>{{ c.paciente.nombre }}</td>
+                <td class="dato">{{ c.paciente.familiar_nombre }}</td>
+                <td class="text-end monto">Q{{ '%.2f'|format(c.monto) }}</td>
+                <td>
+                  {% if c.pagada %}
+                    <span class="badge bg-success">&#10003; Pagada</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark">&#9679; Pendiente</span>
+                  {% endif %}
+                </td>
+                <td class="small text-muted">
+                  {{ c.fecha_pago.strftime('%d/%m/%Y %H:%M') if c.fecha_pago else '—' }}
+                </td>
+                <td class="text-end">
+                  {% if not c.pagada %}
+                  <form method="post" action="{{ url_for('cobrar_cuota', cuota_id=c.id) }}">
+                    <input type="hidden" name="anio" value="{{ anio }}">
+                    <input type="hidden" name="mes" value="{{ mes }}">
+                    <button class="btn btn-sm btn-success">Registrar cobro</button>
+                  </form>
+                  {% else %}
+                    <span class="text-muted">&mdash;</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+          <p class="text-muted">
+            Aun no se han generado las cuotas de este mes. El monto de cada cuota sale
+            del expediente de cada interno.
+          </p>
+        {% endif %}
+
+        <form method="post" action="{{ url_for('generar_cuotas') }}" class="border-top pt-3 mt-3">
+          <input type="hidden" name="anio" value="{{ anio }}">
+          <input type="hidden" name="mes" value="{{ mes }}">
+          <button class="btn btn-sm btn-outline-success">
+            Generar cuotas de {{ meses[mes] }} de {{ anio }}
+          </button>
+          <span class="dato ms-2">No se duplican las cuotas ya generadas.</span>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ------------------------------------------------------ Donaciones -->
+  <div class="tab-pane fade" id="panelDonaciones">
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="tarjeta">
+          <div class="tarjeta-titulo">Donaciones registradas</div>
+          <div class="p-3">
+            {% if donaciones %}
+            <div class="table-responsive">
+              <table class="table table-sm align-middle mb-0">
+                <thead class="table-light">
+                  <tr><th>Fecha</th><th>Donante</th><th>Origen</th>
+                      <th class="text-end">Monto</th><th></th></tr>
+                </thead>
+                <tbody>
+                  {% for d in donaciones %}
+                  <tr>
+                    <td class="small text-nowrap">{{ d.fecha.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                      {{ d.donante }}
+                      {% if d.descripcion %}<div class="dato">{{ d.descripcion }}</div>{% endif %}
+                      {% if d.recibo %}<div class="dato">Recibo {{ d.recibo }}</div>{% endif %}
+                    </td>
+                    <td class="small">{{ etiqueta_origen[d.origen] }}</td>
+                    <td class="text-end monto text-success">Q{{ '%.2f'|format(d.monto) }}</td>
+                    <td class="text-end">
+                      <form method="post"
+                            action="{{ url_for('eliminar_donacion', donacion_id=d.id) }}">
+                        <button class="btn btn-sm text-danger" title="Eliminar">&#128465;</button>
+                      </form>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+              <p class="text-muted mb-0">Sin donaciones registradas.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="tarjeta">
+          <div class="tarjeta-titulo">Registrar donacion</div>
+          <div class="p-3">
+            <form method="post" action="{{ url_for('registrar_donacion') }}" class="row g-2">
+              <div class="col-12">
+                <label class="form-label">Origen</label>
+                <select name="origen" class="form-select" required>
+                  {% for valor, etiqueta in origenes %}
+                    <option value="{{ valor }}">{{ etiqueta }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Donante</label>
+                <input name="donante" class="form-control" required maxlength="150"
+                       placeholder="Nombre de la empresa, institucion o persona">
+              </div>
+              <div class="col-6">
+                <label class="form-label">Monto (Q)</label>
+                <input name="monto" type="number" step="0.01" min="0.01"
+                       class="form-control" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label">Fecha</label>
+                <input name="fecha" type="date" value="{{ hoy }}" class="form-control">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Descripcion</label>
+                <input name="descripcion" class="form-control" maxlength="300"
+                       placeholder="Especie, efectivo, destino de la donacion">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Numero de recibo</label>
+                <input name="recibo" class="form-control" maxlength="40">
+              </div>
+              <div class="col-12 mt-3">
+                <button class="btn btn-success w-100">Registrar donacion</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------------------------------------------------------- Gastos -->
+  <div class="tab-pane fade" id="panelGastos">
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="tarjeta">
+          <div class="tarjeta-titulo">Gastos del asilo</div>
+          <div class="p-3">
+            {% if gastos %}
+            <div class="table-responsive">
+              <table class="table table-sm align-middle mb-0">
+                <thead class="table-light">
+                  <tr><th>Fecha</th><th>Descripcion</th><th>Categoria</th>
+                      <th class="text-end">Monto</th><th></th></tr>
+                </thead>
+                <tbody>
+                  {% for g in gastos %}
+                  <tr>
+                    <td class="small text-nowrap">{{ g.fecha.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                      {{ g.descripcion }}
+                      {% if g.comprobante %}
+                        <div class="dato">Comprobante {{ g.comprobante }}</div>
+                      {% endif %}
+                    </td>
+                    <td class="small">{{ etiqueta_gasto[g.categoria] }}</td>
+                    <td class="text-end monto">Q{{ '%.2f'|format(g.monto) }}</td>
+                    <td class="text-end">
+                      <form method="post" action="{{ url_for('eliminar_gasto', gasto_id=g.id) }}">
+                        <button class="btn btn-sm text-danger" title="Eliminar">&#128465;</button>
+                      </form>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+              <p class="text-muted mb-0">Sin gastos registrados.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="tarjeta">
+          <div class="tarjeta-titulo">Registrar gasto</div>
+          <div class="p-3">
+            <form method="post" action="{{ url_for('registrar_gasto') }}" class="row g-2">
+              <div class="col-12">
+                <label class="form-label">Categoria</label>
+                <select name="categoria" class="form-select" required>
+                  {% for valor, etiqueta in categorias %}
+                    <option value="{{ valor }}">{{ etiqueta }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Descripcion</label>
+                <input name="descripcion" class="form-control" required maxlength="300"
+                       placeholder="Pago de energia electrica del mes">
+              </div>
+              <div class="col-6">
+                <label class="form-label">Monto (Q)</label>
+                <input name="monto" type="number" step="0.01" min="0.01"
+                       class="form-control" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label">Fecha</label>
+                <input name="fecha" type="date" value="{{ hoy }}" class="form-control">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Comprobante</label>
+                <input name="comprobante" class="form-control" maxlength="40">
+              </div>
+              <div class="col-12 mt-3">
+                <button class="btn btn-success w-100">Registrar gasto</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -15,18 +15,20 @@ Reglas implementadas:
   - El laboratorio solo carga resultados de examenes que fueron solicitados.
   - La farmacia solo cobra el medicamento cuando lo entrega.
 """
-from datetime import datetime
+from datetime import date, datetime
 
 from clientes import ClienteCostos, ClienteNotificaciones, MicroservicioError
 from models import (
-    EstadoExamen, EstadoSolicitud, EstadoVisita, FichaMedica, Medico,
-    MedicamentoPermanente, MedicamentoRecetado, OrdenExamen, Paciente,
-    Solicitud, VisitaMedica,
+    CategoriaGasto, CuotaMensual, Donacion, EstadoExamen, EstadoSolicitud,
+    EstadoVisita, FichaMedica, Gasto, Medico, MedicamentoPermanente,
+    MedicamentoRecetado, OrdenExamen, OrigenDonacion, Paciente, Solicitud,
+    VisitaMedica,
 )
 from repository import (
-    CatalogoRepository, ExamenRepository, FichaRepository,
-    MedicamentoPermanenteRepository, PacienteRepository, RecetaRepository,
-    SolicitudRepository, VisitaRepository, marcar_actualizada,
+    CatalogoRepository, CuotaRepository, DonacionRepository, ExamenRepository,
+    FichaRepository, GastoRepository, MedicamentoPermanenteRepository,
+    PacienteRepository, RecetaRepository, SolicitudRepository, VisitaRepository,
+    marcar_actualizada,
 )
 
 
@@ -434,3 +436,116 @@ class ConsultaService:
             return self.notificaciones.listar(paciente_id)
         except MicroservicioError:
             return []
+
+
+# ------------------------------------------------------------------- Caja
+class CajaService:
+    """
+    Tesoreria del asilo: donaciones, gastos operativos y cuotas mensuales.
+
+    Estos movimientos son internos del asilo y no pasan por ms-costos, que
+    administra unicamente lo que se cobra al familiar por los servicios de la
+    fundacion (consultas, examenes y medicamentos).
+    """
+
+    def __init__(self, sesion):
+        self.donaciones = DonacionRepository(sesion)
+        self.gastos = GastoRepository(sesion)
+        self.cuotas = CuotaRepository(sesion)
+        self.pacientes = PacienteRepository(sesion)
+
+    # ---------- donaciones ----------
+    def registrar_donacion(self, datos: dict, usuario: str = "") -> Donacion:
+        monto = self._monto(datos.get("monto"))
+        if not datos.get("donante", "").strip():
+            raise ErrorNegocio("Indique quien realiza la donacion.")
+        donacion = Donacion(
+            origen=OrigenDonacion(datos["origen"]),
+            donante=datos["donante"].strip(),
+            monto=monto,
+            fecha=self._fecha(datos.get("fecha")),
+            descripcion=datos.get("descripcion", "").strip(),
+            recibo=datos.get("recibo", "").strip(),
+            registrada_por=usuario,
+        )
+        return self.donaciones.guardar(donacion)
+
+    def eliminar_donacion(self, donacion_id: int) -> Donacion:
+        donacion = self.donaciones.obtener(donacion_id)
+        if donacion is None:
+            raise ErrorNegocio("La donacion indicada no existe.")
+        self.donaciones.eliminar(donacion)
+        return donacion
+
+    # ---------- gastos ----------
+    def registrar_gasto(self, datos: dict, usuario: str = "") -> Gasto:
+        monto = self._monto(datos.get("monto"))
+        if not datos.get("descripcion", "").strip():
+            raise ErrorNegocio("Describa el gasto realizado.")
+        gasto = Gasto(
+            categoria=CategoriaGasto(datos["categoria"]),
+            descripcion=datos["descripcion"].strip(),
+            monto=monto,
+            fecha=self._fecha(datos.get("fecha")),
+            comprobante=datos.get("comprobante", "").strip(),
+            registrado_por=usuario,
+        )
+        return self.gastos.guardar(gasto)
+
+    def eliminar_gasto(self, gasto_id: int) -> Gasto:
+        gasto = self.gastos.obtener(gasto_id)
+        if gasto is None:
+            raise ErrorNegocio("El gasto indicado no existe.")
+        self.gastos.eliminar(gasto)
+        return gasto
+
+    # ---------- cuotas mensuales ----------
+    def generar_cuotas_del_mes(self, anio: int, mes: int) -> int:
+        """
+        Crea la cuota de cada interno activo para el mes indicado.
+        No duplica: si la cuota ya existe, la deja como esta.
+        """
+        if not 1 <= mes <= 12:
+            raise ErrorNegocio("El mes debe estar entre 1 y 12.")
+        creadas = 0
+        for paciente in self.pacientes.listar():
+            if paciente.cuota_mensual <= 0:
+                continue
+            if self.cuotas.existe(paciente.id, anio, mes):
+                continue
+            self.cuotas.guardar(CuotaMensual(
+                paciente_id=paciente.id, anio=anio, mes=mes,
+                monto=paciente.cuota_mensual))
+            creadas += 1
+        return creadas
+
+    def cobrar_cuota(self, cuota_id: int) -> CuotaMensual:
+        cuota = self.cuotas.obtener(cuota_id)
+        if cuota is None:
+            raise ErrorNegocio("La cuota indicada no existe.")
+        if cuota.pagada:
+            raise ErrorNegocio("Esa cuota ya fue cobrada.")
+        cuota.pagada = True
+        cuota.fecha_pago = datetime.now()
+        self.cuotas.confirmar()
+        return cuota
+
+    # ---------- apoyo ----------
+    @staticmethod
+    def _monto(valor) -> float:
+        try:
+            monto = float(valor)
+        except (TypeError, ValueError):
+            raise ErrorNegocio("El monto debe ser un numero.")
+        if monto <= 0:
+            raise ErrorNegocio("El monto debe ser mayor que cero.")
+        return monto
+
+    @staticmethod
+    def _fecha(texto):
+        if not texto:
+            return date.today()
+        try:
+            return datetime.strptime(texto, "%Y-%m-%d").date()
+        except ValueError:
+            raise ErrorNegocio("La fecha no tiene un formato valido.")

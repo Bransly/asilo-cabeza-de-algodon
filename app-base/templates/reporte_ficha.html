@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block titulo %}{{ datos.titulo }}{% endblock %}
+
+{% block estilos %}
+<style>
+  @media print {
+    .encabezado, .sin-impresion, .alert { display: none !important; }
+    body { background: #fff; }
+    .tarjeta { border: none; }
+  }
+  .membrete { border-bottom: 2px solid #14532d; padding-bottom: .6rem; margin-bottom: 1rem; }
+  .visita { border-left: 3px solid #cfe0d5; padding-left: .9rem; margin-bottom: 1.1rem; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="sin-impresion mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <a href="{{ url_for('reportes') }}" class="btn btn-sm btn-outline-secondary">
+    &larr; Volver a reportes</a>
+  <div class="d-flex gap-2">
+    <form method="get" class="d-flex gap-2">
+      <select name="paciente_id" class="form-select form-select-sm" style="width:auto">
+        {% for p in pacientes %}
+          <option value="{{ p.id }}" {% if p.id == paciente_id %}selected{% endif %}>
+            {{ p.nombre }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-sm btn-outline-success">Aplicar</button>
+    </form>
+    <button onclick="window.print()" class="btn btn-sm btn-success">Imprimir o guardar PDF</button>
+  </div>
+</div>
+
+<div class="tarjeta p-4">
+  <div class="membrete">
+    <div class="d-flex justify-content-between align-items-start flex-wrap">
+      <div>
+        <div class="fw-bold">Asilo de Ancianos Cabeza de Algodon</div>
+        <h1 class="h5 mb-1 mt-1">{{ datos.titulo }}</h1>
+        <div class="dato">{{ datos.paciente.nombre }} · {{ datos.paciente.edad }} anios</div>
+      </div>
+      <div class="text-end dato">
+        <div>Generado el {{ datos.generado.strftime('%d/%m/%Y %H:%M') }}</div>
+        <div>Por {{ usuario.nombre }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="dato">Motivo de ingreso al asilo</div>
+      <div>{{ datos.paciente.motivo_ingreso or 'No indicado' }}</div>
+      <div class="dato mt-2">Fecha de ingreso</div>
+      <div>{{ datos.paciente.fecha_ingreso.strftime('%d/%m/%Y') }}</div>
+    </div>
+    <div class="col-md-6">
+      <div class="dato">Familiar responsable</div>
+      <div>{{ datos.paciente.familiar_nombre }} · {{ datos.paciente.correo_familiar }}</div>
+    </div>
+  </div>
+
+  <h2 class="h6 mt-4">Ficha medica</h2>
+  {% if datos.paciente.ficha %}
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div class="dato">Psicopatologia</div>
+      <div class="texto-ficha">{{ datos.paciente.ficha.psicopatologia or '—' }}</div>
+    </div>
+    <div class="col-md-4">
+      <div class="dato">Padecimientos y enfermedades</div>
+      <div class="texto-ficha">{{ datos.paciente.ficha.padecimientos or '—' }}</div>
+    </div>
+    <div class="col-md-4">
+      <div class="dato">Alergias</div>
+      <div class="texto-ficha">{{ datos.paciente.ficha.alergias or '—' }}</div>
+    </div>
+  </div>
+  {% else %}
+    <p class="text-muted">El interno no tiene ficha medica registrada.</p>
+  {% endif %}
+
+  <h2 class="h6 mt-4">Medicamentos permanentes</h2>
+  {% if datos.paciente.medicamentos_permanentes %}
+  <ul class="small mb-0">
+    {% for m in datos.paciente.medicamentos_permanentes %}
+      <li>{{ m.nombre }} &middot; {{ m.dosis }} &middot; {{ m.frecuencia }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+    <p class="text-muted small">Ninguno registrado.</p>
+  {% endif %}
+
+  <h2 class="h6 mt-4">Historial de atenciones</h2>
+  {% if datos.diagnosticos %}
+    {% for d in datos.diagnosticos %}
+    <div class="visita">
+      <div class="fw-semibold">{{ d.fecha }} &middot; {{ d.medico }}</div>
+      <div class="dato">Motivo: {{ d.motivo }}</div>
+      <div class="mt-1"><strong>Diagnostico:</strong> {{ d.diagnostico }}</div>
+      <div><strong>Observaciones:</strong> {{ d.observaciones }}</div>
+      {% if d.examenes %}
+      <div class="mt-1"><strong>Examenes:</strong>
+        <ul class="small mb-0">
+          {% for nombre, resultado in d.examenes %}
+            <li>{{ nombre }}: {{ resultado }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {% if d.medicamentos %}
+      <div class="mt-1"><strong>Medicamentos:</strong>
+        <ul class="small mb-0">
+          {% for nombre, cantidad, indicaciones, entregado in d.medicamentos %}
+            <li>{{ nombre }} &middot; cantidad {{ cantidad }} &middot; {{ indicaciones }}
+              {% if not entregado %}<span class="text-muted">(no entregado)</span>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-muted">El interno no tiene visitas medicas registradas.</p>
+  {% endif %}
+</div>
+{% endblock %}

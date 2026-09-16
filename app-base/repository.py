@@ -11,9 +11,10 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from models import (
-    Enfermero, Especialidad, EstadoExamen, EstadoSolicitud, EstadoVisita,
-    FichaMedica, Medico, MedicamentoPermanente, MedicamentoRecetado,
-    OrdenExamen, Paciente, RegistroBitacora, Solicitud, Usuario, VisitaMedica,
+    CuotaMensual, Donacion, Enfermero, Especialidad, EstadoExamen,
+    EstadoSolicitud, EstadoVisita, FichaMedica, Gasto, Medico,
+    MedicamentoPermanente, MedicamentoRecetado, OrdenExamen, Paciente,
+    RegistroBitacora, Solicitud, Usuario, VisitaMedica,
 )
 
 
@@ -277,3 +278,118 @@ class BitacoraRepository(RepositorioBase):
         return list(self.sesion.scalars(
             select(RegistroBitacora).order_by(RegistroBitacora.fecha.desc()).limit(limite)
         ))
+
+
+class DonacionRepository(RepositorioBase):
+    def listar(self, desde=None, hasta=None, origen=None):
+        consulta = select(Donacion)
+        if desde:
+            consulta = consulta.where(Donacion.fecha >= desde)
+        if hasta:
+            consulta = consulta.where(Donacion.fecha <= hasta)
+        if origen:
+            consulta = consulta.where(Donacion.origen == origen)
+        return list(self.sesion.scalars(consulta.order_by(Donacion.fecha.desc())))
+
+    def total(self, desde=None, hasta=None) -> float:
+        consulta = select(func.coalesce(func.sum(Donacion.monto), 0.0))
+        if desde:
+            consulta = consulta.where(Donacion.fecha >= desde)
+        if hasta:
+            consulta = consulta.where(Donacion.fecha <= hasta)
+        return float(self.sesion.scalar(consulta) or 0)
+
+    def total_por_origen(self, desde=None, hasta=None):
+        consulta = select(Donacion.origen, func.sum(Donacion.monto),
+                          func.count(Donacion.id)).group_by(Donacion.origen)
+        if desde:
+            consulta = consulta.where(Donacion.fecha >= desde)
+        if hasta:
+            consulta = consulta.where(Donacion.fecha <= hasta)
+        return list(self.sesion.execute(consulta))
+
+    def eliminar(self, donacion):
+        self.sesion.delete(donacion)
+        self.confirmar()
+
+    def obtener(self, donacion_id: int):
+        return self.sesion.get(Donacion, donacion_id)
+
+
+class GastoRepository(RepositorioBase):
+    def listar(self, desde=None, hasta=None, categoria=None):
+        consulta = select(Gasto)
+        if desde:
+            consulta = consulta.where(Gasto.fecha >= desde)
+        if hasta:
+            consulta = consulta.where(Gasto.fecha <= hasta)
+        if categoria:
+            consulta = consulta.where(Gasto.categoria == categoria)
+        return list(self.sesion.scalars(consulta.order_by(Gasto.fecha.desc())))
+
+    def total(self, desde=None, hasta=None) -> float:
+        consulta = select(func.coalesce(func.sum(Gasto.monto), 0.0))
+        if desde:
+            consulta = consulta.where(Gasto.fecha >= desde)
+        if hasta:
+            consulta = consulta.where(Gasto.fecha <= hasta)
+        return float(self.sesion.scalar(consulta) or 0)
+
+    def total_por_categoria(self, desde=None, hasta=None):
+        consulta = select(Gasto.categoria, func.sum(Gasto.monto),
+                          func.count(Gasto.id)).group_by(Gasto.categoria)
+        if desde:
+            consulta = consulta.where(Gasto.fecha >= desde)
+        if hasta:
+            consulta = consulta.where(Gasto.fecha <= hasta)
+        return list(self.sesion.execute(consulta))
+
+    def obtener(self, gasto_id: int):
+        return self.sesion.get(Gasto, gasto_id)
+
+    def eliminar(self, gasto):
+        self.sesion.delete(gasto)
+        self.confirmar()
+
+
+class CuotaRepository(RepositorioBase):
+    def listar(self, anio=None, mes=None, paciente_id=None, solo_pendientes=False):
+        consulta = select(CuotaMensual).options(selectinload(CuotaMensual.paciente))
+        if anio:
+            consulta = consulta.where(CuotaMensual.anio == anio)
+        if mes:
+            consulta = consulta.where(CuotaMensual.mes == mes)
+        if paciente_id:
+            consulta = consulta.where(CuotaMensual.paciente_id == paciente_id)
+        if solo_pendientes:
+            consulta = consulta.where(CuotaMensual.pagada.is_(False))
+        return list(self.sesion.scalars(
+            consulta.order_by(CuotaMensual.anio.desc(), CuotaMensual.mes.desc())))
+
+    def obtener(self, cuota_id: int):
+        return self.sesion.get(CuotaMensual, cuota_id)
+
+    def existe(self, paciente_id: int, anio: int, mes: int) -> bool:
+        return self.sesion.scalar(
+            select(func.count()).select_from(CuotaMensual)
+            .where(CuotaMensual.paciente_id == paciente_id,
+                   CuotaMensual.anio == anio, CuotaMensual.mes == mes)
+        ) > 0
+
+    def total_cobrado(self, anio=None, mes=None) -> float:
+        consulta = select(func.coalesce(func.sum(CuotaMensual.monto), 0.0)).where(
+            CuotaMensual.pagada.is_(True))
+        if anio:
+            consulta = consulta.where(CuotaMensual.anio == anio)
+        if mes:
+            consulta = consulta.where(CuotaMensual.mes == mes)
+        return float(self.sesion.scalar(consulta) or 0)
+
+    def total_pendiente(self, anio=None, mes=None) -> float:
+        consulta = select(func.coalesce(func.sum(CuotaMensual.monto), 0.0)).where(
+            CuotaMensual.pagada.is_(False))
+        if anio:
+            consulta = consulta.where(CuotaMensual.anio == anio)
+        if mes:
+            consulta = consulta.where(CuotaMensual.mes == mes)
+        return float(self.sesion.scalar(consulta) or 0)
