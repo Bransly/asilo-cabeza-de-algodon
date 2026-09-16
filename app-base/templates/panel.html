@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block titulo %}Panel - Asilo Cabeza de Algodon{% endblock %}
+
+{% block contenido %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg">
+    <a href="{{ url_for('pacientes') }}" class="text-decoration-none text-reset">
+      <div class="kpi">
+        <div class="kpi-etiqueta">Internos activos</div>
+        <div class="kpi-valor">{{ resumen.internos }}</div>
+      </div>
+    </a>
+  </div>
+  <div class="col-6 col-lg">
+    <a href="{{ url_for('fundacion') }}" class="text-decoration-none text-reset">
+      <div class="kpi {{ 'kpi-principal' if resumen.solicitudes_pendientes }}">
+        <div class="kpi-etiqueta">Solicitudes sin asignar</div>
+        <div class="kpi-valor">{{ resumen.solicitudes_pendientes }}</div>
+      </div>
+    </a>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="kpi">
+      <div class="kpi-etiqueta">Visitas abiertas</div>
+      <div class="kpi-valor">{{ resumen.visitas_abiertas }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg">
+    <a href="{{ url_for('laboratorio') }}" class="text-decoration-none text-reset">
+      <div class="kpi">
+        <div class="kpi-etiqueta">Examenes sin resultado</div>
+        <div class="kpi-valor">{{ resumen.examenes_pendientes }}</div>
+      </div>
+    </a>
+  </div>
+  <div class="col-6 col-lg">
+    <a href="{{ url_for('farmacia') }}" class="text-decoration-none text-reset">
+      <div class="kpi">
+        <div class="kpi-etiqueta">Medicamentos por entregar</div>
+        <div class="kpi-valor">{{ resumen.medicamentos_pendientes }}</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<div class="tarjeta">
+  <div class="tarjeta-titulo d-flex justify-content-between align-items-center">
+    <span>Ultimas solicitudes de atencion</span>
+    <a href="{{ url_for('fundacion', estado='TODAS') }}" class="small">Ver todas</a>
+  </div>
+  <div class="p-3">
+    {% if solicitudes %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>#</th><th>Interno</th><th>Especialidad</th><th>Medico</th>
+            <th>Estado</th><th class="text-end">Accion</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in solicitudes %}
+          <tr>
+            <td class="text-muted">{{ s.id }}</td>
+            <td>
+              <a href="{{ url_for('expediente', paciente_id=s.paciente.id) }}">{{ s.paciente.nombre }}</a>
+              <div class="dato">{{ s.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</div>
+            </td>
+            <td>{{ s.especialidad.nombre }}</td>
+            <td>{{ s.medico.nombre if s.medico else '-' }}</td>
+            <td>
+              {% if s.estado.value == 'PENDIENTE' %}
+                <span class="badge bg-warning text-dark">Sin asignar</span>
+              {% elif s.estado.value == 'ASIGNADA' %}
+                <span class="badge bg-primary">Asignada</span>
+              {% else %}
+                <span class="badge bg-success">Atendida</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              {% if s.visita %}
+                <a class="btn btn-sm btn-outline-success"
+                   href="{{ url_for('visita', visita_id=s.visita.id) }}">Ver visita</a>
+              {% else %}
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('fundacion') }}">Gestionar</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p class="text-muted mb-0">
+        Aun no hay solicitudes. Entre al expediente de un interno y refieralo a una especialidad.
+      </p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

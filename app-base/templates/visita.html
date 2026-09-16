@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% block titulo %}Visita medica #{{ visita.id }}{% endblock %}
+
+{% block contenido %}
+
+<div class="tarjeta mb-4">
+  <div class="tarjeta-titulo d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>Visita medica #{{ visita.id }} &middot; {{ visita.fecha.strftime('%d/%m/%Y %H:%M') }}</span>
+    <div>
+      {% if visita.estado.value == 'ABIERTA' %}
+        <span class="badge bg-warning text-dark">Abierta</span>
+      {% else %}
+        <span class="badge bg-secondary">Cerrada</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="p-3">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="dato">Interno</div>
+        <a href="{{ url_for('expediente', paciente_id=visita.paciente.id) }}">
+          {{ visita.paciente.nombre }}</a>
+        <div class="dato">{{ visita.paciente.edad }} anios &middot;
+          familiar {{ visita.paciente.familiar_nombre }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="dato">Medico tratante</div>
+        <div>{{ visita.medico.nombre }}</div>
+        <div class="dato">{{ visita.medico.especialidad.nombre }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="dato">Motivo de la referencia</div>
+        <div>{{ visita.motivo }}</div>
+        {% if visita.solicitud and visita.solicitud.enfermero %}
+          <div class="dato mt-1">Acompania: {{ visita.solicitud.enfermero.nombre }}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+
+  <!-- Ficha del paciente, para el analisis del medico -->
+  <div class="col-lg-4">
+    <div class="tarjeta mb-4">
+      <div class="tarjeta-titulo">Ficha medica del interno</div>
+      <div class="p-3">
+        {% if visita.paciente.ficha %}
+          <div class="dato">Psicopatologia</div>
+          <div class="texto-ficha mb-2">{{ visita.paciente.ficha.psicopatologia or '-' }}</div>
+          <div class="dato">Padecimientos</div>
+          <div class="texto-ficha mb-2">{{ visita.paciente.ficha.padecimientos or '-' }}</div>
+          <div class="dato">Alergias</div>
+          <div class="texto-ficha mb-2">{{ visita.paciente.ficha.alergias or '-' }}</div>
+        {% else %}
+          <p class="text-muted small">Sin ficha medica.</p>
+        {% endif %}
+
+        <div class="dato">Medicamentos permanentes</div>
+        {% if visita.paciente.medicamentos_permanentes %}
+          <ul class="small mb-0 ps-3">
+            {% for m in visita.paciente.medicamentos_permanentes %}
+              <li>{{ m.nombre }} &middot; {{ m.dosis }} &middot; {{ m.frecuencia }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="small text-muted">Ninguno</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="tarjeta">
+      <div class="tarjeta-titulo">Visitas anteriores</div>
+      <div class="p-3">
+        {% set anteriores = historial | rejectattr('id', 'equalto', visita.id) | list %}
+        {% if anteriores %}
+          {% for v in anteriores %}
+          <div class="{% if not loop.last %}border-bottom pb-2 mb-2{% endif %}">
+            <div class="small">
+              <strong>{{ v.fecha.strftime('%d/%m/%Y') }}</strong> &middot; {{ v.medico.especialidad.nombre }}
+            </div>
+            <div class="dato">{{ v.diagnostico or 'Sin diagnostico registrado' }}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted small mb-0">Es la primera visita registrada.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+
+    <!-- Diagnostico -->
+    <div class="tarjeta mb-4">
+      <div class="tarjeta-titulo">Diagnostico y observaciones</div>
+      <div class="p-3">
+        <form method="post" action="{{ url_for('guardar_diagnostico', visita_id=visita.id) }}">
+          <div class="mb-2">
+            <label class="form-label">Diagnostico</label>
+            <textarea name="diagnostico" rows="2" class="form-control"
+                      {% if visita.estado.value == 'CERRADA' %}disabled{% endif %}>{{ visita.diagnostico }}</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Observaciones medicas</label>
+            <textarea name="observaciones" rows="2" class="form-control"
+                      {% if visita.estado.value == 'CERRADA' %}disabled{% endif %}>{{ visita.observaciones }}</textarea>
+          </div>
+          {% if visita.estado.value == 'ABIERTA' %}
+          <div class="d-flex gap-2">
+            <button class="btn btn-success btn-sm">Guardar</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm"
+                    data-bs-toggle="modal" data-bs-target="#modalCerrar">Cerrar visita</button>
+          </div>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+
+    <!-- Examenes -->
+    <div class="tarjeta mb-4">
+      <div class="tarjeta-titulo">Examenes de laboratorio</div>
+      <div class="p-3">
+        {% if visita.examenes %}
+        <table class="table table-sm align-middle">
+          <thead class="table-light">
+            <tr><th>Examen</th><th>Solicitado</th><th>Resultado</th><th>Estado</th></tr>
+          </thead>
+          <tbody>
+            {% for e in visita.examenes %}
+            <tr>
+              <td>{{ e.nombre }}
+                {% if e.indicaciones %}<div class="dato">{{ e.indicaciones }}</div>{% endif %}</td>
+              <td class="small">{{ e.fecha_solicitud.strftime('%d/%m/%Y %H:%M') }}</td>
+              <td class="small">{{ e.resultado or '-' }}</td>
+              <td>
+                {% if e.estado.value == 'CON_RESULTADO' %}
+                  <span class="badge bg-success">Con resultado</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">En laboratorio</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+          <p class="text-muted small">No se han solicitado examenes en esta visita.</p>
+        {% endif %}
+
+        {% if visita.estado.value == 'ABIERTA' %}
+        <form method="post" action="{{ url_for('ordenar_examen', visita_id=visita.id) }}"
+              class="row g-2 align-items-end border-top pt-3">
+          <div class="col-md-6">
+            <label class="form-label small">Examen a solicitar</label>
+            <select name="tarifa_id" class="form-select form-select-sm" required>
+              {% for t in tarifas_examen %}
+                <option value="{{ t.id }}">
+                  {{ t.descripcion }} &mdash; Q{{ '%.2f'|format(t.precio_base) }}
+                  ({{ '%.0f'|format(t.descuento_fundacion) }}% desc.)
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Indicaciones</label>
+            <input name="indicaciones" class="form-control form-control-sm" placeholder="En ayunas">
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-sm btn-outline-success w-100"
+                    {% if not estado_servicios.costos %}disabled{% endif %}>Solicitar</button>
+          </div>
+          <div class="col-12">
+            <div class="form-text">
+              Al solicitarlo se carga el examen a la cuenta del familiar con el descuento
+              de la fundacion, y aparece en la bandeja del laboratorio.
+            </div>
+          </div>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Medicamentos -->
+    <div class="tarjeta">
+      <div class="tarjeta-titulo">Medicamentos indicados</div>
+      <div class="p-3">
+        {% if visita.recetas %}
+        <table class="table table-sm align-middle">
+          <thead class="table-light">
+            <tr><th>Medicamento</th><th>Cantidad</th><th>Como tomarlo</th><th>Estado</th></tr>
+          </thead>
+          <tbody>
+            {% for r in visita.recetas %}
+            <tr>
+              <td>{{ r.nombre }}</td>
+              <td>{{ r.cantidad }}</td>
+              <td class="small">{{ r.indicaciones or '-' }}</td>
+              <td>
+                {% if r.entregado %}
+                  <span class="badge bg-success">Entregado</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">En farmacia</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+          <p class="text-muted small">No se han indicado medicamentos en esta visita.</p>
+        {% endif %}
+
+        {% if visita.estado.value == 'ABIERTA' %}
+        <form method="post" action="{{ url_for('recetar', visita_id=visita.id) }}"
+              class="row g-2 align-items-end border-top pt-3">
+          <div class="col-md-5">
+            <label class="form-label small">Medicamento</label>
+            <select name="tarifa_id" class="form-select form-select-sm" required>
+              {% for t in tarifas_medicamento %}
+                <option value="{{ t.id }}">
+                  {{ t.descripcion }} &mdash; Q{{ '%.2f'|format(t.precio_base) }}
+                  ({{ '%.0f'|format(t.descuento_fundacion) }}% desc.)
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small">Cantidad</label>
+            <input name="cantidad" type="number" min="1" value="1" class="form-control form-control-sm">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">Como tomarlo</label>
+            <input name="indicaciones" class="form-control form-control-sm" placeholder="1 cada 12 horas">
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-sm btn-outline-success w-100">Indicar</button>
+          </div>
+          <div class="col-12">
+            <div class="form-text">
+              El costo se carga cuando la farmacia entrega el medicamento, no al indicarlo.
+            </div>
+          </div>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalCerrar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cerrar visita medica</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2">La visita quedara como parte del historial del interno y ya no admitira cambios.</p>
+        <p class="small text-muted mb-0">
+          No se puede cerrar sin diagnostico ni con examenes pendientes de resultado.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <form method="post" action="{{ url_for('cerrar_visita', visita_id=visita.id) }}">
+          <button class="btn btn-success">Si, cerrar visita</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

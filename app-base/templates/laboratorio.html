@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block titulo %}Laboratorio clinico{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta mb-4">
+  <div class="tarjeta-titulo d-flex justify-content-between align-items-center">
+    <div>
+      Examenes pendientes de resultado
+      <div class="dato fw-normal">
+        El paciente llega, se identifica como interno del asilo y realiza los examenes solicitados.
+      </div>
+    </div>
+    <span class="badge bg-warning text-dark">{{ pendientes|length }} pendientes</span>
+  </div>
+  <div class="p-3">
+    {% if pendientes %}
+      {% for e in pendientes %}
+      <div class="{% if not loop.last %}border-bottom pb-3 mb-3{% endif %}">
+        <div class="row g-3 align-items-start">
+          <div class="col-lg-4">
+            <strong>{{ e.nombre }}</strong>
+            <div class="dato">Solicitado el {{ e.fecha_solicitud.strftime('%d/%m/%Y %H:%M') }}</div>
+            <div class="small mt-1">
+              Interno:
+              <a href="{{ url_for('expediente', paciente_id=e.visita.paciente.id) }}">
+                {{ e.visita.paciente.nombre }}</a>
+            </div>
+            <div class="small">Medico: {{ e.visita.medico.nombre }}</div>
+            <div class="small">
+              <a href="{{ url_for('visita', visita_id=e.visita.id) }}">Visita medica #{{ e.visita.id }}</a>
+            </div>
+            {% if e.indicaciones %}
+              <div class="dato mt-1">Indicaciones: {{ e.indicaciones }}</div>
+            {% endif %}
+          </div>
+          <div class="col-lg-8">
+            <form method="post" action="{{ url_for('cargar_resultado', examen_id=e.id) }}"
+                  class="row g-2 align-items-end">
+              <div class="col-md-9">
+                <label class="form-label small">Resultado del examen</label>
+                <textarea name="resultado" rows="2" class="form-control form-control-sm" required
+                          placeholder="Hemoglobina 12.4 g/dL, leucocitos 7,200/uL, sin hallazgos relevantes"></textarea>
+              </div>
+              <div class="col-md-3">
+                <button class="btn btn-sm btn-success w-100">Cargar resultado</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted mb-0">No hay examenes pendientes.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="tarjeta">
+  <div class="tarjeta-titulo">Resultados cargados recientemente</div>
+  <div class="p-3">
+    {% if recientes %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr><th>Fecha</th><th>Interno</th><th>Examen</th><th>Resultado</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for e in recientes %}
+          <tr>
+            <td class="small text-nowrap">{{ e.fecha_resultado.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td>{{ e.visita.paciente.nombre }}</td>
+            <td>{{ e.nombre }}</td>
+            <td class="small">{{ e.resultado }}</td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-secondary"
+                 href="{{ url_for('visita', visita_id=e.visita.id) }}">Visita</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p class="text-muted mb-0">Todavia no se ha cargado ningun resultado.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

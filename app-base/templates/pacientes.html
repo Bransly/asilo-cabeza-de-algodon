@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block titulo %}Internos - Asilo Cabeza de Algodon{% endblock %}
+
+{% block contenido %}
+<div class="row g-4">
+
+  <div class="col-lg-7">
+    <div class="tarjeta">
+      <div class="tarjeta-titulo d-flex justify-content-between align-items-center">
+        <span>Internos del asilo</span>
+        <span class="dato">{{ pacientes|length }} activos</span>
+      </div>
+      <div class="p-3">
+        {% if pacientes %}
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Interno</th><th>Edad</th><th>Familiar responsable</th>
+                <th class="text-end">Cuota</th><th class="text-end">Expediente</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in pacientes %}
+              <tr>
+                <td>
+                  {{ p.nombre }}
+                  <div class="dato">Ingreso {{ p.fecha_ingreso.strftime('%d/%m/%Y') }}</div>
+                </td>
+                <td>{{ p.edad }}</td>
+                <td>
+                  {{ p.familiar_nombre }}
+                  <div class="dato">{{ p.correo_familiar }}</div>
+                </td>
+                <td class="text-end monto">Q{{ '%.2f'|format(p.cuota_mensual) }}</td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-success"
+                     href="{{ url_for('expediente', paciente_id=p.id) }}">Abrir</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+          <p class="text-muted mb-0">Todavia no hay internos registrados.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="tarjeta">
+      <div class="tarjeta-titulo">Registrar nuevo interno</div>
+      <div class="p-3">
+        <form method="post" action="{{ url_for('crear_paciente') }}" class="row g-2">
+          <div class="col-12">
+            <label class="form-label">Nombre completo</label>
+            <input name="nombre" class="form-control" required maxlength="120">
+          </div>
+          <div class="col-4">
+            <label class="form-label">Edad</label>
+            <input name="edad" type="number" min="1" max="120" class="form-control" required>
+          </div>
+          <div class="col-8">
+            <label class="form-label">Fecha de ingreso</label>
+            <input name="fecha_ingreso" type="date" class="form-control">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Motivo de ingreso</label>
+            <textarea name="motivo_ingreso" rows="2" class="form-control"
+                      placeholder="Por que fue recluido en el asilo"></textarea>
+          </div>
+
+          <div class="col-12"><hr class="my-2"></div>
+
+          <div class="col-12">
+            <label class="form-label">Familiar responsable</label>
+            <input name="familiar_nombre" class="form-control" required maxlength="120">
+          </div>
+          <div class="col-7">
+            <label class="form-label">Correo del familiar</label>
+            <input name="correo_familiar" type="email" class="form-control" required>
+            <div class="form-text">Ahi se avisara cada solicitud medica.</div>
+          </div>
+          <div class="col-5">
+            <label class="form-label">Telefono</label>
+            <input name="telefono_familiar" class="form-control" maxlength="30">
+          </div>
+          <div class="col-6">
+            <label class="form-label">Cuota mensual (Q)</label>
+            <input name="cuota_mensual" type="number" step="0.01" min="0" class="form-control" value="0">
+          </div>
+
+          <div class="col-12"><hr class="my-2"></div>
+
+          <div class="col-12">
+            <label class="form-label">Psicopatologia</label>
+            <input name="psicopatologia" class="form-control"
+                   placeholder="Deterioro cognitivo leve, depresion, etc.">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Padecimientos conocidos</label>
+            <textarea name="padecimientos" rows="2" class="form-control"></textarea>
+          </div>
+
+          <div class="col-12 mt-3">
+            <button class="btn btn-success w-100">Registrar interno y crear su ficha medica</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

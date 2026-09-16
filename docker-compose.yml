@@ -1,0 +1,112 @@
+# Sistema de Administracion del Asilo de Ancianos Cabeza de Algodon
+# Levanta 4 contenedores: base de datos, dos microservicios y la aplicacion base.
+# Comando:  docker compose up --build
+
+services:
+
+  # ---------------------------------------------------------------
+  # Base de datos MySQL (requisito del enunciado del proyecto)
+  # ---------------------------------------------------------------
+  mysql:
+    image: mysql:8.0
+    container_name: asilo-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+    ports:
+      - "3307:3306"           # 3307 afuera para no chocar con un MySQL local
+    volumes:
+      - datos_mysql:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks:
+      - red-asilo
+
+  # ---------------------------------------------------------------
+  # Microservicio 1: costos y cargos
+  # ---------------------------------------------------------------
+  ms-costos:
+    build: ./ms-costos
+    container_name: asilo-ms-costos
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: asilo
+      DB_PASSWORD: asilo123
+      DB_NAME: db_costos
+    ports:
+      - "8001:8001"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - red-asilo
+
+  # ---------------------------------------------------------------
+  # Microservicio 2: notificaciones al familiar
+  # ---------------------------------------------------------------
+  ms-notificaciones:
+    build: ./ms-notificaciones
+    container_name: asilo-ms-notificaciones
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: asilo
+      DB_PASSWORD: asilo123
+      DB_NAME: db_notificaciones
+      # Si se dejan vacias, los correos se registran en modo SIMULADA.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USUARIO: ${SMTP_USUARIO:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      CORREO_REMITENTE: ${CORREO_REMITENTE:-asilo.cabezadealgodon@ejemplo.com}
+    ports:
+      - "8002:8002"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - red-asilo
+
+  # ---------------------------------------------------------------
+  # Aplicacion base que consume los microservicios
+  # ---------------------------------------------------------------
+  app-base:
+    build: ./app-base
+    container_name: asilo-app-base
+    restart: unless-stopped
+    environment:
+      # Dentro de la red de Docker los servicios se llaman por su nombre,
+      # no por localhost. Esto es descubrimiento de servicios basico.
+      URL_MS_COSTOS: http://ms-costos:8001
+      URL_MS_NOTIFICACIONES: http://ms-notificaciones:8002
+      # Base de datos propia del monolito (expediente clinico).
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: asilo
+      DB_PASSWORD: asilo123
+      DB_NAME: db_asilo
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      ms-costos:
+        condition: service_started
+      ms-notificaciones:
+        condition: service_started
+    networks:
+      - red-asilo
+
+volumes:
+  datos_mysql:
+
+networks:
+  red-asilo:
+    driver: bridge

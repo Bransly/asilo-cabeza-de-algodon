@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block titulo %}Farmacia{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta mb-4">
+  <div class="tarjeta-titulo d-flex justify-content-between align-items-center">
+    <div>
+      Medicamentos por entregar
+      <div class="dato fw-normal">
+        Al entregar el medicamento se carga su costo a la visita medica y a la cuenta del familiar.
+      </div>
+    </div>
+    <span class="badge bg-warning text-dark">{{ pendientes|length }} pendientes</span>
+  </div>
+  <div class="p-3">
+    {% if pendientes %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Recetado</th><th>Interno</th><th>Medicamento</th>
+            <th>Cantidad</th><th>Como tomarlo</th><th class="text-end">Accion</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in pendientes %}
+          <tr>
+            <td class="small text-nowrap">{{ r.fecha_receta.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td>
+              <a href="{{ url_for('expediente', paciente_id=r.visita.paciente.id) }}">
+                {{ r.visita.paciente.nombre }}</a>
+              <div class="dato">
+                <a href="{{ url_for('visita', visita_id=r.visita.id) }}">Visita #{{ r.visita.id }}</a>
+                &middot; {{ r.visita.medico.nombre }}
+              </div>
+            </td>
+            <td>{{ r.nombre }}</td>
+            <td>{{ r.cantidad }}</td>
+            <td class="small">{{ r.indicaciones or '-' }}</td>
+            <td class="text-end">
+              <form method="post" action="{{ url_for('entregar_medicamento', receta_id=r.id) }}">
+                <button class="btn btn-sm btn-success"
+                        {% if not estado_servicios.costos %}disabled{% endif %}>
+                  Entregar y cobrar
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p class="text-muted mb-0">No hay medicamentos pendientes de entrega.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="tarjeta">
+  <div class="tarjeta-titulo">Entregas recientes</div>
+  <div class="p-3">
+    {% if recientes %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr><th>Entregado</th><th>Interno</th><th>Medicamento</th><th>Cantidad</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for r in recientes %}
+          <tr>
+            <td class="small text-nowrap">{{ r.fecha_entrega.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td>{{ r.visita.paciente.nombre }}</td>
+            <td>{{ r.nombre }}</td>
+            <td>{{ r.cantidad }}</td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-secondary"
+                 href="{{ url_for('visita', visita_id=r.visita.id) }}">Visita</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p class="text-muted mb-0">Todavia no se ha entregado ningun medicamento.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

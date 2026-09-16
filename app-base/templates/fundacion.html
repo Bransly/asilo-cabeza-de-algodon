@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block titulo %}Modulo de la fundacion{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta">
+  <div class="tarjeta-titulo d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      Solicitudes de atencion
+      <div class="dato fw-normal">
+        Modulo que el asilo proporciona a la fundacion para asignar medico y horario.
+      </div>
+    </div>
+    <div class="btn-group btn-group-sm">
+      <a class="btn btn-outline-secondary {{ 'active' if filtro == 'PENDIENTE' }}"
+         href="{{ url_for('fundacion', estado='PENDIENTE') }}">Sin asignar</a>
+      <a class="btn btn-outline-secondary {{ 'active' if filtro == 'ASIGNADA' }}"
+         href="{{ url_for('fundacion', estado='ASIGNADA') }}">Asignadas</a>
+      <a class="btn btn-outline-secondary {{ 'active' if filtro == 'ATENDIDA' }}"
+         href="{{ url_for('fundacion', estado='ATENDIDA') }}">Atendidas</a>
+      <a class="btn btn-outline-secondary {{ 'active' if filtro == 'TODAS' }}"
+         href="{{ url_for('fundacion', estado='TODAS') }}">Todas</a>
+    </div>
+  </div>
+
+  <div class="p-3">
+    {% if solicitudes %}
+      {% for s in solicitudes %}
+      <div class="{% if not loop.last %}border-bottom pb-3 mb-3{% endif %}">
+        <div class="row g-3 align-items-start">
+
+          <div class="col-lg-5">
+            <div class="d-flex align-items-center gap-2">
+              <strong>Solicitud #{{ s.id }}</strong>
+              {% if s.estado.value == 'PENDIENTE' %}
+                <span class="badge bg-warning text-dark">Sin asignar</span>
+              {% elif s.estado.value == 'ASIGNADA' %}
+                <span class="badge bg-primary">Asignada</span>
+              {% else %}
+                <span class="badge bg-success">Atendida</span>
+              {% endif %}
+            </div>
+            <div class="mt-1">
+              <a href="{{ url_for('expediente', paciente_id=s.paciente.id) }}">{{ s.paciente.nombre }}</a>
+              <span class="dato">({{ s.paciente.edad }} anios)</span>
+            </div>
+            <div class="dato">Solicitada el {{ s.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</div>
+            <div class="small mt-1"><strong>Especialidad:</strong> {{ s.especialidad.nombre }}</div>
+            <div class="small"><strong>Motivo:</strong> {{ s.motivo }}</div>
+            <div class="small"><strong>Estado del interno:</strong> {{ s.estado_paciente }}</div>
+            {% if s.enfermero %}
+              <div class="small"><strong>Acompania:</strong> {{ s.enfermero.nombre }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-lg-7">
+            {% if s.estado.value != 'ATENDIDA' %}
+            <form method="post" action="{{ url_for('asignar_solicitud', solicitud_id=s.id) }}"
+                  class="row g-2 align-items-end">
+              <input type="hidden" name="filtro" value="{{ filtro }}">
+              <div class="col-md-5">
+                <label class="form-label small">Medico que atendera</label>
+                <select name="medico_id" class="form-select form-select-sm" required>
+                  {% for m in medicos if m.especialidad_id == s.especialidad_id %}
+                    <option value="{{ m.id }}" {% if s.medico_id == m.id %}selected{% endif %}>
+                      {{ m.nombre }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Fecha y hora</label>
+                <input type="datetime-local" name="fecha_asignada" class="form-control form-control-sm"
+                       value="{{ s.fecha_asignada.strftime('%Y-%m-%dT%H:%M') if s.fecha_asignada }}" required>
+              </div>
+              <div class="col-md-3">
+                <button class="btn btn-sm btn-primary w-100">
+                  {{ 'Reasignar' if s.estado.value == 'ASIGNADA' else 'Asignar' }}
+                </button>
+              </div>
+            </form>
+            {% endif %}
+
+            {% if s.estado.value == 'ASIGNADA' %}
+            <div class="border rounded p-2 mt-2 bg-light">
+              <div class="small mb-2">
+                Cita asignada a <strong>{{ s.medico.nombre }}</strong> para el
+                <strong>{{ s.fecha_asignada.strftime('%d/%m/%Y %H:%M') }}</strong>.
+                Al abrir la visita se cargara la consulta a la cuenta del familiar.
+              </div>
+              <form method="post" action="{{ url_for('abrir_visita', solicitud_id=s.id) }}"
+                    class="row g-2 align-items-end">
+                <div class="col-md-8">
+                  <label class="form-label small">Tarifa de la consulta</label>
+                  <select name="tarifa_consulta_id" class="form-select form-select-sm">
+                    {% for t in tarifas_consulta %}
+                      <option value="{{ t.id }}">
+                        {{ t.descripcion }} &mdash; Q{{ '%.2f'|format(t.precio_base) }}
+                        ({{ '%.0f'|format(t.descuento_fundacion) }}% desc.)
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <button class="btn btn-sm btn-success w-100"
+                          {% if not estado_servicios.costos %}disabled{% endif %}>
+                    Convertir en visita medica
+                  </button>
+                </div>
+              </form>
+            </div>
+            {% elif s.visita %}
+            <div class="border rounded p-2 mt-2 bg-light d-flex justify-content-between align-items-center">
+              <div class="small">
+                Atendida por <strong>{{ s.medico.nombre }}</strong> el
+                {{ s.visita.fecha.strftime('%d/%m/%Y %H:%M') }}.
+              </div>
+              <a class="btn btn-sm btn-outline-success"
+                 href="{{ url_for('visita', visita_id=s.visita.id) }}">Ver visita</a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted mb-0">No hay solicitudes con ese estado.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

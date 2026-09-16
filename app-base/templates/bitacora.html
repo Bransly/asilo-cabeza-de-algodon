@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block titulo %}Bitacora de auditoria{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta">
+  <div class="tarjeta-titulo d-flex justify-content-between align-items-center">
+    <div>
+      Bitacora de auditoria
+      <div class="dato fw-normal">
+        Quien hizo que, cuando, sobre que entidad y con que resultado.
+        Solo el administrador puede consultarla.
+      </div>
+    </div>
+    <span class="dato">{{ registros|length }} registros mas recientes</span>
+  </div>
+  <div class="p-3">
+    {% if registros %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Fecha</th><th>Usuario</th><th>Rol</th><th>Accion</th>
+            <th>Entidad</th><th>Resultado</th><th>Detalle</th><th>Origen</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in registros %}
+          <tr>
+            <td class="small text-nowrap">{{ r.fecha.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+            <td class="small">{{ r.usuario_nombre }}</td>
+            <td class="small text-muted">{{ r.rol|replace('_', ' ')|capitalize }}</td>
+            <td class="small"><code>{{ r.accion }}</code></td>
+            <td class="small">
+              {{ r.entidad }}{% if r.entidad_id %} #{{ r.entidad_id }}{% endif %}
+            </td>
+            <td>
+              {% if r.resultado == 'EXITO' %}
+                <span class="badge bg-success">Exito</span>
+              {% elif r.resultado == 'DENEGADO' %}
+                <span class="badge bg-danger">Denegado</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Fallido</span>
+              {% endif %}
+            </td>
+            <td class="small text-muted">{{ r.detalle }}</td>
+            <td class="small text-muted">{{ r.direccion_ip }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p class="text-muted mb-0">La bitacora esta vacia.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

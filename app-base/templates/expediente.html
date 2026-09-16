@@ -1,0 +1,548 @@
+{% extends "base.html" %}
+{% block titulo %}{{ paciente.nombre }} - Expediente{% endblock %}
+
+{% block contenido %}
+{% set rol = usuario.rol if usuario else '' %}
+{% set admin = rol == 'ADMINISTRADOR' %}
+
+<!-- ------------------------------------------------ Datos del interno -->
+<div class="tarjeta mb-4">
+  <div class="tarjeta-titulo d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>{{ paciente.nombre }} &middot; {{ paciente.edad }} anios</span>
+    <div class="d-flex gap-2">
+      {% if admin %}
+      <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse"
+              data-bs-target="#editarInterno">Editar datos</button>
+      <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+              data-bs-target="#modalBaja">Dar de baja</button>
+      {% endif %}
+    </div>
+  </div>
+  <div class="p-3">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="dato">Ingreso al asilo</div>
+        <div>{{ paciente.fecha_ingreso.strftime('%d/%m/%Y') }}</div>
+        <div class="dato mt-2">Motivo de ingreso</div>
+        <div>{{ paciente.motivo_ingreso or 'No indicado' }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="dato">Familiar responsable</div>
+        <div>{{ paciente.familiar_nombre }}</div>
+        <div class="dato mt-2">Contacto</div>
+        <div>{{ paciente.correo_familiar }}<br>{{ paciente.telefono_familiar or 'Sin telefono' }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="dato">Cuota mensual</div>
+        <div class="monto fs-5">Q{{ '%.2f'|format(paciente.cuota_mensual) }}</div>
+      </div>
+    </div>
+
+    <div class="collapse mt-3" id="editarInterno">
+      <form method="post" action="{{ url_for('editar_paciente', paciente_id=paciente.id) }}"
+            class="row g-2 border-top pt-3">
+        <div class="col-md-6">
+          <label class="form-label">Nombre</label>
+          <input name="nombre" value="{{ paciente.nombre }}" class="form-control" required>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Edad</label>
+          <input name="edad" type="number" value="{{ paciente.edad }}" class="form-control" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Cuota mensual (Q)</label>
+          <input name="cuota_mensual" type="number" step="0.01"
+                 value="{{ '%.2f'|format(paciente.cuota_mensual) }}" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Familiar responsable</label>
+          <input name="familiar_nombre" value="{{ paciente.familiar_nombre }}" class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Correo del familiar</label>
+          <input name="correo_familiar" type="email" value="{{ paciente.correo_familiar }}"
+                 class="form-control">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Telefono</label>
+          <input name="telefono_familiar" value="{{ paciente.telefono_familiar }}" class="form-control">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Motivo de ingreso</label>
+          <textarea name="motivo_ingreso" rows="2" class="form-control">{{ paciente.motivo_ingreso }}</textarea>
+        </div>
+        <div class="col-12">
+          <button class="btn btn-success btn-sm">Guardar cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+
+  <!-- ------------------------------------------------ Ficha medica -->
+  <div class="col-lg-7">
+    <div class="tarjeta mb-4">
+      <div class="tarjeta-titulo d-flex justify-content-between align-items-center">
+        <span>Ficha medica</span>
+        {% if paciente.ficha %}
+          <span class="dato">Actualizada {{ paciente.ficha.actualizada.strftime('%d/%m/%Y %H:%M') }}</span>
+        {% endif %}
+      </div>
+      <div class="p-3">
+        <form method="post" action="{{ url_for('guardar_ficha', paciente_id=paciente.id) }}"
+              class="row g-2">
+          <div class="col-md-6">
+            <label class="form-label">Psicopatologia</label>
+            <textarea name="psicopatologia" rows="2" class="form-control">{{ paciente.ficha.psicopatologia if paciente.ficha }}</textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Padecimientos y enfermedades</label>
+            <textarea name="padecimientos" rows="2" class="form-control">{{ paciente.ficha.padecimientos if paciente.ficha }}</textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Alergias</label>
+            <textarea name="alergias" rows="2" class="form-control">{{ paciente.ficha.alergias if paciente.ficha }}</textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Observaciones generales</label>
+            <textarea name="observaciones" rows="2" class="form-control">{{ paciente.ficha.observaciones if paciente.ficha }}</textarea>
+          </div>
+          {% if admin or rol in ['MEDICO_GENERAL', 'MEDICO_ESPECIALISTA'] %}
+          <div class="col-12">
+            <button class="btn btn-success btn-sm">Guardar ficha</button>
+          </div>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+
+    <!-- --------------------------------- Medicinas de cajon -->
+    <div class="tarjeta mb-4">
+      <div class="tarjeta-titulo">Medicamentos permanentes</div>
+      <div class="p-3">
+        {% if paciente.medicamentos_permanentes %}
+        <table class="table table-sm align-middle">
+          <thead class="table-light">
+            <tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for m in paciente.medicamentos_permanentes %}
+            <tr>
+              <td>{{ m.nombre }}</td>
+              <td>{{ m.dosis }}</td>
+              <td>{{ m.frecuencia }}</td>
+              <td class="text-end">
+                <form method="post" action="{{ url_for('eliminar_medicamento', medicamento_id=m.id) }}">
+                  <input type="hidden" name="paciente_id" value="{{ paciente.id }}">
+                  <button class="btn btn-sm btn-outline-danger">Quitar</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+          <p class="text-muted small">Sin medicamentos permanentes registrados.</p>
+        {% endif %}
+
+        <form method="post" action="{{ url_for('agregar_medicamento', paciente_id=paciente.id) }}"
+              class="row g-2 border-top pt-3">
+          <div class="col-md-5">
+            <input name="nombre" class="form-control form-control-sm" placeholder="Medicamento" required>
+          </div>
+          <div class="col-md-3">
+            <input name="dosis" class="form-control form-control-sm" placeholder="Dosis">
+          </div>
+          <div class="col-md-3">
+            <input name="frecuencia" class="form-control form-control-sm" placeholder="Frecuencia">
+          </div>
+          <div class="col-md-1">
+            <button class="btn btn-sm btn-outline-success w-100">+</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ------------------------------------------------ Solicitudes -->
+  <div class="col-lg-5">
+    {% if admin or rol == 'MEDICO_GENERAL' %}
+    <div class="tarjeta mb-4">
+      <div class="tarjeta-titulo">Referir a una especialidad</div>
+      <div class="p-3">
+        <p class="dato">
+          El medico general evalua al interno y lo remite. La solicitud aparece en el
+          modulo de la fundacion y se avisa por correo al familiar.
+        </p>
+        <form method="post" action="{{ url_for('crear_solicitud') }}">
+          <input type="hidden" name="paciente_id" value="{{ paciente.id }}">
+          <div class="mb-2">
+            <label class="form-label">Especialidad</label>
+            <select name="especialidad_id" class="form-select" required>
+              {% for e in especialidades %}
+                <option value="{{ e.id }}">{{ e.nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Enfermero(a) que acompania</label>
+            <select name="enfermero_id" class="form-select">
+              <option value="">Sin asignar</option>
+              {% for enf in enfermeros %}
+                <option value="{{ enf.id }}">{{ enf.nombre }} ({{ enf.turno }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Motivo de la referencia</label>
+            <textarea name="motivo" rows="2" class="form-control" required
+                      placeholder="Presion arterial elevada durante la evaluacion"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Estado actual del interno</label>
+            <input name="estado_paciente" value="Estable" class="form-control">
+          </div>
+          <button class="btn btn-primary w-100"
+                  {% if not paciente.ficha %}disabled{% endif %}>
+            Crear solicitud y avisar al familiar
+          </button>
+          {% if not paciente.ficha %}
+            <div class="form-text text-danger">Complete primero la ficha medica.</div>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="tarjeta">
+      <div class="tarjeta-titulo">Solicitudes del interno</div>
+      <div class="p-3">
+        {% if paciente.solicitudes %}
+          {% for s in paciente.solicitudes|sort(attribute='fecha_creacion', reverse=true) %}
+          <div class="d-flex justify-content-between align-items-start gap-2 {% if not loop.last %}border-bottom pb-2 mb-2{% endif %}">
+            <div>
+              <strong class="small">#{{ s.id }} &middot; {{ s.especialidad.nombre }}</strong>
+              <div class="dato">{{ s.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}
+                {% if s.enfermero %} &middot; {{ s.enfermero.nombre }}{% endif %}</div>
+              <div class="small">{{ s.motivo }}</div>
+            </div>
+            <div class="text-end">
+              {% if s.estado.value == 'PENDIENTE' %}
+                <span class="badge bg-warning text-dark">Sin asignar</span>
+              {% elif s.estado.value == 'ASIGNADA' %}
+                <span class="badge bg-primary">Asignada</span>
+              {% else %}
+                <span class="badge bg-success">Atendida</span>
+              {% endif %}
+              {% if s.visita %}
+                <div class="mt-1">
+                  <a class="small" href="{{ url_for('visita', visita_id=s.visita.id) }}">Ver visita</a>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted small mb-0">Sin solicitudes registradas.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ------------------------------------------- Historial medico -->
+<div class="tarjeta mt-4">
+  <div class="tarjeta-titulo">Historial medico</div>
+  <div class="p-3">
+    {% if historial %}
+      {% for v in historial %}
+      <div class="{% if not loop.last %}border-bottom pb-3 mb-3{% endif %}">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+          <div>
+            <strong>{{ v.fecha.strftime('%d/%m/%Y') }} &middot; {{ v.medico.nombre }}</strong>
+            <span class="dato">({{ v.medico.especialidad.nombre }})</span>
+            <div class="dato">Motivo: {{ v.motivo }}</div>
+          </div>
+          <div>
+            {% if v.estado.value == 'ABIERTA' %}
+              <span class="badge bg-warning text-dark">Abierta</span>
+            {% else %}
+              <span class="badge bg-secondary">Cerrada</span>
+            {% endif %}
+            <a class="btn btn-sm btn-outline-success ms-1"
+               href="{{ url_for('visita', visita_id=v.id) }}">Abrir</a>
+          </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-md-6">
+            <div class="dato">Diagnostico</div>
+            <div class="texto-ficha">{{ v.diagnostico or 'Pendiente' }}</div>
+          </div>
+          <div class="col-md-6">
+            <div class="dato">Observaciones medicas</div>
+            <div class="texto-ficha">{{ v.observaciones or '-' }}</div>
+          </div>
+          <div class="col-md-6">
+            <div class="dato">Examenes de laboratorio</div>
+            {% if v.examenes %}
+              <ul class="small mb-0 ps-3">
+                {% for e in v.examenes %}
+                  <li>{{ e.nombre }}:
+                    {% if e.estado.value == 'CON_RESULTADO' %}{{ e.resultado }}
+                    {% else %}<span class="text-warning-emphasis">sin resultado</span>{% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}<div class="small text-muted">Ninguno</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <div class="dato">Medicamentos aplicados</div>
+            {% if v.recetas %}
+              <ul class="small mb-0 ps-3">
+                {% for r in v.recetas %}
+                  <li>{{ r.nombre }} &middot; cantidad {{ r.cantidad }}
+                    {% if r.indicaciones %} &middot; {{ r.indicaciones }}{% endif %}
+                    {% if not r.entregado %}<span class="text-muted">(no entregado)</span>{% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}<div class="small text-muted">Ninguno</div>{% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted mb-0">Este interno todavia no tiene visitas medicas registradas.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ------------------------------------------- Cuenta del familiar -->
+{% if cuenta %}
+<div class="tarjeta mt-4">
+  <div class="tarjeta-titulo d-flex justify-content-between align-items-center">
+    <span>Estado de cuenta de {{ paciente.familiar_nombre }}</span>
+    <span class="etiqueta-servicio text-muted">{{ cuenta.cantidad_cargos }} cargos</span>
+  </div>
+  <div class="p-3">
+    <div class="row g-2">
+      <div class="col-6 col-md-3">
+        <div class="kpi kpi-principal">
+          <div class="kpi-etiqueta">Saldo pendiente</div>
+          <div class="kpi-valor monto">Q{{ '%.2f'|format(cuenta.saldo_pendiente) }}</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi">
+          <div class="kpi-etiqueta">Total facturado</div>
+          <div class="kpi-valor monto">Q{{ '%.2f'|format(cuenta.total_facturado) }}</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi">
+          <div class="kpi-etiqueta">Ya pagado</div>
+          <div class="kpi-valor monto text-success">Q{{ '%.2f'|format(cuenta.total_pagado) }}</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi">
+          <div class="kpi-etiqueta">Ahorro de la fundacion</div>
+          <div class="kpi-valor monto text-success">Q{{ '%.2f'|format(cuenta.total_ahorrado) }}</div>
+          <div class="dato">sobre Q{{ '%.2f'|format(cuenta.total_sin_descuento) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="tarjeta mt-4">
+  <div class="tarjeta-titulo d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>Cargos del interno</span>
+    <div class="btn-group btn-group-sm" role="group">
+      <button type="button" class="btn btn-outline-secondary active" data-filtro="TODOS">Todos</button>
+      <button type="button" class="btn btn-outline-secondary" data-filtro="PENDIENTE">Pendientes</button>
+      <button type="button" class="btn btn-outline-secondary" data-filtro="PAGADO">Pagados</button>
+    </div>
+  </div>
+  <div class="p-3">
+    {% if cargos %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle" id="tablaCargos">
+        <thead class="table-light">
+          <tr>
+            <th>Fecha</th><th>Servicio</th>
+            <th class="text-end">Subtotal</th><th class="text-end">Descuento</th>
+            <th class="text-end">Total</th><th>Estado</th><th class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in cargos %}
+          <tr data-estado="{{ c.estado }}">
+            <td class="small text-nowrap">
+              {{ c.fecha_registro[8:10] }}/{{ c.fecha_registro[5:7] }}/{{ c.fecha_registro[0:4] }}
+              <div class="text-muted">{{ c.fecha_registro[11:16] }}</div>
+            </td>
+            <td>
+              {{ c.descripcion }}
+              <div class="dato">{{ c.tipo_servicio|capitalize }} &middot; cantidad {{ c.cantidad }}
+                {% if c.visita_id %} &middot; visita #{{ c.visita_id }}{% endif %}</div>
+            </td>
+            <td class="text-end monto text-muted">Q{{ '%.2f'|format(c.subtotal) }}</td>
+            <td class="text-end monto text-success">{{ '%.0f'|format(c.descuento_aplicado) }}%</td>
+            <td class="text-end monto fw-semibold">Q{{ '%.2f'|format(c.total) }}</td>
+            <td>
+              {% if c.estado == 'PAGADO' %}
+                <span class="badge bg-success">&#10003; Pagado</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">&#9679; Pendiente</span>
+              {% endif %}
+            </td>
+            <td class="text-end text-nowrap">
+              {% if c.estado != 'PAGADO' and (admin or rol == 'CAJA') %}
+                <button type="button" class="btn btn-success btn-sm"
+                        data-bs-toggle="modal" data-bs-target="#modalConfirmar"
+                        data-tipo="pagar"
+                        data-accion="{{ url_for('pagar_cargo', cargo_id=c.id) }}"
+                        data-descripcion="{{ c.descripcion }}"
+                        data-monto="Q{{ '%.2f'|format(c.total) }}">Registrar pago</button>
+                <button type="button" class="btn btn-sm text-danger"
+                        data-bs-toggle="modal" data-bs-target="#modalConfirmar"
+                        data-tipo="eliminar"
+                        data-accion="{{ url_for('eliminar_cargo', cargo_id=c.id) }}"
+                        data-descripcion="{{ c.descripcion }}"
+                        data-monto="Q{{ '%.2f'|format(c.total) }}" title="Eliminar el cargo">&#128465;</button>
+              {% else %}
+                <span class="text-muted">&mdash;</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="text-muted small mb-0 d-none" id="sinResultados">No hay cargos con ese estado.</p>
+    {% else %}
+      <p class="text-muted mb-0">
+        Sin cargos registrados. Los cargos se generan solos al abrir una visita medica,
+        solicitar un examen o entregar un medicamento.
+      </p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ------------------------------------------- Correos al familiar -->
+<div class="tarjeta mt-4">
+  <div class="tarjeta-titulo">Correos enviados al familiar</div>
+  <div class="p-3">
+    {% if correos %}
+      {% for n in correos %}
+      <div class="{% if not loop.last %}border-bottom pb-2 mb-2{% endif %}">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+          <strong class="small">{{ n.asunto }}</strong>
+          <span class="badge {{ 'bg-success' if n.estado == 'ENVIADA' else 'bg-secondary' }}">{{ n.estado }}</span>
+        </div>
+        <div class="dato">Para {{ n.correo_destino }} &middot;
+          {{ n.fecha_envio[8:10] }}/{{ n.fecha_envio[5:7] }}/{{ n.fecha_envio[0:4] }}
+          {{ n.fecha_envio[11:16] }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted small mb-0">Sin correos registrados para este interno.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Confirmacion de cobro / eliminacion -->
+<div class="modal fade" id="modalConfirmar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitulo">Confirmar accion</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2" id="modalMensaje"></p>
+        <div class="border rounded p-2 bg-light">
+          <div class="fw-semibold" id="modalDescripcion"></div>
+          <div class="monto" id="modalMonto"></div>
+        </div>
+        <p class="small text-danger mt-2 mb-0 d-none" id="modalAviso">
+          Esta accion no se puede deshacer.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <form method="post" id="formConfirmar">
+          <input type="hidden" name="paciente_id" value="{{ paciente.id }}">
+          <button class="btn" id="modalBoton">Confirmar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmacion de baja del interno -->
+<div class="modal fade" id="modalBaja" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Dar de baja al interno</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2">{{ paciente.nombre }} dejara de aparecer en el listado de internos activos.</p>
+        <p class="small text-muted mb-0">
+          El expediente clinico y su historial se conservan: es una baja logica, no un borrado.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <form method="post" action="{{ url_for('dar_de_baja', paciente_id=paciente.id) }}">
+          <button class="btn btn-danger">Si, dar de baja</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const modal = document.getElementById('modalConfirmar');
+if (modal) {
+  modal.addEventListener('show.bs.modal', (evento) => {
+    const origen = evento.relatedTarget;
+    const eliminar = origen.dataset.tipo === 'eliminar';
+    document.getElementById('formConfirmar').action = origen.dataset.accion;
+    document.getElementById('modalDescripcion').textContent = origen.dataset.descripcion;
+    document.getElementById('modalMonto').textContent = origen.dataset.monto;
+    document.getElementById('modalTitulo').textContent = eliminar ? 'Eliminar cargo' : 'Registrar pago';
+    document.getElementById('modalMensaje').textContent = eliminar
+      ? 'Se eliminara de forma definitiva el siguiente cargo de la cuenta del familiar:'
+      : 'Se marcara como pagado el siguiente cargo:';
+    document.getElementById('modalAviso').classList.toggle('d-none', !eliminar);
+    const boton = document.getElementById('modalBoton');
+    boton.className = 'btn ' + (eliminar ? 'btn-danger' : 'btn-success');
+    boton.textContent = eliminar ? 'Si, eliminar' : 'Confirmar pago';
+  });
+}
+
+document.querySelectorAll('[data-filtro]').forEach((boton) => {
+  boton.addEventListener('click', () => {
+    document.querySelectorAll('[data-filtro]').forEach(b => b.classList.remove('active'));
+    boton.classList.add('active');
+    let visibles = 0;
+    document.querySelectorAll('#tablaCargos tbody tr').forEach((fila) => {
+      const mostrar = boton.dataset.filtro === 'TODOS' || fila.dataset.estado === boton.dataset.filtro;
+      fila.style.display = mostrar ? '' : 'none';
+      if (mostrar) visibles++;
+    });
+    document.getElementById('sinResultados').classList.toggle('d-none', visibles > 0);
+  });
+});
+</script>
+{% endblock %}
