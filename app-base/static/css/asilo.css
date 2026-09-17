@@ -1,0 +1,328 @@
+/*
+  Identidad visual del Sistema del Asilo Cabeza de Algodon.
+
+  Se construye sobre Bootstrap, pero redefine los colores, la tipografia y los
+  componentes para que el sistema tenga identidad propia y no el aspecto por
+  defecto del framework.
+
+  Criterios de diseno:
+  - Legibilidad primero: el personal usa el sistema toda la jornada y buena
+    parte de los usuarios son adultos mayores o personal clinico con prisa.
+  - Densidad comoda: mucha tabla y mucho formulario, sin apretar la lectura.
+  - Contraste suficiente para cumplir el nivel AA de accesibilidad.
+*/
+
+:root {
+  /* Color */
+  --pino: #143d2b;          /* barra lateral y titulos */
+  --verde: #1c6b47;         /* acciones principales */
+  --verde-claro: #e7f0eb;   /* fondos suaves y estados activos */
+  --tinta: #16211c;         /* texto */
+  --tinta-suave: #5c6b63;   /* texto secundario */
+  --papel: #eef1f0;         /* fondo de la aplicacion */
+  --superficie: #ffffff;    /* tarjetas y tablas */
+  --borde: #d7ded9;
+  --ambar: #a9700f;         /* pendiente */
+  --ambar-fondo: #fdf5e4;
+  --granate: #8f2a2a;       /* saldo por cobrar, acciones irreversibles */
+  --granate-fondo: #fbeeee;
+
+  /* Tipografia */
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  /* Medidas */
+  --lateral: 232px;
+  --radio: 6px;
+}
+
+/* ------------------------------------------------------------- base --- */
+body {
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+h1, h2, h3, h4, h5, h6, .titular {
+  font-family: var(--serif);
+  color: var(--pino);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+a { color: var(--verde); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { color: var(--pino); }
+
+/* Los montos alinean por columna gracias a los numerales tabulares. */
+.monto, td.monto, .kpi-valor { font-variant-numeric: tabular-nums; }
+
+:focus-visible {
+  outline: 2px solid var(--verde);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* --------------------------------------------------- barra lateral --- */
+.lateral {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--lateral);
+  background: var(--pino);
+  color: #dbe7e0;
+  display: flex;
+  flex-direction: column;
+  z-index: 1030;
+}
+
+.lateral .marca {
+  padding: 1.1rem 1.15rem 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.lateral .marca .nombre {
+  font-family: var(--serif);
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.25;
+  display: block;
+  text-decoration: none;
+}
+
+.lateral .marca .lugar {
+  font-size: 0.78rem;
+  color: #9fb8ab;
+  margin-top: 0.15rem;
+}
+
+.lateral nav { padding: 0.75rem 0.6rem; flex: 1; overflow-y: auto; }
+
+.lateral nav a {
+  display: block;
+  padding: 0.5rem 0.65rem;
+  margin-bottom: 0.15rem;
+  border-radius: var(--radio);
+  color: #cfe0d6;
+  text-decoration: none;
+  font-size: 0.93rem;
+}
+
+.lateral nav a:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+
+.lateral nav a.activo {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 #7fc0a0;
+}
+
+.lateral .servicios {
+  padding: 0.85rem 1.15rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.78rem;
+  color: #9fb8ab;
+}
+
+.lateral .servicios .punto {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+}
+
+.punto.activo { background: #6ec295; }
+.punto.caido { background: #d98a8a; }
+
+/* ------------------------------------------------- barra superior --- */
+.contenido { margin-left: var(--lateral); }
+
+.superior {
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borde);
+  padding: 0.7rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.superior .seccion {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  color: var(--pino);
+  margin: 0;
+}
+
+.superior .quien { text-align: right; line-height: 1.25; }
+.superior .quien .nombre { font-weight: 600; font-size: 0.92rem; }
+.superior .quien .rol { font-size: 0.8rem; color: var(--tinta-suave); }
+
+.area { padding: 1.5rem; max-width: 1400px; }
+
+/* ------------------------------------------------------- tarjetas --- */
+.tarjeta {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.tarjeta-titulo {
+  font-family: var(--serif);
+  font-size: 1.03rem;
+  font-weight: 600;
+  color: var(--pino);
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid var(--borde);
+}
+
+/* Indicadores. El principal se distingue por color, no por tamano de caja. */
+.kpi {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-left: 3px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 0.8rem 0.95rem;
+  height: 100%;
+}
+
+.kpi-etiqueta { font-size: 0.82rem; color: var(--tinta-suave); }
+.kpi-valor { font-size: 1.4rem; font-weight: 600; color: var(--tinta); line-height: 1.2; }
+
+.kpi-principal { border-left-color: var(--granate); background: var(--granate-fondo); }
+.kpi-principal .kpi-valor { color: var(--granate); font-size: 1.7rem; }
+
+.dato { font-size: 0.85rem; color: var(--tinta-suave); }
+
+/* ---------------------------------------------------------- tablas --- */
+.table { --bs-table-color: var(--tinta); margin-bottom: 0; }
+
+.table > thead th {
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--tinta-suave);
+  background: #f5f7f6;
+  border-bottom: 1px solid var(--borde);
+  white-space: nowrap;
+}
+
+.table > tbody td { border-color: #e8edea; vertical-align: middle; }
+.table > tbody tr:hover > td { background: #f7faf8; }
+
+/* --------------------------------------------------------- estados --- */
+.badge { font-weight: 600; font-size: 0.75rem; padding: 0.32em 0.6em; border-radius: 3px; }
+.bg-success { background: var(--verde) !important; }
+.bg-warning { background: var(--ambar-fondo) !important; color: var(--ambar) !important;
+              box-shadow: inset 0 0 0 1px #e8d5aa; }
+.bg-danger { background: var(--granate) !important; }
+.bg-primary { background: #1f5c7a !important; }
+.bg-secondary { background: #6b7a72 !important; }
+
+/* --------------------------------------------------------- botones --- */
+.btn { border-radius: var(--radio); font-weight: 600; font-size: 0.9rem; }
+
+.btn-success { background: var(--verde); border-color: var(--verde); }
+.btn-success:hover, .btn-success:focus { background: #175a3b; border-color: #175a3b; }
+
+.btn-primary { background: #1f5c7a; border-color: #1f5c7a; }
+.btn-primary:hover { background: #1a4d66; border-color: #1a4d66; }
+
+.btn-danger { background: var(--granate); border-color: var(--granate); }
+
+.btn-outline-secondary { color: var(--tinta); border-color: var(--borde); }
+.btn-outline-secondary:hover { background: #eef1f0; color: var(--tinta); border-color: #c3cdc7; }
+.btn-outline-secondary.active { background: var(--verde-claro); color: var(--pino);
+                                border-color: #b9d3c5; }
+
+.btn-outline-success { color: var(--verde); border-color: #b9d3c5; }
+.btn-outline-success:hover { background: var(--verde); border-color: var(--verde); }
+
+/* Acciones destructivas: discretas hasta que se usan. */
+.btn-eliminar, .btn.text-danger { color: var(--granate); border-color: transparent; }
+.btn-eliminar:hover, .btn.text-danger:hover { background: var(--granate-fondo); }
+
+/* ----------------------------------------------------- formularios --- */
+.form-label { font-size: 0.85rem; font-weight: 600; color: var(--tinta); margin-bottom: 0.25rem; }
+.form-control, .form-select { border-color: #cfd8d3; border-radius: var(--radio); font-size: 0.93rem; }
+.form-control:focus, .form-select:focus {
+  border-color: var(--verde);
+  box-shadow: 0 0 0 3px rgba(28, 107, 71, 0.13);
+}
+.form-text { font-size: 0.82rem; color: var(--tinta-suave); }
+
+/* Panel de calculo del cargo: el dato mas importante del modulo de cobros. */
+.calculo {
+  background: var(--verde-claro);
+  border: 1px solid #c3dccd;
+  border-radius: var(--radio);
+  padding: 0.8rem 0.95rem;
+}
+.calculo .linea { display: flex; justify-content: space-between; font-size: 0.9rem; padding: 0.12rem 0; }
+.calculo .total {
+  border-top: 1px solid #b3d2c1;
+  margin-top: 0.45rem; padding-top: 0.45rem;
+  font-size: 1.05rem; font-weight: 600; color: var(--pino);
+}
+
+/* ------------------------------------------------------- mensajes --- */
+.alert { border-radius: var(--radio); border-width: 1px; font-size: 0.93rem; }
+.alert-success { background: var(--verde-claro); border-color: #b9d3c5; color: #14532d; }
+.alert-danger { background: var(--granate-fondo); border-color: #e3bcbc; color: var(--granate); }
+.alert-warning { background: var(--ambar-fondo); border-color: #e8d5aa; color: #7a5209; }
+
+/* -------------------------------------------------------- pestanas --- */
+.nav-tabs { border-bottom-color: var(--borde); }
+.nav-tabs .nav-link { color: var(--tinta-suave); border: none; font-weight: 600; padding: 0.55rem 0.9rem; }
+.nav-tabs .nav-link:hover { color: var(--pino); border: none; }
+.nav-tabs .nav-link.active {
+  color: var(--pino); background: transparent; border: none;
+  box-shadow: inset 0 -2px 0 var(--verde);
+}
+
+/* ------------------------------------------------- correo y fichas --- */
+.correo {
+  background: #f6f8f7;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  max-height: 150px;
+  overflow-y: auto;
+  padding: 0.65rem;
+}
+
+.texto-ficha { white-space: pre-wrap; }
+
+/* ---------------------------------------------------------- movil --- */
+@media (max-width: 991px) {
+  .lateral {
+    position: static;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .lateral .marca { border-bottom: none; padding: 0.8rem 1rem; }
+  .lateral nav { display: flex; gap: 0.2rem; overflow-x: auto; padding: 0 0.6rem 0.6rem; }
+  .lateral nav a { white-space: nowrap; }
+  .lateral .servicios { border-top: none; margin-left: auto; }
+  .contenido { margin-left: 0; }
+  .area { padding: 1rem; }
+}
+
+/* -------------------------------------------------------- impresion --- */
+@media print {
+  .lateral, .superior, .sin-impresion, .alert { display: none !important; }
+  .contenido { margin-left: 0; }
+  .area { padding: 0; max-width: 100%; }
+  .tarjeta { border: none; }
+  body { background: #fff; font-size: 11pt; }
+}

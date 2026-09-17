@@ -9,14 +9,15 @@
     .tarjeta { border: none; }
     .container { max-width: 100%; }
   }
-  .membrete { border-bottom: 2px solid #14532d; padding-bottom: .6rem; margin-bottom: 1rem; }
-</style>
+  </style>
 {% endblock %}
+
+{% block seccion %}{{ datos.titulo }}{% endblock %}
 
 {% block contenido %}
 <div class="sin-impresion mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
   <a href="{{ url_for('reportes') }}" class="btn btn-sm btn-outline-secondary">
-    &larr; Volver a reportes</a>
+    Volver a reportes</a>
   <div class="d-flex gap-2">
     <form method="get" class="d-flex gap-2 align-items-end">
       {% if definicion.paciente %}

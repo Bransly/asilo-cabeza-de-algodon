@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 {% block titulo %}Visita medica #{{ visita.id }}{% endblock %}
 
+{% block seccion %}Visita medica{% endblock %}
+
 {% block contenido %}
 
 <div class="tarjeta mb-4">
   <div class="tarjeta-titulo d-flex justify-content-between align-items-center flex-wrap gap-2">
-    <span>Visita medica #{{ visita.id }} &middot; {{ visita.fecha.strftime('%d/%m/%Y %H:%M') }}</span>
+    <span>Visita medica #{{ visita.id }} del {{ visita.fecha.strftime('%d/%m/%Y a las %H:%M') }}</span>
     <div>
       {% if visita.estado.value == 'ABIERTA' %}
         <span class="badge bg-warning text-dark">Abierta</span>
@@ -20,8 +22,7 @@
         <div class="dato">Interno</div>
         <a href="{{ url_for('expediente', paciente_id=visita.paciente.id) }}">
           {{ visita.paciente.nombre }}</a>
-        <div class="dato">{{ visita.paciente.edad }} anios &middot;
-          familiar {{ visita.paciente.familiar_nombre }}</div>
+        <div class="dato">{{ visita.paciente.edad }} anios, familiar {{ visita.paciente.familiar_nombre }}</div>
       </div>
       <div class="col-md-4">
         <div class="dato">Medico tratante</div>
@@ -61,7 +62,7 @@
         {% if visita.paciente.medicamentos_permanentes %}
           <ul class="small mb-0 ps-3">
             {% for m in visita.paciente.medicamentos_permanentes %}
-              <li>{{ m.nombre }} &middot; {{ m.dosis }} &middot; {{ m.frecuencia }}</li>
+              <li>{{ m.nombre }}, {{ m.dosis }}, {{ m.frecuencia }}</li>
             {% endfor %}
           </ul>
         {% else %}
@@ -78,7 +79,7 @@
           {% for v in anteriores %}
           <div class="{% if not loop.last %}border-bottom pb-2 mb-2{% endif %}">
             <div class="small">
-              <strong>{{ v.fecha.strftime('%d/%m/%Y') }}</strong> &middot; {{ v.medico.especialidad.nombre }}
+              <strong>{{ v.fecha.strftime('%d/%m/%Y') }}</strong> &mdash; {{ v.medico.especialidad.nombre }}
             </div>
             <div class="dato">{{ v.diagnostico or 'Sin diagnostico registrado' }}</div>
           </div>

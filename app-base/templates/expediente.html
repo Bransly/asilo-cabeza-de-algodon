@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block titulo %}{{ paciente.nombre }} - Expediente{% endblock %}
 
+{% block seccion %}Expediente del interno{% endblock %}
+
 {% block contenido %}
 {% set rol = usuario.rol if usuario else '' %}
 {% set admin = rol == 'ADMINISTRADOR' %}
@@ -8,7 +10,7 @@
 <!-- ------------------------------------------------ Datos del interno -->
 <div class="tarjeta mb-4">
   <div class="tarjeta-titulo d-flex justify-content-between align-items-center flex-wrap gap-2">
-    <span>{{ paciente.nombre }} &middot; {{ paciente.edad }} anios</span>
+    <span>{{ paciente.nombre }}, {{ paciente.edad }} anios</span>
     <div class="d-flex gap-2">
       {% if admin %}
       <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse"
@@ -224,8 +226,7 @@
           <div class="d-flex justify-content-between align-items-start gap-2 {% if not loop.last %}border-bottom pb-2 mb-2{% endif %}">
             <div>
               <strong class="small">#{{ s.id }} &middot; {{ s.especialidad.nombre }}</strong>
-              <div class="dato">{{ s.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}
-                {% if s.enfermero %} &middot; {{ s.enfermero.nombre }}{% endif %}</div>
+              <div class="dato">{{ s.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}{% if s.enfermero %}, acompana {{ s.enfermero.nombre }}{% endif %}</div>
               <div class="small">{{ s.motivo }}</div>
             </div>
             <div class="text-end">
@@ -261,7 +262,7 @@
       <div class="{% if not loop.last %}border-bottom pb-3 mb-3{% endif %}">
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
           <div>
-            <strong>{{ v.fecha.strftime('%d/%m/%Y') }} &middot; {{ v.medico.nombre }}</strong>
+            <strong>{{ v.fecha.strftime('%d/%m/%Y') }} &mdash; {{ v.medico.nombre }}</strong>
             <span class="dato">({{ v.medico.especialidad.nombre }})</span>
             <div class="dato">Motivo: {{ v.motivo }}</div>
           </div>
@@ -303,8 +304,7 @@
             {% if v.recetas %}
               <ul class="small mb-0 ps-3">
                 {% for r in v.recetas %}
-                  <li>{{ r.nombre }} &middot; cantidad {{ r.cantidad }}
-                    {% if r.indicaciones %} &middot; {{ r.indicaciones }}{% endif %}
+                  <li>{{ r.nombre }}, cantidad {{ r.cantidad }}{% if r.indicaciones %}, {{ r.indicaciones }}{% endif %}
                     {% if not r.entregado %}<span class="text-muted">(no entregado)</span>{% endif %}
                   </li>
                 {% endfor %}
@@ -325,7 +325,7 @@
 <div class="tarjeta mt-4">
   <div class="tarjeta-titulo d-flex justify-content-between align-items-center">
     <span>Estado de cuenta de {{ paciente.familiar_nombre }}</span>
-    <span class="etiqueta-servicio text-muted">{{ cuenta.cantidad_cargos }} cargos</span>
+    <span class="dato">{{ cuenta.cantidad_cargos }} cargos registrados</span>
   </div>
   <div class="p-3">
     <div class="row g-2">
@@ -388,8 +388,7 @@
             </td>
             <td>
               {{ c.descripcion }}
-              <div class="dato">{{ c.tipo_servicio|capitalize }} &middot; cantidad {{ c.cantidad }}
-                {% if c.visita_id %} &middot; visita #{{ c.visita_id }}{% endif %}</div>
+              <div class="dato">{{ c.tipo_servicio|capitalize }}, cantidad {{ c.cantidad }}{% if c.visita_id %}, visita #{{ c.visita_id }}{% endif %}</div>
             </td>
             <td class="text-end monto text-muted">Q{{ '%.2f'|format(c.subtotal) }}</td>
             <td class="text-end monto text-success">{{ '%.0f'|format(c.descuento_aplicado) }}%</td>
