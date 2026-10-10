@@ -135,6 +135,18 @@ Ejecuta los casos **CP-01 a CP-74** (seguridad, validación de datos, flujo clí
 caja, reportes y tolerancia a fallas). Cada caso indica el requerimiento de la ERS que
 verifica. El registro con fecha y resultado queda en `pruebas/resultados/`.
 
+Después del plan, dos revisiones adicionales:
+
+```bash
+# Carga (RNF-20) y volumen (RNF-21)
+python pruebas/carga.py carga --usuarios 20 --segundos 60
+python pruebas/carga.py volumen --cargos 5000
+
+# Accesibilidad WCAG 2.1 AA (RNF-22); requiere: pip install playwright,
+# playwright install chromium y npm install axe-core
+AXE_JS=node_modules/axe-core/axe.min.js python pruebas/accesibilidad.py
+```
+
 ## 8. Reglas de negocio implementadas
 
 - No se refiere a un interno sin ficha médica. Solo la fundación asigna médico y horario,

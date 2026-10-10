@@ -18,6 +18,7 @@ Atiende el informe de revisión del SQA (hallazgos H-01 a H-11) y los pendientes
 - Clave de servicio (`X-API-Key`) entre la aplicación y los microservicios (DEF-06).
 - Encabezados de seguridad HTTP y token de sesión en el servidor.
 - Plan de pruebas automatizado CP-01 a CP-74 con registro de resultados.
+- Pruebas de carga, volumen y accesibilidad (`pruebas/carga.py`, `pruebas/accesibilidad.py`).
 - `docs/DESPLIEGUE.md`, `docs/MICROSERVICIOS.md` y este historial.
 
 ### Cambiado
@@ -33,6 +34,10 @@ Atiende el informe de revisión del SQA (hallazgos H-01 a H-11) y los pendientes
 - Una caída de un microservicio por error de conexión producía un error 500 en lugar de la
   advertencia prevista.
 - Los reportes mostraban ceros sin aviso cuando el servicio de costos no respondía.
+- Con Gunicorn, los procesos compartían las conexiones a MySQL abiertas al arrancar y
+  fallaban de forma esporádica bajo carga (DEF-08).
+- Accesibilidad WCAG 2.1 AA: contraste de los indicadores de estado pendiente y del código
+  en la bitácora, y etiquetas asociadas a todos los campos de formulario.
 
 ### Requiere
 - Base de datos nueva (`docker compose down -v`): cambian tipos de columnas y se agregan tablas.
