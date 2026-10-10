@@ -60,8 +60,8 @@
                   class="row g-2 align-items-end">
               <input type="hidden" name="filtro" value="{{ filtro }}">
               <div class="col-md-5">
-                <label class="form-label small">Medico que atendera</label>
-                <select name="medico_id" class="form-select form-select-sm" required>
+                <label for="fundacion_medico_id_1{{ "-" ~ loop.index if loop is defined }}" class="form-label small">Medico que atendera</label>
+                <select id="fundacion_medico_id_1{{ "-" ~ loop.index if loop is defined }}" name="medico_id" class="form-select form-select-sm" required>
                   {% for m in medicos if m.especialidad_id == s.especialidad_id %}
                     <option value="{{ m.id }}" {% if s.medico_id == m.id %}selected{% endif %}>
                       {{ m.nombre }}
@@ -70,8 +70,8 @@
                 </select>
               </div>
               <div class="col-md-4">
-                <label class="form-label small">Fecha y hora</label>
-                <input type="datetime-local" name="fecha_asignada" class="form-control form-control-sm"
+                <label for="fundacion_fecha_asignada_2{{ "-" ~ loop.index if loop is defined }}" class="form-label small">Fecha y hora</label>
+                <input id="fundacion_fecha_asignada_2{{ "-" ~ loop.index if loop is defined }}" type="datetime-local" name="fecha_asignada" class="form-control form-control-sm"
                        min="{{ ahora }}"
                        value="{{ s.fecha_asignada.strftime('%Y-%m-%dT%H:%M') if s.fecha_asignada }}" required>
               </div>
@@ -93,8 +93,8 @@
               <form method="post" action="{{ url_for('abrir_visita', solicitud_id=s.id) }}"
                     class="row g-2 align-items-end">
                 <div class="col-md-8">
-                  <label class="form-label small">Tarifa de la consulta</label>
-                  <select name="tarifa_consulta_id" class="form-select form-select-sm">
+                  <label for="fundacion_tarifa_consulta_id_3{{ "-" ~ loop.index if loop is defined }}" class="form-label small">Tarifa de la consulta</label>
+                  <select id="fundacion_tarifa_consulta_id_3{{ "-" ~ loop.index if loop is defined }}" name="tarifa_consulta_id" class="form-select form-select-sm">
                     {% for t in tarifas_consulta %}
                       <option value="{{ t.id }}">
                         {{ t.descripcion }} &mdash; Q{{ '%.2f'|format(t.precio_base) }}

@@ -59,13 +59,13 @@
       <div class="tarjeta-titulo d-flex justify-content-between align-items-center flex-wrap gap-2">
         <span>Cuotas de {{ meses[mes]|capitalize }} de {{ anio }}</span>
         <form method="get" action="{{ url_for('caja') }}" class="d-flex gap-2">
-          <select name="mes" class="form-select form-select-sm" style="width:auto">
+          <select aria-label="Mes" name="mes" class="form-select form-select-sm" style="width:auto">
             {% for numero in range(1, 13) %}
               <option value="{{ numero }}" {% if numero == mes %}selected{% endif %}>
                 {{ meses[numero]|capitalize }}</option>
             {% endfor %}
           </select>
-          <input type="number" name="anio" value="{{ anio }}" class="form-control form-control-sm"
+          <input aria-label="Anio" type="number" name="anio" value="{{ anio }}" class="form-control form-control-sm"
                  style="width:100px" min="2020" max="2100">
           <button class="btn btn-sm btn-outline-secondary">Ver</button>
         </form>
@@ -181,35 +181,35 @@
           <div class="p-3">
             <form method="post" action="{{ url_for('registrar_donacion') }}" class="row g-2">
               <div class="col-12">
-                <label class="form-label">Origen</label>
-                <select name="origen" class="form-select" required>
+                <label for="caja_origen_1{{ "-" ~ loop.index if loop is defined }}" class="form-label">Origen</label>
+                <select id="caja_origen_1{{ "-" ~ loop.index if loop is defined }}" name="origen" class="form-select" required>
                   {% for valor, etiqueta in origenes %}
                     <option value="{{ valor }}">{{ etiqueta }}</option>
                   {% endfor %}
                 </select>
               </div>
               <div class="col-12">
-                <label class="form-label">Donante</label>
-                <input name="donante" class="form-control" required maxlength="150"
+                <label for="caja_donante_2{{ "-" ~ loop.index if loop is defined }}" class="form-label">Donante</label>
+                <input id="caja_donante_2{{ "-" ~ loop.index if loop is defined }}" name="donante" class="form-control" required maxlength="150"
                        placeholder="Nombre de la empresa, institucion o persona">
               </div>
               <div class="col-6">
-                <label class="form-label">Monto (Q)</label>
-                <input name="monto" type="number" step="0.01" min="0.01"
+                <label for="caja_monto_3{{ "-" ~ loop.index if loop is defined }}" class="form-label">Monto (Q)</label>
+                <input id="caja_monto_3{{ "-" ~ loop.index if loop is defined }}" name="monto" type="number" step="0.01" min="0.01"
                        class="form-control" required>
               </div>
               <div class="col-6">
-                <label class="form-label">Fecha</label>
-                <input name="fecha" type="date" value="{{ hoy }}" class="form-control">
+                <label for="caja_fecha_4{{ "-" ~ loop.index if loop is defined }}" class="form-label">Fecha</label>
+                <input id="caja_fecha_4{{ "-" ~ loop.index if loop is defined }}" name="fecha" type="date" value="{{ hoy }}" class="form-control">
               </div>
               <div class="col-12">
-                <label class="form-label">Descripcion</label>
-                <input name="descripcion" class="form-control" maxlength="300"
+                <label for="caja_descripcion_5{{ "-" ~ loop.index if loop is defined }}" class="form-label">Descripcion</label>
+                <input id="caja_descripcion_5{{ "-" ~ loop.index if loop is defined }}" name="descripcion" class="form-control" maxlength="300"
                        placeholder="Especie, efectivo, destino de la donacion">
               </div>
               <div class="col-12">
-                <label class="form-label">Numero de recibo</label>
-                <input name="recibo" class="form-control" maxlength="40">
+                <label for="caja_recibo_6{{ "-" ~ loop.index if loop is defined }}" class="form-label">Numero de recibo</label>
+                <input id="caja_recibo_6{{ "-" ~ loop.index if loop is defined }}" name="recibo" class="form-control" maxlength="40">
               </div>
               <div class="col-12 mt-3">
                 <button class="btn btn-success w-100">Registrar donacion</button>
@@ -270,30 +270,30 @@
           <div class="p-3">
             <form method="post" action="{{ url_for('registrar_gasto') }}" class="row g-2">
               <div class="col-12">
-                <label class="form-label">Categoria</label>
-                <select name="categoria" class="form-select" required>
+                <label for="caja_categoria_7{{ "-" ~ loop.index if loop is defined }}" class="form-label">Categoria</label>
+                <select id="caja_categoria_7{{ "-" ~ loop.index if loop is defined }}" name="categoria" class="form-select" required>
                   {% for valor, etiqueta in categorias %}
                     <option value="{{ valor }}">{{ etiqueta }}</option>
                   {% endfor %}
                 </select>
               </div>
               <div class="col-12">
-                <label class="form-label">Descripcion</label>
-                <input name="descripcion" class="form-control" required maxlength="300"
+                <label for="caja_descripcion_8{{ "-" ~ loop.index if loop is defined }}" class="form-label">Descripcion</label>
+                <input id="caja_descripcion_8{{ "-" ~ loop.index if loop is defined }}" name="descripcion" class="form-control" required maxlength="300"
                        placeholder="Pago de energia electrica del mes">
               </div>
               <div class="col-6">
-                <label class="form-label">Monto (Q)</label>
-                <input name="monto" type="number" step="0.01" min="0.01"
+                <label for="caja_monto_9{{ "-" ~ loop.index if loop is defined }}" class="form-label">Monto (Q)</label>
+                <input id="caja_monto_9{{ "-" ~ loop.index if loop is defined }}" name="monto" type="number" step="0.01" min="0.01"
                        class="form-control" required>
               </div>
               <div class="col-6">
-                <label class="form-label">Fecha</label>
-                <input name="fecha" type="date" value="{{ hoy }}" class="form-control">
+                <label for="caja_fecha_10{{ "-" ~ loop.index if loop is defined }}" class="form-label">Fecha</label>
+                <input id="caja_fecha_10{{ "-" ~ loop.index if loop is defined }}" name="fecha" type="date" value="{{ hoy }}" class="form-control">
               </div>
               <div class="col-12">
-                <label class="form-label">Comprobante</label>
-                <input name="comprobante" class="form-control" maxlength="40">
+                <label for="caja_comprobante_11{{ "-" ~ loop.index if loop is defined }}" class="form-label">Comprobante</label>
+                <input id="caja_comprobante_11{{ "-" ~ loop.index if loop is defined }}" name="comprobante" class="form-control" maxlength="40">
               </div>
               <div class="col-12 mt-3">
                 <button class="btn btn-success w-100">Registrar gasto</button>
@@ -378,23 +378,23 @@
             <form method="post" action="{{ url_for('registrar_pago_fundacion') }}" class="row g-2"
                   onsubmit="this.querySelector('button').disabled = true;">
               <div class="col-6">
-                <label class="form-label">Monto (Q)</label>
-                <input name="monto" type="number" step="0.01" min="0.01"
+                <label for="caja_monto_12{{ "-" ~ loop.index if loop is defined }}" class="form-label">Monto (Q)</label>
+                <input id="caja_monto_12{{ "-" ~ loop.index if loop is defined }}" name="monto" type="number" step="0.01" min="0.01"
                        {% if fundacion %}max="{{ '%.2f'|format(fundacion.deuda) }}"{% endif %}
                        class="form-control" required>
               </div>
               <div class="col-6">
-                <label class="form-label">Fecha</label>
-                <input name="fecha" type="date" value="{{ hoy }}" max="{{ hoy }}" class="form-control">
+                <label for="caja_fecha_13{{ "-" ~ loop.index if loop is defined }}" class="form-label">Fecha</label>
+                <input id="caja_fecha_13{{ "-" ~ loop.index if loop is defined }}" name="fecha" type="date" value="{{ hoy }}" max="{{ hoy }}" class="form-control">
               </div>
               <div class="col-12">
-                <label class="form-label">Referencia o numero de factura</label>
-                <input name="referencia" class="form-control" required minlength="3" maxlength="60"
+                <label for="caja_referencia_14{{ "-" ~ loop.index if loop is defined }}" class="form-label">Referencia o numero de factura</label>
+                <input id="caja_referencia_14{{ "-" ~ loop.index if loop is defined }}" name="referencia" class="form-control" required minlength="3" maxlength="60"
                        placeholder="Factura FVD-0001 o boleta de deposito">
               </div>
               <div class="col-12">
-                <label class="form-label">Descripcion</label>
-                <input name="descripcion" class="form-control" maxlength="300">
+                <label for="caja_descripcion_15{{ "-" ~ loop.index if loop is defined }}" class="form-label">Descripcion</label>
+                <input id="caja_descripcion_15{{ "-" ~ loop.index if loop is defined }}" name="descripcion" class="form-control" maxlength="300">
               </div>
               <div class="col-12 mt-3">
                 <button class="btn btn-success w-100" {% if not fundacion %}disabled{% endif %}>

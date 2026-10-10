@@ -44,34 +44,34 @@
       <form method="post" action="{{ url_for('editar_paciente', paciente_id=paciente.id) }}"
             class="row g-2 border-top pt-3">
         <div class="col-md-6">
-          <label class="form-label">Nombre</label>
-          <input name="nombre" value="{{ paciente.nombre }}" class="form-control" required>
+          <label for="expediente_nombre_1{{ "-" ~ loop.index if loop is defined }}" class="form-label">Nombre</label>
+          <input id="expediente_nombre_1{{ "-" ~ loop.index if loop is defined }}" name="nombre" value="{{ paciente.nombre }}" class="form-control" required>
         </div>
         <div class="col-md-2">
-          <label class="form-label">Edad</label>
-          <input name="edad" type="number" min="60" max="120" value="{{ paciente.edad }}" class="form-control" required>
+          <label for="expediente_edad_2{{ "-" ~ loop.index if loop is defined }}" class="form-label">Edad</label>
+          <input id="expediente_edad_2{{ "-" ~ loop.index if loop is defined }}" name="edad" type="number" min="60" max="120" value="{{ paciente.edad }}" class="form-control" required>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Cuota mensual (Q)</label>
-          <input name="cuota_mensual" type="number" step="0.01"
+          <label for="expediente_cuota_mensual_3{{ "-" ~ loop.index if loop is defined }}" class="form-label">Cuota mensual (Q)</label>
+          <input id="expediente_cuota_mensual_3{{ "-" ~ loop.index if loop is defined }}" name="cuota_mensual" type="number" step="0.01"
                  value="{{ '%.2f'|format(paciente.cuota_mensual) }}" class="form-control">
         </div>
         <div class="col-md-4">
-          <label class="form-label">Familiar responsable</label>
-          <input name="familiar_nombre" value="{{ paciente.familiar_nombre }}" class="form-control">
+          <label for="expediente_familiar_nombre_4{{ "-" ~ loop.index if loop is defined }}" class="form-label">Familiar responsable</label>
+          <input id="expediente_familiar_nombre_4{{ "-" ~ loop.index if loop is defined }}" name="familiar_nombre" value="{{ paciente.familiar_nombre }}" class="form-control">
         </div>
         <div class="col-md-4">
-          <label class="form-label">Correo del familiar</label>
-          <input name="correo_familiar" type="email" value="{{ paciente.correo_familiar }}"
+          <label for="expediente_correo_familiar_5{{ "-" ~ loop.index if loop is defined }}" class="form-label">Correo del familiar</label>
+          <input id="expediente_correo_familiar_5{{ "-" ~ loop.index if loop is defined }}" name="correo_familiar" type="email" value="{{ paciente.correo_familiar }}"
                  class="form-control">
         </div>
         <div class="col-md-4">
-          <label class="form-label">Telefono</label>
-          <input name="telefono_familiar" value="{{ paciente.telefono_familiar }}" class="form-control">
+          <label for="expediente_telefono_familiar_6{{ "-" ~ loop.index if loop is defined }}" class="form-label">Telefono</label>
+          <input id="expediente_telefono_familiar_6{{ "-" ~ loop.index if loop is defined }}" name="telefono_familiar" value="{{ paciente.telefono_familiar }}" class="form-control">
         </div>
         <div class="col-12">
-          <label class="form-label">Motivo de ingreso</label>
-          <textarea name="motivo_ingreso" rows="2" class="form-control">{{ paciente.motivo_ingreso }}</textarea>
+          <label for="expediente_motivo_ingreso_7{{ "-" ~ loop.index if loop is defined }}" class="form-label">Motivo de ingreso</label>
+          <textarea id="expediente_motivo_ingreso_7{{ "-" ~ loop.index if loop is defined }}" name="motivo_ingreso" rows="2" class="form-control">{{ paciente.motivo_ingreso }}</textarea>
         </div>
         <div class="col-12">
           <button class="btn btn-success btn-sm">Guardar cambios</button>
@@ -96,20 +96,20 @@
         <form method="post" action="{{ url_for('guardar_ficha', paciente_id=paciente.id) }}"
               class="row g-2">
           <div class="col-md-6">
-            <label class="form-label">Psicopatologia</label>
-            <textarea name="psicopatologia" rows="2" class="form-control">{{ paciente.ficha.psicopatologia if paciente.ficha }}</textarea>
+            <label for="expediente_psicopatologia_8{{ "-" ~ loop.index if loop is defined }}" class="form-label">Psicopatologia</label>
+            <textarea id="expediente_psicopatologia_8{{ "-" ~ loop.index if loop is defined }}" name="psicopatologia" rows="2" class="form-control">{{ paciente.ficha.psicopatologia if paciente.ficha }}</textarea>
           </div>
           <div class="col-md-6">
-            <label class="form-label">Padecimientos y enfermedades</label>
-            <textarea name="padecimientos" rows="2" class="form-control">{{ paciente.ficha.padecimientos if paciente.ficha }}</textarea>
+            <label for="expediente_padecimientos_9{{ "-" ~ loop.index if loop is defined }}" class="form-label">Padecimientos y enfermedades</label>
+            <textarea id="expediente_padecimientos_9{{ "-" ~ loop.index if loop is defined }}" name="padecimientos" rows="2" class="form-control">{{ paciente.ficha.padecimientos if paciente.ficha }}</textarea>
           </div>
           <div class="col-md-6">
-            <label class="form-label">Alergias</label>
-            <textarea name="alergias" rows="2" class="form-control">{{ paciente.ficha.alergias if paciente.ficha }}</textarea>
+            <label for="expediente_alergias_10{{ "-" ~ loop.index if loop is defined }}" class="form-label">Alergias</label>
+            <textarea id="expediente_alergias_10{{ "-" ~ loop.index if loop is defined }}" name="alergias" rows="2" class="form-control">{{ paciente.ficha.alergias if paciente.ficha }}</textarea>
           </div>
           <div class="col-md-6">
-            <label class="form-label">Observaciones generales</label>
-            <textarea name="observaciones" rows="2" class="form-control">{{ paciente.ficha.observaciones if paciente.ficha }}</textarea>
+            <label for="expediente_observaciones_11{{ "-" ~ loop.index if loop is defined }}" class="form-label">Observaciones generales</label>
+            <textarea id="expediente_observaciones_11{{ "-" ~ loop.index if loop is defined }}" name="observaciones" rows="2" class="form-control">{{ paciente.ficha.observaciones if paciente.ficha }}</textarea>
           </div>
           {% if admin or rol in ['MEDICO_GENERAL', 'MEDICO_ESPECIALISTA'] %}
           <div class="col-12">
@@ -152,13 +152,13 @@
         <form method="post" action="{{ url_for('agregar_medicamento', paciente_id=paciente.id) }}"
               class="row g-2 border-top pt-3">
           <div class="col-md-5">
-            <input name="nombre" class="form-control form-control-sm" placeholder="Medicamento" required>
+            <input aria-label="Nombre" name="nombre" class="form-control form-control-sm" placeholder="Medicamento" required>
           </div>
           <div class="col-md-3">
-            <input name="dosis" class="form-control form-control-sm" placeholder="Dosis">
+            <input aria-label="Dosis" name="dosis" class="form-control form-control-sm" placeholder="Dosis">
           </div>
           <div class="col-md-3">
-            <input name="frecuencia" class="form-control form-control-sm" placeholder="Frecuencia">
+            <input aria-label="Frecuencia" name="frecuencia" class="form-control form-control-sm" placeholder="Frecuencia">
           </div>
           <div class="col-md-1">
             <button class="btn btn-sm btn-outline-success w-100">+</button>
@@ -181,16 +181,16 @@
         <form method="post" action="{{ url_for('crear_solicitud') }}">
           <input type="hidden" name="paciente_id" value="{{ paciente.id }}">
           <div class="mb-2">
-            <label class="form-label">Especialidad</label>
-            <select name="especialidad_id" class="form-select" required>
+            <label for="expediente_especialidad_id_12{{ "-" ~ loop.index if loop is defined }}" class="form-label">Especialidad</label>
+            <select id="expediente_especialidad_id_12{{ "-" ~ loop.index if loop is defined }}" name="especialidad_id" class="form-select" required>
               {% for e in especialidades %}
                 <option value="{{ e.id }}">{{ e.nombre }}</option>
               {% endfor %}
             </select>
           </div>
           <div class="mb-2">
-            <label class="form-label">Enfermero(a) que acompania</label>
-            <select name="enfermero_id" class="form-select">
+            <label for="expediente_enfermero_id_13{{ "-" ~ loop.index if loop is defined }}" class="form-label">Enfermero(a) que acompania</label>
+            <select id="expediente_enfermero_id_13{{ "-" ~ loop.index if loop is defined }}" name="enfermero_id" class="form-select">
               <option value="">Sin asignar</option>
               {% for enf in enfermeros %}
                 <option value="{{ enf.id }}">{{ enf.nombre }} ({{ enf.turno }})</option>
@@ -198,13 +198,13 @@
             </select>
           </div>
           <div class="mb-2">
-            <label class="form-label">Motivo de la referencia</label>
-            <textarea name="motivo" rows="2" class="form-control" required
+            <label for="expediente_motivo_14{{ "-" ~ loop.index if loop is defined }}" class="form-label">Motivo de la referencia</label>
+            <textarea id="expediente_motivo_14{{ "-" ~ loop.index if loop is defined }}" name="motivo" rows="2" class="form-control" required
                       placeholder="Presion arterial elevada durante la evaluacion"></textarea>
           </div>
           <div class="mb-3">
-            <label class="form-label">Estado actual del interno</label>
-            <input name="estado_paciente" value="Estable" class="form-control">
+            <label for="expediente_estado_paciente_15{{ "-" ~ loop.index if loop is defined }}" class="form-label">Estado actual del interno</label>
+            <input id="expediente_estado_paciente_15{{ "-" ~ loop.index if loop is defined }}" name="estado_paciente" value="Estable" class="form-control">
           </div>
           <button class="btn btn-primary w-100"
                   {% if not paciente.ficha %}disabled{% endif %}>
@@ -482,7 +482,7 @@
         </p>
         <div class="mt-3 d-none" id="bloqueMotivo">
           <label class="form-label" for="campoMotivo">Motivo de la reversion</label>
-          <textarea id="campoMotivo" name="motivo" form="formConfirmar" class="form-control"
+          <textarea aria-label="Motivo" id="campoMotivo" name="motivo" form="formConfirmar" class="form-control"
                     rows="2" minlength="5" maxlength="200"
                     placeholder="Ej.: se marco como pagado el cargo de otro interno"></textarea>
           <div class="form-text">Queda registrado en la bitacora de auditoria.</div>

@@ -22,7 +22,7 @@
   --papel: #eef1f0;         /* fondo de la aplicacion */
   --superficie: #ffffff;    /* tarjetas y tablas */
   --borde: #d7ded9;
-  --ambar: #a9700f;         /* pendiente */
+  --ambar: #8a5a0b;         /* pendiente (contraste 5.5:1, WCAG AA) */
   --ambar-fondo: #fdf5e4;
   --granate: #8f2a2a;       /* saldo por cobrar, acciones irreversibles */
   --granate-fondo: #fbeeee;
@@ -326,3 +326,5 @@ a:hover { color: var(--pino); }
   .tarjeta { border: none; }
   body { background: #fff; font-size: 11pt; }
 }
+/* Codigo en linea (bitacora): contraste 7.5:1 sobre el fondo de las tablas. */
+code { color: #9d174d; }

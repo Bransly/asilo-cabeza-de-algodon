@@ -20,7 +20,7 @@
     Volver a reportes</a>
   <div class="d-flex gap-2">
     <form method="get" class="d-flex gap-2">
-      <select name="paciente_id" class="form-select form-select-sm" style="width:auto">
+      <select aria-label="Interno" name="paciente_id" class="form-select form-select-sm" style="width:auto">
         {% for p in pacientes %}
           <option value="{{ p.id }}" {% if p.id == paciente_id %}selected{% endif %}>
             {{ p.nombre }}</option>

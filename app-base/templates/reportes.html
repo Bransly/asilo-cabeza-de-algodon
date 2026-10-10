@@ -22,8 +22,8 @@
                 class="row g-2 align-items-end">
             {% if r.paciente %}
             <div class="col-12">
-              <label class="form-label small">Interno</label>
-              <select name="paciente_id" class="form-select form-select-sm" required>
+              <label for="reportes_paciente_id_1{{ "-" ~ loop.index if loop is defined }}" class="form-label small">Interno</label>
+              <select id="reportes_paciente_id_1{{ "-" ~ loop.index if loop is defined }}" name="paciente_id" class="form-select form-select-sm" required>
                 {% for p in pacientes %}
                   <option value="{{ p.id }}">{{ p.nombre }}</option>
                 {% endfor %}
@@ -32,12 +32,12 @@
             {% endif %}
             {% if clave != 'analisis-medico' %}
             <div class="col-6">
-              <label class="form-label small">Desde</label>
-              <input type="date" name="desde" class="form-control form-control-sm">
+              <label for="reportes_desde_2{{ "-" ~ loop.index if loop is defined }}" class="form-label small">Desde</label>
+              <input id="reportes_desde_2{{ "-" ~ loop.index if loop is defined }}" type="date" name="desde" class="form-control form-control-sm">
             </div>
             <div class="col-6">
-              <label class="form-label small">Hasta</label>
-              <input type="date" name="hasta" class="form-control form-control-sm">
+              <label for="reportes_hasta_3{{ "-" ~ loop.index if loop is defined }}" class="form-label small">Hasta</label>
+              <input id="reportes_hasta_3{{ "-" ~ loop.index if loop is defined }}" type="date" name="hasta" class="form-control form-control-sm">
             </div>
             {% endif %}
             <div class="col-12">

@@ -99,13 +99,13 @@
       <div class="p-3">
         <form method="post" action="{{ url_for('guardar_diagnostico', visita_id=visita.id) }}">
           <div class="mb-2">
-            <label class="form-label">Diagnostico</label>
-            <textarea name="diagnostico" rows="2" class="form-control"
+            <label for="visita_diagnostico_1{{ "-" ~ loop.index if loop is defined }}" class="form-label">Diagnostico</label>
+            <textarea id="visita_diagnostico_1{{ "-" ~ loop.index if loop is defined }}" name="diagnostico" rows="2" class="form-control"
                       {% if visita.estado.value == 'CERRADA' %}disabled{% endif %}>{{ visita.diagnostico }}</textarea>
           </div>
           <div class="mb-3">
-            <label class="form-label">Observaciones medicas</label>
-            <textarea name="observaciones" rows="2" class="form-control"
+            <label for="visita_observaciones_2{{ "-" ~ loop.index if loop is defined }}" class="form-label">Observaciones medicas</label>
+            <textarea id="visita_observaciones_2{{ "-" ~ loop.index if loop is defined }}" name="observaciones" rows="2" class="form-control"
                       {% if visita.estado.value == 'CERRADA' %}disabled{% endif %}>{{ visita.observaciones }}</textarea>
           </div>
           {% if visita.estado.value == 'ABIERTA' %}
@@ -154,8 +154,8 @@
         <form method="post" action="{{ url_for('ordenar_examen', visita_id=visita.id) }}"
               class="row g-2 align-items-end border-top pt-3">
           <div class="col-md-6">
-            <label class="form-label small">Examen a solicitar</label>
-            <select name="tarifa_id" class="form-select form-select-sm" required>
+            <label for="visita_tarifa_id_3{{ "-" ~ loop.index if loop is defined }}" class="form-label small">Examen a solicitar</label>
+            <select id="visita_tarifa_id_3{{ "-" ~ loop.index if loop is defined }}" name="tarifa_id" class="form-select form-select-sm" required>
               {% for t in tarifas_examen %}
                 <option value="{{ t.id }}">
                   {{ t.descripcion }} &mdash; Q{{ '%.2f'|format(t.precio_base) }}
@@ -165,8 +165,8 @@
             </select>
           </div>
           <div class="col-md-4">
-            <label class="form-label small">Indicaciones</label>
-            <input name="indicaciones" class="form-control form-control-sm" placeholder="En ayunas">
+            <label for="visita_indicaciones_4{{ "-" ~ loop.index if loop is defined }}" class="form-label small">Indicaciones</label>
+            <input id="visita_indicaciones_4{{ "-" ~ loop.index if loop is defined }}" name="indicaciones" class="form-control form-control-sm" placeholder="En ayunas">
           </div>
           <div class="col-md-2">
             <button class="btn btn-sm btn-outline-success w-100"
@@ -217,8 +217,8 @@
         <form method="post" action="{{ url_for('recetar', visita_id=visita.id) }}"
               class="row g-2 align-items-end border-top pt-3">
           <div class="col-md-5">
-            <label class="form-label small">Medicamento</label>
-            <select name="tarifa_id" class="form-select form-select-sm" required>
+            <label for="visita_tarifa_id_5{{ "-" ~ loop.index if loop is defined }}" class="form-label small">Medicamento</label>
+            <select id="visita_tarifa_id_5{{ "-" ~ loop.index if loop is defined }}" name="tarifa_id" class="form-select form-select-sm" required>
               {% for t in tarifas_medicamento %}
                 <option value="{{ t.id }}">
                   {{ t.descripcion }} &mdash; Q{{ '%.2f'|format(t.precio_base) }}
@@ -228,12 +228,12 @@
             </select>
           </div>
           <div class="col-md-2">
-            <label class="form-label small">Cantidad</label>
-            <input name="cantidad" type="number" min="1" max="500" value="1" class="form-control form-control-sm" required>
+            <label for="visita_cantidad_6{{ "-" ~ loop.index if loop is defined }}" class="form-label small">Cantidad</label>
+            <input id="visita_cantidad_6{{ "-" ~ loop.index if loop is defined }}" name="cantidad" type="number" min="1" max="500" value="1" class="form-control form-control-sm" required>
           </div>
           <div class="col-md-3">
-            <label class="form-label small">Como tomarlo</label>
-            <input name="indicaciones" class="form-control form-control-sm" placeholder="1 cada 12 horas" required minlength="3" maxlength="300">
+            <label for="visita_indicaciones_7{{ "-" ~ loop.index if loop is defined }}" class="form-label small">Como tomarlo</label>
+            <input id="visita_indicaciones_7{{ "-" ~ loop.index if loop is defined }}" name="indicaciones" class="form-control form-control-sm" placeholder="1 cada 12 horas" required minlength="3" maxlength="300">
           </div>
           <div class="col-md-2">
             <button class="btn btn-sm btn-outline-success w-100">Indicar</button>

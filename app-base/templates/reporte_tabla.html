@@ -21,15 +21,15 @@
   <div class="d-flex gap-2">
     <form method="get" class="d-flex gap-2 align-items-end">
       {% if definicion.paciente %}
-      <select name="paciente_id" class="form-select form-select-sm" style="width:auto">
+      <select aria-label="Interno" name="paciente_id" class="form-select form-select-sm" style="width:auto">
         {% for p in pacientes %}
           <option value="{{ p.id }}" {% if p.id == paciente_id %}selected{% endif %}>
             {{ p.nombre }}</option>
         {% endfor %}
       </select>
       {% endif %}
-      <input type="date" name="desde" value="{{ desde }}" class="form-control form-control-sm">
-      <input type="date" name="hasta" value="{{ hasta }}" class="form-control form-control-sm">
+      <input aria-label="Desde" type="date" name="desde" value="{{ desde }}" class="form-control form-control-sm">
+      <input aria-label="Hasta" type="date" name="hasta" value="{{ hasta }}" class="form-control form-control-sm">
       <button class="btn btn-sm btn-outline-success">Aplicar</button>
     </form>
     <button onclick="window.print()" class="btn btn-sm btn-success">Imprimir o guardar PDF</button>

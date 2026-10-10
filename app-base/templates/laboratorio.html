@@ -39,8 +39,8 @@
             <form method="post" action="{{ url_for('cargar_resultado', examen_id=e.id) }}"
                   class="row g-2 align-items-end">
               <div class="col-md-9">
-                <label class="form-label small">Resultado del examen</label>
-                <textarea name="resultado" rows="2" class="form-control form-control-sm" required
+                <label for="laboratorio_resultado_1{{ "-" ~ loop.index if loop is defined }}" class="form-label small">Resultado del examen</label>
+                <textarea id="laboratorio_resultado_1{{ "-" ~ loop.index if loop is defined }}" name="resultado" rows="2" class="form-control form-control-sm" required
                           placeholder="Hemoglobina 12.4 g/dL, leucocitos 7,200/uL, sin hallazgos relevantes"></textarea>
               </div>
               <div class="col-md-3">
