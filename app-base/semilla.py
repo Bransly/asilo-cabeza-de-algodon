@@ -5,6 +5,8 @@ Deja el sistema utilizable desde el primer arranque: las especialidades,
 medicos y enfermeros que aporta la fundacion, y tres internos de ejemplo con
 su ficha medica. Solo se ejecuta si la base de datos esta vacia.
 """
+import os
+import secrets
 from datetime import date
 
 from sqlalchemy import func, select
@@ -29,19 +31,31 @@ ENFERMEROS = [
     ("Enf. Claudia Similox", "Matutino"),
 ]
 
-# Usuario de cada rol de la matriz de permisos. La contrasena se guarda
-# unicamente como hash scrypt con sal; aqui solo va la contrasena inicial que
-# el administrador debe obligar a cambiar en el primer ingreso.
+# Usuario de cada rol de la matriz de permisos. Las personas son ficticias.
+# Las contrasenas NO estan en el codigo: se leen de las variables de entorno
+# CLAVE_INICIAL_ADMIN y CLAVE_INICIAL_USUARIOS (archivo .env, fuera del
+# repositorio). Si no se definen, se genera una clave aleatoria y se muestra
+# una sola vez en el registro del contenedor. En ambos casos la clave es
+# temporal: el sistema obliga a cambiarla en el primer ingreso.
 USUARIOS = [
-    ("Brandon Madrid", "admin", "Admin2026*", RolUsuario.ADMINISTRADOR),
-    ("Dr. Carlos Say", "mgeneral", "Asilo2026*", RolUsuario.MEDICO_GENERAL),
-    ("Dr. Luis Herrera", "especialista", "Asilo2026*", RolUsuario.MEDICO_ESPECIALISTA),
-    ("Enf. Marta Lopez", "enfermeria", "Asilo2026*", RolUsuario.ENFERMERIA),
-    ("Lic. Ana Chavez", "laboratorio", "Asilo2026*", RolUsuario.LABORATORIO),
-    ("Lic. Oscar Tuy", "farmacia", "Asilo2026*", RolUsuario.FARMACIA),
-    ("Sra. Elsa Coy", "caja", "Asilo2026*", RolUsuario.CAJA),
-    ("Fundacion Vida Digna", "fundacion", "Asilo2026*", RolUsuario.FUNDACION),
+    ("Brandon Madrid", "admin", RolUsuario.ADMINISTRADOR),
+    ("Dr. Carlos Say", "mgeneral", RolUsuario.MEDICO_GENERAL),
+    ("Dr. Luis Herrera", "especialista", RolUsuario.MEDICO_ESPECIALISTA),
+    ("Enf. Marta Lopez", "enfermeria", RolUsuario.ENFERMERIA),
+    ("Lic. Ana Chavez", "laboratorio", RolUsuario.LABORATORIO),
+    ("Lic. Oscar Tuy", "farmacia", RolUsuario.FARMACIA),
+    ("Sra. Elsa Coy", "caja", RolUsuario.CAJA),
+    ("Fundacion Vida Digna", "fundacion", RolUsuario.FUNDACION),
 ]
+
+
+def _clave_inicial(variable: str) -> str:
+    clave = os.getenv(variable, "").strip()
+    if clave:
+        return clave
+    clave = secrets.token_urlsafe(12)
+    print(f"[semilla] {variable} no esta definida. Clave temporal generada: {clave}")
+    return clave
 
 PACIENTES = [
     {
@@ -101,9 +115,13 @@ def cargar_datos_iniciales() -> None:
         for nombre, turno in ENFERMEROS:
             sesion.add(Enfermero(nombre=nombre, turno=turno))
 
-        for nombre, cuenta, contrasena, rol in USUARIOS:
+        clave_admin = _clave_inicial("CLAVE_INICIAL_ADMIN")
+        clave_usuarios = _clave_inicial("CLAVE_INICIAL_USUARIOS")
+        for nombre, cuenta, rol in USUARIOS:
+            clave = clave_admin if rol == RolUsuario.ADMINISTRADOR else clave_usuarios
             sesion.add(Usuario(nombre=nombre, usuario=cuenta, rol=rol,
-                               hash_contrasena=cifrar_contrasena(contrasena)))
+                               hash_contrasena=cifrar_contrasena(clave),
+                               debe_cambiar_contrasena=True))
 
         for datos in PACIENTES:
             paciente = Paciente(

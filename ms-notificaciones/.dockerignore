@@ -1,0 +1,13 @@
+# Nada de esto debe terminar dentro de una imagen de Docker.
+.git
+.env
+.env.*
+!.env.example
+*.sql.gz
+respaldos/
+pruebas/
+docs/
+__pycache__/
+*.pyc
+.venv/
+*.db

@@ -1,4 +1,27 @@
+# --- Secretos: nunca al repositorio -----------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- Datos: ningun respaldo ni base con informacion de internos ---------------
+respaldos/
+*.sql.gz
+*.dump
+*.db
+*.sqlite3
+datos_mysql/
+
+# --- Python ------------------------------------------------------------------
 __pycache__/
 *.pyc
-.env
 .venv/
+venv/
+
+# --- Editores y sistema operativo --------------------------------------------
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
