@@ -7,12 +7,12 @@ Documentacion interactiva: http://localhost:8002/docs
 from typing import List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query, status
-from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from .database import get_db, init_db
 from .models import EstadoEnvio
 from .schemas import NotificacionRespuesta, SolicitudMedicaNotificar
+from .seguridad import exigir_clave_de_servicio
 from .services import NotificacionService, ReglaNegocioError
 
 app = FastAPI(
@@ -22,14 +22,8 @@ app = FastAPI(
         "solicitud de atencion medica. "
         "Sistema de Administracion del Asilo de Ancianos Cabeza de Algodon."
     ),
-    version="1.0.0",
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    version="1.1.0",
+    dependencies=[Depends(exigir_clave_de_servicio)],
 )
 
 

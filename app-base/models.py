@@ -11,11 +11,19 @@ import enum
 from datetime import date, datetime
 
 from sqlalchemy import (
-    Boolean, Date, DateTime, Enum, Float, ForeignKey, Integer, String, Text
+    Boolean, Date, DateTime, Enum, ForeignKey, Integer, Numeric, String, Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
+
+# El dinero se guarda como DECIMAL(10,2) en MySQL, nunca como FLOAT: un FLOAT
+# no representa exactamente los centavos y acumula error al sumar. Python lo
+# recibe ya redondeado a dos decimales (asdecimal=False) para que los reportes
+# puedan operar sin conversiones; las reglas de negocio validan con Decimal.
+def Dinero():
+    return Numeric(10, 2, asdecimal=False)
 
 
 class EstadoSolicitud(str, enum.Enum):
@@ -49,7 +57,7 @@ class Paciente(Base):
     familiar_nombre: Mapped[str] = mapped_column(String(120), nullable=False)
     correo_familiar: Mapped[str] = mapped_column(String(150), nullable=False)
     telefono_familiar: Mapped[str] = mapped_column(String(30), default="")
-    cuota_mensual: Mapped[float] = mapped_column(Float, default=0.0)
+    cuota_mensual: Mapped[float] = mapped_column(Dinero(), default=0)
 
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
 
@@ -279,6 +287,12 @@ class Usuario(Base):
     intentos_fallidos: Mapped[int] = mapped_column(Integer, default=0)
     bloqueado_hasta: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     ultimo_acceso: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # Las contrasenas iniciales son temporales: el usuario debe cambiarlas en su
+    # primer ingreso (politica de contrasenas, ERS RNF-17).
+    debe_cambiar_contrasena: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Identificador de la sesion vigente. Se renueva en cada ingreso y se borra
+    # al cerrar sesion: una cookie copiada deja de servir aunque siga firmada.
+    token_sesion: Mapped[str | None] = mapped_column(String(64), nullable=True)
     fecha_creacion: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
 
 
@@ -353,7 +367,7 @@ class Donacion(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     origen: Mapped[OrigenDonacion] = mapped_column(Enum(OrigenDonacion), nullable=False)
     donante: Mapped[str] = mapped_column(String(150), nullable=False)
-    monto: Mapped[float] = mapped_column(Float, nullable=False)
+    monto: Mapped[float] = mapped_column(Dinero(), nullable=False)
     fecha: Mapped[date] = mapped_column(Date, default=date.today, index=True)
     descripcion: Mapped[str] = mapped_column(String(300), default="")
     recibo: Mapped[str] = mapped_column(String(40), default="")
@@ -368,7 +382,7 @@ class Gasto(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     categoria: Mapped[CategoriaGasto] = mapped_column(Enum(CategoriaGasto), nullable=False)
     descripcion: Mapped[str] = mapped_column(String(300), nullable=False)
-    monto: Mapped[float] = mapped_column(Float, nullable=False)
+    monto: Mapped[float] = mapped_column(Dinero(), nullable=False)
     fecha: Mapped[date] = mapped_column(Date, default=date.today, index=True)
     comprobante: Mapped[str] = mapped_column(String(40), default="")
     registrado_por: Mapped[str] = mapped_column(String(120), default="")
@@ -381,15 +395,38 @@ class CuotaMensual(Base):
     """
 
     __tablename__ = "cuotas_mensuales"
+    # Una sola cuota por interno y por mes: la base lo garantiza aunque la
+    # regla de negocio fallara (RV-06).
+    __table_args__ = (UniqueConstraint("paciente_id", "anio", "mes", name="uq_cuota_mes"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     paciente_id: Mapped[int] = mapped_column(ForeignKey("pacientes.id"))
     anio: Mapped[int] = mapped_column(Integer, nullable=False)
     mes: Mapped[int] = mapped_column(Integer, nullable=False)
-    monto: Mapped[float] = mapped_column(Float, nullable=False)
+    monto: Mapped[float] = mapped_column(Dinero(), nullable=False)
 
     pagada: Mapped[bool] = mapped_column(Boolean, default=False)
     fecha_pago: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     observaciones: Mapped[str] = mapped_column(String(200), default="")
 
     paciente: Mapped["Paciente"] = relationship()
+
+
+class PagoFundacion(Base):
+    """
+    Pago que el asilo hace a la fundacion por las consultas, examenes y
+    medicamentos que esta presto a los internos (requerimiento RF-25).
+
+    Es distinto del cobro al familiar: el familiar le paga al asilo (cargos de
+    ms-costos) y el asilo le paga a la fundacion (esta tabla). La deuda con la
+    fundacion es lo facturado por sus servicios menos lo que el asilo ya pago.
+    """
+
+    __tablename__ = "pagos_fundacion"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    fecha: Mapped[date] = mapped_column(Date, default=date.today, index=True)
+    monto: Mapped[float] = mapped_column(Dinero(), nullable=False)
+    referencia: Mapped[str] = mapped_column(String(60), nullable=False)
+    descripcion: Mapped[str] = mapped_column(String(300), default="")
+    registrado_por: Mapped[str] = mapped_column(String(120), default="")

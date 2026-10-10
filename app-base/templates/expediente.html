@@ -49,7 +49,7 @@
         </div>
         <div class="col-md-2">
           <label class="form-label">Edad</label>
-          <input name="edad" type="number" value="{{ paciente.edad }}" class="form-control" required>
+          <input name="edad" type="number" min="60" max="120" value="{{ paciente.edad }}" class="form-control" required>
         </div>
         <div class="col-md-4">
           <label class="form-label">Cuota mensual (Q)</label>
@@ -414,6 +414,14 @@
                         data-accion="{{ url_for('eliminar_cargo', cargo_id=c.id) }}"
                         data-descripcion="{{ c.descripcion }}"
                         data-monto="Q{{ '%.2f'|format(c.total) }}" title="Eliminar el cargo">&#128465;</button>
+              {% elif c.estado == 'PAGADO' and (admin or rol == 'CAJA') %}
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        data-bs-toggle="modal" data-bs-target="#modalConfirmar"
+                        data-tipo="revertir"
+                        data-accion="{{ url_for('revertir_pago', cargo_id=c.id) }}"
+                        data-descripcion="{{ c.descripcion }}"
+                        data-monto="Q{{ '%.2f'|format(c.total) }}"
+                        title="Corregir un pago registrado por error">Revertir pago</button>
               {% else %}
                 <span class="text-muted">&mdash;</span>
               {% endif %}
@@ -472,6 +480,13 @@
         <p class="small text-danger mt-2 mb-0 d-none" id="modalAviso">
           Esta accion no se puede deshacer.
         </p>
+        <div class="mt-3 d-none" id="bloqueMotivo">
+          <label class="form-label" for="campoMotivo">Motivo de la reversion</label>
+          <textarea id="campoMotivo" name="motivo" form="formConfirmar" class="form-control"
+                    rows="2" minlength="5" maxlength="200"
+                    placeholder="Ej.: se marco como pagado el cargo de otro interno"></textarea>
+          <div class="form-text">Queda registrado en la bitacora de auditoria.</div>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -515,18 +530,28 @@ const modal = document.getElementById('modalConfirmar');
 if (modal) {
   modal.addEventListener('show.bs.modal', (evento) => {
     const origen = evento.relatedTarget;
-    const eliminar = origen.dataset.tipo === 'eliminar';
+    const tipo = origen.dataset.tipo;
+    const textos = {
+      pagar: ['Registrar pago', 'Se marcara como pagado el siguiente cargo:', 'btn-success', 'Confirmar pago'],
+      eliminar: ['Eliminar cargo', 'Se eliminara de forma definitiva el siguiente cargo de la cuenta del familiar:', 'btn-danger', 'Si, eliminar'],
+      revertir: ['Revertir pago', 'El siguiente cargo volvera a quedar pendiente de pago:', 'btn-warning', 'Revertir pago'],
+    }[tipo];
     document.getElementById('formConfirmar').action = origen.dataset.accion;
     document.getElementById('modalDescripcion').textContent = origen.dataset.descripcion;
     document.getElementById('modalMonto').textContent = origen.dataset.monto;
-    document.getElementById('modalTitulo').textContent = eliminar ? 'Eliminar cargo' : 'Registrar pago';
-    document.getElementById('modalMensaje').textContent = eliminar
-      ? 'Se eliminara de forma definitiva el siguiente cargo de la cuenta del familiar:'
-      : 'Se marcara como pagado el siguiente cargo:';
-    document.getElementById('modalAviso').classList.toggle('d-none', !eliminar);
+    document.getElementById('modalTitulo').textContent = textos[0];
+    document.getElementById('modalMensaje').textContent = textos[1];
+    document.getElementById('modalAviso').classList.toggle('d-none', tipo !== 'eliminar');
+    document.getElementById('bloqueMotivo').classList.toggle('d-none', tipo !== 'revertir');
+    document.getElementById('campoMotivo').required = tipo === 'revertir';
     const boton = document.getElementById('modalBoton');
-    boton.className = 'btn ' + (eliminar ? 'btn-danger' : 'btn-success');
-    boton.textContent = eliminar ? 'Si, eliminar' : 'Confirmar pago';
+    boton.className = 'btn ' + textos[2];
+    boton.textContent = textos[3];
+    boton.disabled = false;
+  });
+  // Evita el doble envio: el boton se desactiva al primer clic.
+  document.getElementById('formConfirmar').addEventListener('submit', () => {
+    document.getElementById('modalBoton').disabled = true;
   });
 }
 

@@ -31,25 +31,30 @@
   </div>
 </div>
 
+{% set pest = pestana if pestana in ['cuotas', 'donaciones', 'gastos', 'fundacion'] else 'cuotas' %}
 <ul class="nav nav-tabs mb-3" role="tablist">
   <li class="nav-item">
-    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#panelCuotas">
+    <button class="nav-link {{ 'active' if pest == 'cuotas' }}" data-bs-toggle="tab" data-bs-target="#panelCuotas">
       Cuotas mensuales</button>
   </li>
   <li class="nav-item">
-    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#panelDonaciones">
+    <button class="nav-link {{ 'active' if pest == 'donaciones' }}" data-bs-toggle="tab" data-bs-target="#panelDonaciones">
       Donaciones</button>
   </li>
   <li class="nav-item">
-    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#panelGastos">
+    <button class="nav-link {{ 'active' if pest == 'gastos' }}" data-bs-toggle="tab" data-bs-target="#panelGastos">
       Gastos</button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link {{ 'active' if pest == 'fundacion' }}" data-bs-toggle="tab" data-bs-target="#panelFundacion">
+      Pagos a la fundacion</button>
   </li>
 </ul>
 
 <div class="tab-content">
 
   <!-- ------------------------------------------------ Cuotas mensuales -->
-  <div class="tab-pane fade show active" id="panelCuotas">
+  <div class="tab-pane fade {{ 'show active' if pest == 'cuotas' }}" id="panelCuotas">
     <div class="tarjeta">
       <div class="tarjeta-titulo d-flex justify-content-between align-items-center flex-wrap gap-2">
         <span>Cuotas de {{ meses[mes]|capitalize }} de {{ anio }}</span>
@@ -128,7 +133,7 @@
   </div>
 
   <!-- ------------------------------------------------------ Donaciones -->
-  <div class="tab-pane fade" id="panelDonaciones">
+  <div class="tab-pane fade {{ 'show active' if pest == 'donaciones' }}" id="panelDonaciones">
     <div class="row g-4">
       <div class="col-lg-7">
         <div class="tarjeta">
@@ -217,7 +222,7 @@
   </div>
 
   <!-- ---------------------------------------------------------- Gastos -->
-  <div class="tab-pane fade" id="panelGastos">
+  <div class="tab-pane fade {{ 'show active' if pest == 'gastos' }}" id="panelGastos">
     <div class="row g-4">
       <div class="col-lg-7">
         <div class="tarjeta">
@@ -292,6 +297,108 @@
               </div>
               <div class="col-12 mt-3">
                 <button class="btn btn-success w-100">Registrar gasto</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ------------------------------------------- Pagos a la fundacion -->
+  <div class="tab-pane fade {{ 'show active' if pest == 'fundacion' }}" id="panelFundacion">
+    {% if fundacion %}
+    <div class="row g-3 mb-3">
+      <div class="col-md-4">
+        <div class="kpi kpi-principal">
+          <div class="kpi-etiqueta">Deuda actual con la fundacion</div>
+          <div class="kpi-valor monto">Q{{ '%.2f'|format(fundacion.deuda) }}</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="kpi">
+          <div class="kpi-etiqueta">Facturado por la fundacion (con descuento)</div>
+          <div class="kpi-valor monto">Q{{ '%.2f'|format(fundacion.facturado) }}</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="kpi">
+          <div class="kpi-etiqueta">Pagado por el asilo</div>
+          <div class="kpi-valor monto text-success">Q{{ '%.2f'|format(fundacion.pagado) }}</div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+      <div class="alert alert-warning">
+        El servicio de cobros no esta disponible: no se puede calcular la deuda con la
+        fundacion ni registrar pagos en este momento.
+      </div>
+    {% endif %}
+
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="tarjeta">
+          <div class="tarjeta-titulo">Pagos realizados a la fundacion</div>
+          <div class="p-3">
+            {% if pagos_fundacion %}
+            <div class="table-responsive">
+              <table class="table table-sm align-middle mb-0">
+                <thead class="table-light">
+                  <tr><th>Fecha</th><th>Referencia</th><th>Descripcion</th>
+                      <th class="text-end">Monto</th></tr>
+                </thead>
+                <tbody>
+                  {% for p in pagos_fundacion %}
+                  <tr>
+                    <td class="small text-nowrap">{{ p.fecha.strftime('%d/%m/%Y') }}</td>
+                    <td class="small">{{ p.referencia }}</td>
+                    <td class="small">{{ p.descripcion or '-' }}
+                      <div class="dato">Registro: {{ p.registrado_por }}</div></td>
+                    <td class="text-end monto">Q{{ '%.2f'|format(p.monto) }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+              <p class="text-muted mb-0">Aun no se registran pagos a la fundacion.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="tarjeta">
+          <div class="tarjeta-titulo">Registrar pago a la fundacion</div>
+          <div class="p-3">
+            <p class="small text-muted">
+              Es el pago que el asilo hace a la fundacion por consultas, examenes y
+              medicamentos. No es el cobro al familiar, que se registra en el expediente.
+            </p>
+            <form method="post" action="{{ url_for('registrar_pago_fundacion') }}" class="row g-2"
+                  onsubmit="this.querySelector('button').disabled = true;">
+              <div class="col-6">
+                <label class="form-label">Monto (Q)</label>
+                <input name="monto" type="number" step="0.01" min="0.01"
+                       {% if fundacion %}max="{{ '%.2f'|format(fundacion.deuda) }}"{% endif %}
+                       class="form-control" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label">Fecha</label>
+                <input name="fecha" type="date" value="{{ hoy }}" max="{{ hoy }}" class="form-control">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Referencia o numero de factura</label>
+                <input name="referencia" class="form-control" required minlength="3" maxlength="60"
+                       placeholder="Factura FVD-0001 o boleta de deposito">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Descripcion</label>
+                <input name="descripcion" class="form-control" maxlength="300">
+              </div>
+              <div class="col-12 mt-3">
+                <button class="btn btn-success w-100" {% if not fundacion %}disabled{% endif %}>
+                  Registrar pago</button>
               </div>
             </form>
           </div>

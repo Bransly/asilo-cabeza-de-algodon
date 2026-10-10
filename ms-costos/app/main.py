@@ -9,7 +9,6 @@ Documentacion interactiva: http://localhost:8001/docs
 from typing import List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query, status
-from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from .database import SessionLocal, get_db, init_db
@@ -18,10 +17,12 @@ from .schemas import (
     CargoCrear,
     CargoRespuesta,
     EstadoCuenta,
+    ReversionPago,
     TarifaActualizar,
     TarifaCrear,
     TarifaRespuesta,
 )
+from .seguridad import exigir_clave_de_servicio
 from .services import CargoService, ReglaNegocioError, TarifaService
 
 app = FastAPI(
@@ -31,15 +32,11 @@ app = FastAPI(
         "farmacia aplicando el descuento de la fundacion. "
         "Sistema de Administracion del Asilo de Ancianos Cabeza de Algodon."
     ),
-    version="1.0.0",
-)
-
-# Permite que la aplicacion base consuma el microservicio desde el navegador.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    version="1.1.0",
+    # Toda ruta exige la clave de servicio (salvo /salud). El navegador nunca
+    # llama a este servicio: lo hace la aplicacion base desde el servidor, por
+    # eso ya no se habilita CORS.
+    dependencies=[Depends(exigir_clave_de_servicio)],
 )
 
 
@@ -145,6 +142,15 @@ def registrar_cargo(datos: CargoCrear, db: Session = Depends(get_db)):
 def pagar_cargo(cargo_id: int, db: Session = Depends(get_db)):
     try:
         return CargoService(db).marcar_pagado(cargo_id)
+    except ReglaNegocioError as error:
+        raise _manejar(error)
+
+
+@app.put("/cargos/{cargo_id}/revertir-pago", response_model=CargoRespuesta, tags=["Cargos"])
+def revertir_pago(cargo_id: int, datos: ReversionPago, db: Session = Depends(get_db)):
+    """Devuelve a PENDIENTE un cargo marcado como pagado por error. Exige motivo."""
+    try:
+        return CargoService(db).revertir_pago(cargo_id, datos.motivo)
     except ReglaNegocioError as error:
         raise _manejar(error)
 

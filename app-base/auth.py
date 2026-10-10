@@ -13,12 +13,14 @@ Arquitectonico:
 
 La contrasena en claro nunca se guarda ni se escribe en la bitacora.
 """
+import secrets
 from datetime import datetime, timedelta
 from functools import wraps
 
 from flask import flash, redirect, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
+import validaciones as v
 from models import RegistroBitacora, RolUsuario, Usuario
 from repository import BitacoraRepository, UsuarioRepository
 
@@ -35,6 +37,22 @@ MINUTOS_INACTIVIDAD = 30
 
 class ErrorAutenticacion(Exception):
     """Credenciales invalidas, usuario inactivo o cuenta bloqueada."""
+
+
+# Un solo mensaje para todos los rechazos del ingreso. Si "cuenta bloqueada" o
+# "cuenta inactiva" tuvieran su propio texto, un atacante podria usarlos para
+# saber que usuarios existen. El motivo real queda en la bitacora.
+MENSAJE_GENERICO = ("Usuario o contrasena incorrectos, o la cuenta esta bloqueada "
+                    "temporalmente.")
+
+
+def enmascarar(nombre: str) -> str:
+    """
+    En la bitacora no se guarda el texto completo que se escribio como usuario:
+    a veces la persona escribe su contrasena en ese campo por error.
+    """
+    nombre = (nombre or "").strip()[:40]
+    return (nombre[:2] + "***") if nombre else "(vacio)"
 
 
 # --- Hash de contrasenas -----------------------------------------------------
@@ -62,25 +80,24 @@ class AutenticacionService:
     def iniciar_sesion(self, nombre_usuario: str, contrasena: str) -> Usuario:
         usuario = self.usuarios.obtener_por_nombre((nombre_usuario or "").strip())
 
-        # Mensaje unico a proposito: no se revela si el usuario existe o no.
-        generico = "Usuario o contrasena incorrectos."
+        # Mensaje unico a proposito: no se revela si el usuario existe, si esta
+        # inactivo o si esta bloqueado. El motivo real queda en la bitacora.
+        generico = MENSAJE_GENERICO
 
         if usuario is None:
             self.registrar("INICIO_SESION", "Usuario", None, "FALLIDO",
-                           f"Usuario inexistente: {nombre_usuario}")
+                           f"Usuario inexistente: {enmascarar(nombre_usuario)}")
             raise ErrorAutenticacion(generico)
 
         if not usuario.activo:
             self.registrar("INICIO_SESION", "Usuario", usuario.id, "FALLIDO",
                            "Cuenta inactiva", usuario_id=usuario.id)
-            raise ErrorAutenticacion("La cuenta esta inactiva. Consulte al administrador.")
+            raise ErrorAutenticacion(generico)
 
         if usuario.bloqueado_hasta and usuario.bloqueado_hasta > datetime.now():
-            restantes = int((usuario.bloqueado_hasta - datetime.now()).total_seconds() // 60) + 1
             self.registrar("INICIO_SESION", "Usuario", usuario.id, "FALLIDO",
                            "Cuenta bloqueada", usuario_id=usuario.id)
-            raise ErrorAutenticacion(
-                f"Cuenta bloqueada por intentos fallidos. Intente en {restantes} minutos.")
+            raise ErrorAutenticacion(generico)
 
         if not contrasena_valida(usuario, contrasena):
             usuario.intentos_fallidos += 1
@@ -98,13 +115,19 @@ class AutenticacionService:
         usuario.intentos_fallidos = 0
         usuario.bloqueado_hasta = None
         usuario.ultimo_acceso = datetime.now()
+        # Identificador nuevo en cada ingreso: invalida cualquier sesion anterior
+        # del mismo usuario (fijacion de sesion) y permite cerrarla desde el servidor.
+        usuario.token_sesion = secrets.token_hex(32)
         self.usuarios.confirmar()
 
         session.clear()
         session["usuario_id"] = usuario.id
         session["usuario_nombre"] = usuario.nombre
         session["rol"] = usuario.rol.value
+        session["token"] = usuario.token_sesion
+        session["debe_cambiar"] = bool(usuario.debe_cambiar_contrasena)
         session["ultima_actividad"] = datetime.now().isoformat()
+        session["inicio"] = datetime.now().isoformat()
         session.permanent = True
 
         self.registrar("INICIO_SESION", "Usuario", usuario.id, "EXITO",
@@ -113,7 +136,38 @@ class AutenticacionService:
 
     def cerrar_sesion(self) -> None:
         self.registrar("CIERRE_SESION", "Usuario", session.get("usuario_id"), "EXITO")
+        usuario = self.usuarios.obtener(session.get("usuario_id") or 0)
+        if usuario is not None:
+            # Se borra el token en el servidor: la cookie anterior ya no sirve,
+            # aunque alguien la hubiera copiado.
+            usuario.token_sesion = None
+            self.usuarios.confirmar()
         session.clear()
+
+    def cambiar_contrasena(self, actual: str, nueva: str, confirmacion: str) -> None:
+        """Politica de contrasenas (RV-17) y cambio obligatorio en el primer ingreso."""
+        usuario = self.usuarios.obtener(session.get("usuario_id") or 0)
+        if usuario is None:
+            raise ErrorAutenticacion("Inicie sesion para continuar.")
+        if not contrasena_valida(usuario, actual or ""):
+            self.registrar("CAMBIO_CONTRASENA", "Usuario", usuario.id, "FALLIDO",
+                           "Contrasena actual incorrecta")
+            raise ErrorAutenticacion("La contrasena actual no es correcta.")
+        if nueva != confirmacion:
+            raise ErrorAutenticacion("La confirmacion no coincide con la nueva contrasena.")
+        if contrasena_valida(usuario, nueva):
+            raise ErrorAutenticacion("La nueva contrasena debe ser distinta de la actual.")
+        try:
+            v.contrasena_segura(nueva)
+        except v.ErrorValidacion as error:
+            raise ErrorAutenticacion(str(error))
+        usuario.hash_contrasena = cifrar_contrasena(nueva)
+        usuario.debe_cambiar_contrasena = False
+        usuario.token_sesion = secrets.token_hex(32)
+        self.usuarios.confirmar()
+        session["token"] = usuario.token_sesion
+        session["debe_cambiar"] = False
+        self.registrar("CAMBIO_CONTRASENA", "Usuario", usuario.id, "EXITO")
 
     def registrar(self, accion, entidad=None, entidad_id=None, resultado="EXITO",
                   detalle="", usuario_id=None):
@@ -143,12 +197,26 @@ def usuario_actual() -> dict | None:
     }
 
 
+HORAS_MAXIMAS_SESION = 8
+
+
 def sesion_expirada() -> bool:
+    """30 minutos sin actividad o 8 horas desde el ingreso, lo que ocurra primero."""
     marca = session.get("ultima_actividad")
-    if not marca:
+    inicio = session.get("inicio")
+    if not marca or not inicio:
         return True
-    limite = datetime.fromisoformat(marca) + timedelta(minutes=MINUTOS_INACTIVIDAD)
-    return datetime.now() > limite
+    ahora = datetime.now()
+    if ahora > datetime.fromisoformat(marca) + timedelta(minutes=MINUTOS_INACTIVIDAD):
+        return True
+    return ahora > datetime.fromisoformat(inicio) + timedelta(hours=HORAS_MAXIMAS_SESION)
+
+
+def sesion_vigente_en_servidor() -> bool:
+    """La cookie solo vale si su token coincide con el guardado para el usuario."""
+    usuario = UsuarioRepository(request.sesion).obtener(session.get("usuario_id") or 0)
+    return (usuario is not None and usuario.activo and usuario.token_sesion is not None
+            and secrets.compare_digest(usuario.token_sesion, session.get("token", "")))
 
 
 def refrescar_actividad() -> None:
@@ -167,12 +235,18 @@ def requiere_rol(*roles_permitidos):
                 flash("Inicie sesion para continuar.", "warning")
                 return redirect(url_for("login", siguiente=request.path))
 
-            if sesion_expirada():
+            if sesion_expirada() or not sesion_vigente_en_servidor():
                 session.clear()
-                flash("Su sesion vencio por inactividad. Vuelva a ingresar.", "warning")
+                flash("Su sesion vencio o fue cerrada. Vuelva a ingresar.", "warning")
                 return redirect(url_for("login"))
 
             refrescar_actividad()
+
+            # Con la contrasena inicial solo se puede entrar a cambiarla.
+            if session.get("debe_cambiar") and request.endpoint != "cambiar_contrasena":
+                flash("Por seguridad, cambie su contrasena inicial antes de continuar.",
+                      "warning")
+                return redirect(url_for("cambiar_contrasena"))
 
             if roles_permitidos:
                 rol = session.get("rol")

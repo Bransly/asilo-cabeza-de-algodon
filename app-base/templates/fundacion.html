@@ -72,6 +72,7 @@
               <div class="col-md-4">
                 <label class="form-label small">Fecha y hora</label>
                 <input type="datetime-local" name="fecha_asignada" class="form-control form-control-sm"
+                       min="{{ ahora }}"
                        value="{{ s.fecha_asignada.strftime('%Y-%m-%dT%H:%M') if s.fecha_asignada }}" required>
               </div>
               <div class="col-md-3">

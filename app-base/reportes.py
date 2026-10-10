@@ -15,7 +15,7 @@ from clientes import MicroservicioError
 from models import ETIQUETA_GASTO, ETIQUETA_ORIGEN, CategoriaGasto, OrigenDonacion
 from repository import (
     CuotaRepository, DonacionRepository, ExamenRepository, GastoRepository,
-    PacienteRepository, RecetaRepository, VisitaRepository,
+    PacienteRepository, PagoFundacionRepository, RecetaRepository, VisitaRepository,
 )
 
 MESES = ["", "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
@@ -47,12 +47,17 @@ class ReporteService:
         self.donaciones = DonacionRepository(sesion)
         self.gastos = GastoRepository(sesion)
         self.cuotas = CuotaRepository(sesion)
+        self.pagos_fundacion = PagoFundacionRepository(sesion)
+        # Si ms-costos no responde, el reporte se genera sin cobros y la
+        # pantalla lo advierte, en lugar de mostrar ceros como si fueran reales.
+        self.sin_cobros = False
 
     # ------------------------------------------------------------- apoyo
     def _cargos(self, paciente_id=None) -> list:
         try:
             return self.costos.listar_cargos(paciente_id)
         except MicroservicioError:
+            self.sin_cobros = True
             return []
 
     @staticmethod
@@ -192,48 +197,56 @@ class ReporteService:
 
     # ------------------------------------------------ 4. pagos a la fundacion
     def pagos_a_la_fundacion(self, desde=None, hasta=None) -> dict:
-        """Lo que el asilo debe y ha pagado a la fundacion por sus servicios."""
+        """
+        Lo que la fundacion facturo al asilo por sus servicios, lo que el asilo
+        le pago y la deuda actual (RF-25 y RF-32).
+
+        Son dos cuentas distintas que no deben mezclarse:
+          - El familiar le paga al asilo (cargos de ms-costos).
+          - El asilo le paga a la fundacion (tabla pagos_fundacion).
+        """
         cargos = [c for c in self._cargos() if self._en_rango(c, desde, hasta)]
 
         resumen = {}
         for c in cargos:
-            tipo = c["tipo_servicio"]
-            datos = resumen.setdefault(tipo, {"cantidad": 0, "sin_descuento": 0.0,
-                                              "total": 0.0, "pagado": 0.0})
+            datos = resumen.setdefault(c["tipo_servicio"],
+                                       {"cantidad": 0, "lista": 0.0, "total": 0.0})
             datos["cantidad"] += 1
-            datos["sin_descuento"] += c["subtotal"]
+            datos["lista"] += c["subtotal"]
             datos["total"] += c["total"]
-            if c["estado"] == "PAGADO":
-                datos["pagado"] += c["total"]
 
-        filas, total, pagado, ahorro = [], 0.0, 0.0, 0.0
+        filas, facturado, ahorro = [], 0.0, 0.0
         for tipo, d in sorted(resumen.items()):
-            total += d["total"]
-            pagado += d["pagado"]
-            ahorro += d["sin_descuento"] - d["total"]
-            filas.append([
-                tipo.capitalize(), str(d["cantidad"]),
-                quetzales(d["sin_descuento"]),
-                quetzales(d["sin_descuento"] - d["total"]),
-                quetzales(d["total"]), quetzales(d["pagado"]),
-                quetzales(d["total"] - d["pagado"]),
-            ])
+            facturado += d["total"]
+            ahorro += d["lista"] - d["total"]
+            filas.append(["Servicio prestado", tipo.capitalize(), str(d["cantidad"]),
+                          quetzales(d["lista"]), quetzales(d["lista"] - d["total"]),
+                          quetzales(d["total"])])
+
+        pagos = self.pagos_fundacion.listar(desde, hasta)
+        pagado = sum(p.monto for p in pagos)
+        for p in pagos:
+            filas.append([f"Pago del asilo ({fecha_larga(p.fecha)})", p.referencia, "1",
+                          "-", "-", quetzales(-p.monto)])
+
+        # La deuda actual siempre se calcula con todo el historial, no solo el periodo.
+        facturado_historico = sum(c["total"] for c in self._cargos())
+        deuda_actual = facturado_historico - self.pagos_fundacion.total()
 
         return {
             "titulo": "Reporte de pagos a la fundacion",
-            "subtitulo": "Servicios prestados por la fundacion a los internos del asilo",
+            "subtitulo": "Servicios que la fundacion presto a los internos y pagos del asilo",
             "periodo": self._periodo(desde, hasta),
-            "columnas": [columna("Tipo de servicio"), columna("Cantidad", True),
-                         columna("Precio de lista", True), columna("Descuento otorgado", True),
-                         columna("Total a la fundacion", True), columna("Pagado", True),
-                         columna("Pendiente de pago", True)],
+            "columnas": [columna("Concepto"), columna("Detalle"), columna("Cantidad", True),
+                         columna("Precio de lista", True), columna("Descuento", True),
+                         columna("Monto", True)],
             "filas": filas,
-            "totales": [("Ahorro total por el convenio", quetzales(ahorro)),
-                        ("Total facturado por la fundacion", quetzales(total)),
-                        ("Pagado a la fundacion", quetzales(pagado)),
-                        ("Deuda actual con la fundacion", quetzales(total - pagado))],
-            "nota": "La deuda con la fundacion corresponde a los cargos que aun no han "
-                    "sido cancelados por los familiares.",
+            "totales": [("Ahorro por el convenio en el periodo", quetzales(ahorro)),
+                        ("Facturado por la fundacion en el periodo", quetzales(facturado)),
+                        ("Pagado a la fundacion en el periodo", quetzales(pagado)),
+                        ("Deuda actual con la fundacion", quetzales(deuda_actual))],
+            "nota": "Lo facturado por la fundacion ya incluye su descuento. La deuda es "
+                    "independiente de si el familiar ya pago su cargo al asilo.",
         }
 
     # ------------------------------------------------------- 5. entradas
@@ -262,6 +275,8 @@ class ReporteService:
                           str(len(cargos)), quetzales(total_cobros)])
 
         total_gastos = self.gastos.total(desde, hasta)
+        total_pagos_fundacion = self.pagos_fundacion.total(desde, hasta)
+        total_salidas = total_gastos + total_pagos_fundacion
         total_entradas = total_donaciones + total_cuotas + total_cobros
 
         return {
@@ -275,8 +290,9 @@ class ReporteService:
                         ("Total de cuotas cobradas", quetzales(total_cuotas)),
                         ("Total de cobros por servicios", quetzales(total_cobros)),
                         ("Total de entradas", quetzales(total_entradas)),
-                        ("Total de gastos del periodo", quetzales(total_gastos)),
-                        ("Diferencia", quetzales(total_entradas - total_gastos))],
+                        ("Gastos operativos del periodo", quetzales(total_gastos)),
+                        ("Pagos a la fundacion del periodo", quetzales(total_pagos_fundacion)),
+                        ("Diferencia", quetzales(total_entradas - total_salidas))],
             "nota": "El asilo se sostiene con donaciones y con la cuota mensual que pagan "
                     "los familiares. Esta comparacion permite fiscalizar el periodo.",
         }

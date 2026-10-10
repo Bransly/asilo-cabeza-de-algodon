@@ -16,7 +16,7 @@ from typing import List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
-from .models import EstadoEnvio, Notificacion
+from .models import EstadoEnvio, Notificacion, TipoAviso
 from .repository import NotificacionRepository
 from .schemas import SolicitudMedicaNotificar
 
@@ -40,21 +40,41 @@ class NotificacionService:
 
     # ---------------- Redaccion del mensaje ----------------
     def _redactar(self, datos: SolicitudMedicaNotificar) -> Tuple[str, str]:
-        asunto = f"Solicitud medica registrada - {datos.paciente_nombre}"
+        """
+        Dos avisos cumplen juntos el requisito del enunciado ("informando el
+        estado del paciente y a que medico fue referido"):
+          - SOLICITUD_REGISTRADA: especialidad, motivo y estado del paciente.
+          - MEDICO_ASIGNADO: nombre del medico y fecha y hora de la cita.
+        """
         fecha = datetime.now().strftime("%d/%m/%Y %H:%M")
-        mensaje = (
-            f"Estimado(a) {datos.familiar_nombre}:\n\n"
-            f"Le informamos que el dia {fecha} se registro una solicitud de atencion "
-            f"medica para su familiar {datos.paciente_nombre}.\n\n"
-            f"Especialidad a la que fue referido: {datos.especialidad}\n"
-            f"Medico asignado: {datos.medico_asignado}\n"
-            f"Motivo de la referencia: {datos.motivo}\n"
-            f"Estado actual del paciente: {datos.estado_paciente}\n\n"
-            f"La fundacion asignara el horario de la cita y se le notificara oportunamente.\n\n"
-            f"Atentamente,\n"
-            f"Asilo de Ancianos Cabeza de Algodon"
-        )
-        return asunto, mensaje
+        saludo = f"Estimado(a) {datos.familiar_nombre}:\n\n"
+        firma = "Atentamente,\nAsilo de Ancianos Cabeza de Algodon"
+
+        if datos.tipo == TipoAviso.MEDICO_ASIGNADO:
+            asunto = f"Medico asignado - {datos.paciente_nombre}"
+            cita = datos.fecha_cita.strftime("%d/%m/%Y a las %H:%M")
+            cuerpo = (
+                f"La fundacion asigno el medico que atendera a su familiar "
+                f"{datos.paciente_nombre}.\n\n"
+                f"Medico asignado: {datos.medico_asignado}\n"
+                f"Especialidad: {datos.especialidad}\n"
+                f"Fecha de la cita: {cita}\n"
+                f"Motivo de la referencia: {datos.motivo}\n"
+                f"Estado actual del paciente: {datos.estado_paciente}\n\n"
+                f"Un enfermero(a) del asilo acompanara a su familiar a la cita.\n\n"
+            )
+        else:
+            asunto = f"Solicitud medica registrada - {datos.paciente_nombre}"
+            cuerpo = (
+                f"Le informamos que el dia {fecha} el medico general del asilo refirio a "
+                f"su familiar {datos.paciente_nombre} a una consulta especializada.\n\n"
+                f"Especialidad a la que fue referido: {datos.especialidad}\n"
+                f"Motivo de la referencia: {datos.motivo}\n"
+                f"Estado actual del paciente: {datos.estado_paciente}\n\n"
+                f"La fundacion asignara el medico y el horario de la cita. Recibira otro "
+                f"correo con el nombre del medico en cuanto quede asignado.\n\n"
+            )
+        return asunto, saludo + cuerpo + firma
 
     # ---------------- Envio por SMTP ----------------
     def _enviar_correo(self, destino: str, asunto: str, cuerpo: str) -> Tuple[EstadoEnvio, Optional[str]]:
@@ -84,6 +104,8 @@ class NotificacionService:
         estado, detalle = self._enviar_correo(datos.correo_destino, asunto, mensaje)
 
         notificacion = Notificacion(
+            tipo=datos.tipo,
+            solicitud_id=datos.solicitud_id,
             paciente_id=datos.paciente_id,
             paciente_nombre=datos.paciente_nombre.strip(),
             familiar_nombre=datos.familiar_nombre.strip(),
@@ -111,6 +133,8 @@ class NotificacionService:
             original.correo_destino, original.asunto, original.mensaje
         )
         copia = Notificacion(
+            tipo=original.tipo,
+            solicitud_id=original.solicitud_id,
             paciente_id=original.paciente_id,
             paciente_nombre=original.paciente_nombre,
             familiar_nombre=original.familiar_nombre,

@@ -7,6 +7,8 @@ Regla principal implementada (enunciado del proyecto):
 "El costo de la cita, de los examenes de laboratorio y de farmacia son cargados
 a la cuenta del familiar siempre con el descuento que proporciona la fundacion."
 """
+from datetime import datetime
+from decimal import ROUND_HALF_UP, Decimal
 from typing import List, Optional
 
 from sqlalchemy.orm import Session
@@ -25,8 +27,17 @@ class ReglaNegocioError(Exception):
         self.codigo = codigo
 
 
-def _redondear(valor: float) -> float:
-    return round(valor + 1e-9, 2)
+CENTAVO = Decimal("0.01")
+CIEN = Decimal("100")
+
+
+def _redondear(valor) -> Decimal:
+    """
+    Redondeo comercial a centavos (mitad hacia arriba): Q60.125 -> Q60.13.
+    Todo el calculo se hace con Decimal; nunca con float, que no representa
+    exactamente los centavos (0.1 + 0.2 != 0.3).
+    """
+    return Decimal(str(valor)).quantize(CENTAVO, rounding=ROUND_HALF_UP)
 
 
 class TarifaService:
@@ -59,21 +70,21 @@ class TarifaService:
         if self.repo.contar() > 0:
             return
         catalogo = [
-            (TipoServicio.CONSULTA, "Consulta con medico general", 150.00, 40.0),
-            (TipoServicio.CONSULTA, "Consulta con especialista", 350.00, 35.0),
-            (TipoServicio.EXAMEN, "Hematologia completa", 120.00, 50.0),
-            (TipoServicio.EXAMEN, "Perfil lipidico", 200.00, 45.0),
-            (TipoServicio.EXAMEN, "Glucosa en ayunas", 60.00, 50.0),
-            (TipoServicio.MEDICAMENTO, "Losartan 50mg (tableta)", 3.50, 30.0),
-            (TipoServicio.MEDICAMENTO, "Metformina 850mg (tableta)", 2.75, 30.0),
+            (TipoServicio.CONSULTA, "Consulta con medico general", "150.00", "40"),
+            (TipoServicio.CONSULTA, "Consulta con especialista", "350.00", "35"),
+            (TipoServicio.EXAMEN, "Hematologia completa", "120.00", "50"),
+            (TipoServicio.EXAMEN, "Perfil lipidico", "200.00", "45"),
+            (TipoServicio.EXAMEN, "Glucosa en ayunas", "60.00", "50"),
+            (TipoServicio.MEDICAMENTO, "Losartan 50mg (tableta)", "3.50", "30"),
+            (TipoServicio.MEDICAMENTO, "Metformina 850mg (tableta)", "2.75", "30"),
         ]
         for tipo, descripcion, precio, descuento in catalogo:
             self.repo.crear(
                 Tarifa(
                     tipo_servicio=tipo,
                     descripcion=descripcion,
-                    precio_base=precio,
-                    descuento_fundacion=descuento,
+                    precio_base=Decimal(precio),
+                    descuento_fundacion=Decimal(descuento),
                     activo=True,
                 )
             )
@@ -93,8 +104,10 @@ class CargoService:
         if not tarifa.activo:
             raise ReglaNegocioError("La tarifa esta inactiva y no puede cobrarse")
 
-        subtotal = tarifa.precio_base * datos.cantidad
-        total = subtotal * (1 - tarifa.descuento_fundacion / 100)
+        precio = Decimal(str(tarifa.precio_base))
+        descuento = Decimal(str(tarifa.descuento_fundacion))
+        subtotal = _redondear(precio * datos.cantidad)
+        total = _redondear(subtotal * (1 - descuento / CIEN))
 
         cargo = Cargo(
             paciente_id=datos.paciente_id,
@@ -127,6 +140,21 @@ class CargoService:
         if cargo.estado == EstadoCargo.PAGADO:
             raise ReglaNegocioError("El cargo ya estaba cancelado")
         cargo.estado = EstadoCargo.PAGADO
+        cargo.fecha_pago = datetime.now()
+        return self.repo.guardar(cargo)
+
+    def revertir_pago(self, cargo_id: int, motivo: str) -> Cargo:
+        """
+        Corrige un pago registrado por error (defecto DEF-05). Es la unica
+        transicion PAGADO -> PENDIENTE y exige un motivo, que la aplicacion base
+        tambien deja en su bitacora de auditoria.
+        """
+        cargo = self.obtener(cargo_id)
+        if cargo.estado != EstadoCargo.PAGADO:
+            raise ReglaNegocioError("Solo se puede revertir un cargo que esta pagado")
+        cargo.estado = EstadoCargo.PENDIENTE
+        cargo.fecha_pago = None
+        cargo.motivo_reversion = motivo.strip()[:200]
         return self.repo.guardar(cargo)
 
     def eliminar(self, cargo_id: int) -> None:
@@ -142,9 +170,10 @@ class CargoService:
         if not cargos:
             raise ReglaNegocioError(f"El paciente {paciente_id} no tiene cargos registrados", 404)
 
-        sin_descuento = sum(c.subtotal for c in cargos)
-        facturado = sum(c.total for c in cargos)
-        pagado = sum(c.total for c in cargos if c.estado == EstadoCargo.PAGADO)
+        sin_descuento = sum((Decimal(str(c.subtotal)) for c in cargos), Decimal("0"))
+        facturado = sum((Decimal(str(c.total)) for c in cargos), Decimal("0"))
+        pagado = sum((Decimal(str(c.total)) for c in cargos
+                      if c.estado == EstadoCargo.PAGADO), Decimal("0"))
 
         return EstadoCuenta(
             paciente_id=paciente_id,

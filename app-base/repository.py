@@ -14,7 +14,7 @@ from models import (
     CuotaMensual, Donacion, Enfermero, Especialidad, EstadoExamen,
     EstadoSolicitud, EstadoVisita, FichaMedica, Gasto, Medico,
     MedicamentoPermanente, MedicamentoRecetado, OrdenExamen, Paciente,
-    RegistroBitacora, Solicitud, Usuario, VisitaMedica,
+    PagoFundacion, RegistroBitacora, Solicitud, Usuario, VisitaMedica,
 )
 
 
@@ -393,3 +393,36 @@ class CuotaRepository(RepositorioBase):
         if mes:
             consulta = consulta.where(CuotaMensual.mes == mes)
         return float(self.sesion.scalar(consulta) or 0)
+
+
+class PagoFundacionRepository(RepositorioBase):
+    """Pagos que el asilo hace a la fundacion (RF-25)."""
+
+    def listar(self, desde=None, hasta=None):
+        consulta = select(PagoFundacion)
+        if desde:
+            consulta = consulta.where(PagoFundacion.fecha >= desde)
+        if hasta:
+            consulta = consulta.where(PagoFundacion.fecha <= hasta)
+        return list(self.sesion.scalars(
+            consulta.order_by(PagoFundacion.fecha.desc(), PagoFundacion.id.desc())))
+
+    def total(self, desde=None, hasta=None) -> float:
+        consulta = select(func.coalesce(func.sum(PagoFundacion.monto), 0))
+        if desde:
+            consulta = consulta.where(PagoFundacion.fecha >= desde)
+        if hasta:
+            consulta = consulta.where(PagoFundacion.fecha <= hasta)
+        return float(self.sesion.scalar(consulta) or 0)
+
+    def obtener(self, pago_id: int):
+        return self.sesion.get(PagoFundacion, pago_id)
+
+    def existe_referencia(self, referencia: str) -> bool:
+        return self.sesion.scalar(
+            select(func.count()).select_from(PagoFundacion)
+            .where(PagoFundacion.referencia == referencia)) > 0
+
+    def eliminar(self, pago):
+        self.sesion.delete(pago)
+        self.confirmar()

@@ -70,6 +70,7 @@
         <div class="nombre">{{ usuario.nombre }}</div>
         <div class="rol">{{ usuario.rol|replace('_', ' ')|capitalize }}</div>
       </div>
+      <a href="{{ url_for('cambiar_contrasena') }}" class="btn btn-sm btn-link">Contrasena</a>
       <form method="post" action="{{ url_for('logout') }}">
         <button class="btn btn-sm btn-outline-secondary">Salir</button>
       </form>

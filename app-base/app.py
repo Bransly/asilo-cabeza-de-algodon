@@ -24,19 +24,40 @@ from models import (
 from reportes import MESES, ReporteService
 from semilla import cargar_datos_iniciales
 from services import (
-    AtencionService, CajaService, ConsultaService, ErrorNegocio, PacienteService,
+    AtencionService, CajaService, CobroService, ConsultaService, ErrorNegocio,
+    PacienteService,
 )
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "clave-de-desarrollo-asilo")
 
-# La cookie de sesion se firma con la llave anterior y no viaja a otros sitios.
+# La llave que firma la cookie de sesion NO tiene valor por defecto: si faltara,
+# cualquiera que leyera el codigo podria falsificar sesiones. Se define en el
+# archivo .env (fuera del repositorio) o en las variables del servidor.
+app.secret_key = os.getenv("SECRET_KEY", "")
+if len(app.secret_key) < 32:
+    raise RuntimeError(
+        "Defina SECRET_KEY (minimo 32 caracteres) en el archivo .env. "
+        "Puede generarla con: python -c \"import secrets; print(secrets.token_hex(32))\"")
+
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,     # JavaScript no puede leer la cookie
     SESSION_COOKIE_SAMESITE="Lax",    # mitiga CSRF entre sitios
     SESSION_COOKIE_SECURE=os.getenv("HTTPS", "").lower() == "true",
     PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
+    MAX_CONTENT_LENGTH=1024 * 1024,   # ningun formulario necesita mas de 1 MB
 )
+
+# Fuentes externas permitidas por la politica de contenido (CSP).
+CSP = "; ".join([
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data:",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "base-uri 'self'",
+])
 
 R = RolUsuario
 
@@ -44,6 +65,28 @@ R = RolUsuario
 @app.before_request
 def abrir_sesion():
     request.sesion = Sesion()
+
+
+@app.after_request
+def encabezados_de_seguridad(respuesta):
+    """Encabezados HTTP de seguridad (hallazgo H-09 del SQA)."""
+    respuesta.headers["Content-Security-Policy"] = CSP
+    respuesta.headers["X-Content-Type-Options"] = "nosniff"
+    respuesta.headers["X-Frame-Options"] = "DENY"
+    respuesta.headers["Referrer-Policy"] = "same-origin"
+    respuesta.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    if app.config["SESSION_COOKIE_SECURE"]:
+        respuesta.headers["Strict-Transport-Security"] = "max-age=31536000"
+    # Las pantallas con datos clinicos no se guardan en la cache del navegador.
+    if request.endpoint != "static":
+        respuesta.headers["Cache-Control"] = "no-store"
+    return respuesta
+
+
+@app.errorhandler(413)
+def demasiado_grande(_error):
+    flash("La informacion enviada excede el tamanio permitido.", "danger")
+    return redirect(request.referrer or url_for("panel"))
 
 
 @app.teardown_request
@@ -93,6 +136,23 @@ def logout():
     return volver("login")
 
 
+@app.route("/cuenta/contrasena", methods=["GET", "POST"])
+@requiere_rol()
+def cambiar_contrasena():
+    """Cambio de contrasena; obligatorio en el primer ingreso."""
+    if request.method == "GET":
+        return render_template("contrasena.html", obligatorio=session.get("debe_cambiar"))
+    try:
+        AutenticacionService(request.sesion).cambiar_contrasena(
+            request.form.get("actual", ""), request.form.get("nueva", ""),
+            request.form.get("confirmacion", ""))
+        flash("Contrasena actualizada.", "success")
+        return volver("panel")
+    except ErrorAutenticacion as error:
+        flash(str(error), "danger")
+        return volver("cambiar_contrasena")
+
+
 @app.route("/bitacora")
 @requiere_rol(R.ADMINISTRADOR)
 def bitacora():
@@ -128,6 +188,7 @@ def pacientes():
     return render_template(
         "pacientes.html",
         pacientes=servicio.listar(),
+        hoy=date.today().isoformat(),
         estado_servicios=consultas.estado_servicios(),
     )
 
@@ -144,8 +205,6 @@ def crear_paciente():
         return volver("expediente", paciente_id=paciente.id)
     except ErrorNegocio as error:
         flash(str(error), "danger")
-    except ValueError:
-        flash("Revise los datos numericos (edad, cuota) y la fecha de ingreso.", "danger")
     return volver("pacientes")
 
 
@@ -275,6 +334,7 @@ def fundacion():
         medicos=consultas.catalogo.medicos(),
         tarifas_consulta=consultas.tarifas_por_tipo("CONSULTA"),
         filtro=filtro,
+        ahora=datetime.now().strftime("%Y-%m-%dT%H:%M"),
         estado_servicios=consultas.estado_servicios(),
     )
 
@@ -284,10 +344,14 @@ def fundacion():
 def asignar_solicitud(solicitud_id: int):
     atencion = AtencionService(request.sesion)
     try:
-        solicitud = atencion.asignar_solicitud(solicitud_id, request.form.to_dict())
+        solicitud, advertencia = atencion.asignar_solicitud(
+            solicitud_id, request.form.to_dict())
         flash(
             f"Solicitud #{solicitud.id} asignada a {solicitud.medico.nombre} "
-            f"para el {solicitud.fecha_asignada.strftime('%d/%m/%Y %H:%M')}.", "success")
+            f"para el {solicitud.fecha_asignada.strftime('%d/%m/%Y %H:%M')}. "
+            "Se aviso al familiar.", "success")
+        if advertencia:
+            flash(advertencia, "warning")
     except (ErrorNegocio, ValueError, KeyError) as error:
         flash(str(error), "danger")
     return volver("fundacion", estado=request.form.get("filtro", "PENDIENTE"))
@@ -440,30 +504,49 @@ def entregar_medicamento(receta_id: int):
 @app.post("/cargos/<int:cargo_id>/pagar")
 @requiere_rol(R.CAJA)
 def pagar_cargo(cargo_id: int):
-    consultas = ConsultaService(request.sesion)
     paciente_id = request.form.get("paciente_id", type=int)
+    auditoria = AutenticacionService(request.sesion)
     try:
-        consultas.costos.pagar_cargo(cargo_id)
-        AutenticacionService(request.sesion).registrar(
-            "PAGO_CARGO", "Cargo", cargo_id, "EXITO")
+        cargo = CobroService().pagar_cargo(cargo_id)
+        auditoria.registrar("PAGO_CARGO", "Cargo", cargo_id, "EXITO",
+                            f"Q{cargo['total']:.2f}")
         flash("Cargo marcado como pagado.", "success")
-    except Exception as error:
-        flash(f"No se pudo registrar el pago. {error}", "danger")
+    except ErrorNegocio as error:
+        auditoria.registrar("PAGO_CARGO", "Cargo", cargo_id, "FALLIDO", str(error))
+        flash(str(error), "danger")
+    return volver("expediente", paciente_id=paciente_id)
+
+
+@app.post("/cargos/<int:cargo_id>/revertir")
+@requiere_rol(R.CAJA)
+def revertir_pago(cargo_id: int):
+    """Corrige un pago marcado por error. Queda en la bitacora con su motivo."""
+    paciente_id = request.form.get("paciente_id", type=int)
+    motivo = request.form.get("motivo", "")
+    auditoria = AutenticacionService(request.sesion)
+    try:
+        cargo = CobroService().revertir_pago(cargo_id, motivo)
+        auditoria.registrar("REVIERTE_PAGO", "Cargo", cargo_id, "EXITO",
+                            f"Q{cargo['total']:.2f}. Motivo: {motivo.strip()}")
+        flash("El pago se revirtio. El cargo vuelve a estar pendiente.", "success")
+    except ErrorNegocio as error:
+        auditoria.registrar("REVIERTE_PAGO", "Cargo", cargo_id, "FALLIDO", str(error))
+        flash(str(error), "danger")
     return volver("expediente", paciente_id=paciente_id)
 
 
 @app.post("/cargos/<int:cargo_id>/eliminar")
 @requiere_rol(R.CAJA)
 def eliminar_cargo(cargo_id: int):
-    consultas = ConsultaService(request.sesion)
     paciente_id = request.form.get("paciente_id", type=int)
+    auditoria = AutenticacionService(request.sesion)
     try:
-        consultas.costos.eliminar_cargo(cargo_id)
-        AutenticacionService(request.sesion).registrar(
-            "ELIMINA_CARGO", "Cargo", cargo_id, "EXITO")
+        CobroService().eliminar_cargo(cargo_id)
+        auditoria.registrar("ELIMINA_CARGO", "Cargo", cargo_id, "EXITO")
         flash("Cargo eliminado.", "success")
-    except Exception as error:
-        flash(f"No se pudo eliminar. {error}", "danger")
+    except ErrorNegocio as error:
+        auditoria.registrar("ELIMINA_CARGO", "Cargo", cargo_id, "FALLIDO", str(error))
+        flash(str(error), "danger")
     return volver("expediente", paciente_id=paciente_id)
 
 
@@ -490,6 +573,10 @@ def caja():
     donaciones = servicio.donaciones.listar()
     gastos = servicio.gastos.listar()
     cuotas = servicio.cuotas.listar(anio=anio, mes=mes)
+    try:
+        fundacion = servicio.estado_con_fundacion()
+    except ErrorNegocio:
+        fundacion = None   # ms-costos fuera de linea: la pantalla lo indica
 
     return render_template(
         "caja.html",
@@ -502,6 +589,9 @@ def caja():
         total_gastos=servicio.gastos.total(),
         total_cuotas=servicio.cuotas.total_cobrado(anio, mes),
         pendiente_cuotas=servicio.cuotas.total_pendiente(anio, mes),
+        pagos_fundacion=servicio.pagos_fundacion.listar(),
+        fundacion=fundacion,
+        pestana=request.args.get("pestana", "cuotas"),
         hoy=hoy.isoformat(),
         estado_servicios=consultas.estado_servicios(),
     )
@@ -567,6 +657,23 @@ def eliminar_gasto(gasto_id: int):
     return volver("caja")
 
 
+@app.post("/caja/pagos-fundacion")
+@requiere_rol(R.CAJA)
+def registrar_pago_fundacion():
+    servicio = CajaService(request.sesion)
+    try:
+        pago = servicio.registrar_pago_fundacion(
+            request.form.to_dict(), session.get("usuario_nombre", ""))
+        AutenticacionService(request.sesion).registrar(
+            "PAGO_FUNDACION", "PagoFundacion", pago.id, "EXITO",
+            f"{pago.referencia} Q{pago.monto:.2f}")
+        flash(f"Pago a la fundacion registrado: Q{pago.monto:,.2f} ({pago.referencia}).",
+              "success")
+    except ErrorNegocio as error:
+        flash(str(error), "danger")
+    return volver("caja", pestana="fundacion")
+
+
 @app.post("/caja/cuotas")
 @requiere_rol(R.CAJA)
 def generar_cuotas():
@@ -579,7 +686,7 @@ def generar_cuotas():
             flash(f"Se generaron {creadas} cuotas para {MESES[mes]} de {anio}.", "success")
         else:
             flash("Las cuotas de ese mes ya estaban generadas.", "warning")
-    except (ErrorNegocio, TypeError) as error:
+    except ErrorNegocio as error:
         flash(str(error), "danger")
     return volver("caja", anio=anio, mes=mes)
 
@@ -693,10 +800,22 @@ def ver_reporte(clave: str):
         "medicamentos-por-paciente": lambda: servicio.medicamentos_por_paciente(
             paciente_id, desde, hasta),
     }
-    return render_template("reporte_tabla.html", datos=generadores[clave](), **comunes)
+    datos = generadores[clave]()
+    if servicio.sin_cobros:
+        flash("El servicio de cobros no respondio: este reporte no incluye cargos.", "warning")
+    return render_template("reporte_tabla.html", datos=datos, **comunes)
+
+
+def preparar_base_de_datos() -> None:
+    """Crea las tablas y carga los catalogos iniciales (solo si la base esta vacia)."""
+    crear_tablas()
+    cargar_datos_iniciales()
 
 
 if __name__ == "__main__":
-    crear_tablas()
-    cargar_datos_iniciales()
-    app.run(host="0.0.0.0", port=int(os.getenv("PUERTO", "8000")), debug=True)
+    # Solo para desarrollo local. En Docker la aplicacion corre con Gunicorn
+    # (ver wsgi.py y el Dockerfile). El modo debug nunca se activa por defecto:
+    # su consola permite ejecutar codigo en el servidor.
+    preparar_base_de_datos()
+    app.run(host="127.0.0.1", port=int(os.getenv("PUERTO", "8000")),
+            debug=os.getenv("FLASK_DEBUG", "").lower() == "true")

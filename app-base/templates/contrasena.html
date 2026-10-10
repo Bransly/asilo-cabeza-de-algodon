@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block titulo %}Cambiar contrasena - Asilo Cabeza de Algodon{% endblock %}
+
+{% block seccion %}Cambiar contrasena{% endblock %}
+
+{% block contenido %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="tarjeta">
+      <div class="tarjeta-titulo">Cambiar contrasena</div>
+      <div class="p-3">
+        {% if obligatorio %}
+          <div class="alert alert-warning small">
+            Esta es una contrasena inicial. Por seguridad, debe cambiarla antes de usar el sistema.
+          </div>
+        {% endif %}
+        <form method="post" class="row g-3" autocomplete="off">
+          <div class="col-12">
+            <label class="form-label" for="actual">Contrasena actual</label>
+            <input id="actual" name="actual" type="password" class="form-control" required>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="nueva">Nueva contrasena</label>
+            <input id="nueva" name="nueva" type="password" class="form-control"
+                   required minlength="10" maxlength="128" autocomplete="new-password">
+            <div class="form-text">Minimo 10 caracteres, con letras y numeros.</div>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="confirmacion">Repita la nueva contrasena</label>
+            <input id="confirmacion" name="confirmacion" type="password" class="form-control"
+                   required minlength="10" maxlength="128" autocomplete="new-password">
+          </div>
+          <div class="col-12">
+            <button class="btn btn-success w-100">Guardar contrasena</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
