@@ -1,7 +1,7 @@
 """
 PLAN DE PRUEBAS AUTOMATIZADO - Sistema del Asilo Cabeza de Algodon
 
-Ejecuta los casos CP-01 a CP-77 contra el sistema en ejecucion, por HTTP, tal
+Ejecuta los casos CP-01 a CP-78 contra el sistema en ejecucion, por HTTP, tal
 como lo haria un usuario o un atacante que se salta la pantalla. Cada caso
 indica el requerimiento o regla que verifica (RF, RNF, RN o RV de la ERS v1.1).
 
@@ -673,6 +673,20 @@ def pruebas_usuarios():
          and hay("no tiene permiso", r3) and hay("su propia cuenta", r4))
 
 
+def pruebas_permisos_expediente():
+    A = "Seguridad"
+    lab, fun, medico, caja = sesion("laboratorio"), sesion("fundacion"), sesion("mgeneral"), sesion("caja")
+    r1 = lab.get(f"{BASE}/pacientes/1")
+    r2 = fun.get(f"{BASE}/pacientes")
+    r3 = medico.get(f"{BASE}/pacientes/1")
+    r4 = caja.get(f"{BASE}/pacientes/1")
+    caso("CP-78", A, "Laboratorio y fundacion no abren expedientes; solo caja ve la cuenta del familiar",
+         "RN-10, RF-37", "Laboratorio y fundacion denegados; medico sin estado de cuenta; caja con estado de cuenta",
+         hay("no tiene permiso", r1) and hay("no tiene permiso", r2)
+         and r3.status_code == 200 and "Estado de cuenta" not in r3.text
+         and hay("Estado de cuenta", r4))
+
+
 # =================================================================== registro
 def guardar_registro():
     carpeta = Path(__file__).parent / "resultados"
@@ -729,6 +743,7 @@ def main():
     if args.tolerancia:
         pruebas_tolerancia(args, pid)
     pruebas_usuarios()
+    pruebas_permisos_expediente()
 
     archivo, correctos = guardar_registro()
     print(f"\n{correctos} de {len(RESULTADOS)} casos correctos. Registro: {archivo}")

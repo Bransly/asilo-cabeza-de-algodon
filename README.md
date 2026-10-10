@@ -102,12 +102,13 @@ el administrador la restablece en **Usuarios**: el sistema genera una clave temp
 | `mgeneral` | Médico general | Expedientes, ficha médica y referencias |
 | `especialista` | Médico especialista | Visitas, exámenes y recetas |
 | `enfermeria` | Enfermería | Expedientes y medicamentos permanentes |
-| `laboratorio` | Laboratorio | Bandeja de exámenes y carga de resultados |
-| `farmacia` | Farmacia | Entrega de medicamentos |
+| `laboratorio` | Laboratorio | Bandeja de exámenes, carga de resultados y visita médica |
+| `farmacia` | Farmacia | Entrega de medicamentos y visita médica |
 | `caja` | Caja | Cobros, cuotas, donaciones, gastos y pagos a la fundación |
 | `fundacion` | Fundación | Asignación de médico y horario |
 
-Las personas de los datos de ejemplo son ficticias.
+Solo administrador, médicos, enfermería y caja abren expedientes; el estado de cuenta del
+familiar solo lo ven caja y el administrador. Las personas de los datos de ejemplo son ficticias.
 
 ## 6. Desarrollo y producción
 
@@ -132,7 +133,7 @@ export CLAVE_INICIAL_ADMIN=...  CLAVE_INICIAL_USUARIOS=...  API_KEY_SERVICIOS=..
 python pruebas/plan_pruebas.py --tolerancia
 ```
 
-Ejecuta los casos **CP-01 a CP-77** (seguridad, validación de datos, flujo clínico, costos,
+Ejecuta los casos **CP-01 a CP-78** (seguridad, validación de datos, flujo clínico, costos,
 caja, reportes, tolerancia a fallas y administración de usuarios). Cada caso indica el requerimiento de la ERS que
 verifica. El registro con fecha y resultado queda en `pruebas/resultados/`.
 

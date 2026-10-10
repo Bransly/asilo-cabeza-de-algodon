@@ -1,4 +1,4 @@
-# Revision de accesibilidad WCAG 2.1 AA (09/10/2026 22:13)
+# Revision de accesibilidad WCAG 2.1 AA (09/10/2026 22:22)
 
 Herramienta: axe-core en Chromium. Reglas: wcag2a, wcag2aa, wcag21a, wcag21aa.
 

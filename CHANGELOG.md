@@ -18,7 +18,7 @@ Atiende el informe de revisión del SQA (hallazgos H-01 a H-11) y los pendientes
 - Administración de usuarios: desbloquear, restablecer clave temporal, activar y desactivar (RF-44).
 - Clave de servicio (`X-API-Key`) entre la aplicación y los microservicios (DEF-06).
 - Encabezados de seguridad HTTP y token de sesión en el servidor.
-- Plan de pruebas automatizado CP-01 a CP-77 con registro de resultados.
+- Plan de pruebas automatizado CP-01 a CP-78 con registro de resultados.
 - Pruebas de carga, volumen y accesibilidad (`pruebas/carga.py`, `pruebas/accesibilidad.py`).
 - `docs/DESPLIEGUE.md`, `docs/MICROSERVICIOS.md` y este historial.
 
@@ -37,6 +37,9 @@ Atiende el informe de revisión del SQA (hallazgos H-01 a H-11) y los pendientes
 - Los reportes mostraban ceros sin aviso cuando el servicio de costos no respondía.
 - Con Gunicorn, los procesos compartían las conexiones a MySQL abiertas al arrancar y
   fallaban de forma esporádica bajo carga (DEF-08).
+- Laboratorio, farmacia y fundación podían abrir el expediente completo, incluida la cuenta
+  del familiar. Ahora solo administrador, médicos, enfermería y caja abren expedientes, y solo
+  caja y el administrador ven el estado de cuenta (RN-10).
 - Accesibilidad WCAG 2.1 AA: contraste de los indicadores de estado pendiente y del código
   en la bitácora, y etiquetas asociadas a todos los campos de formulario.
 
