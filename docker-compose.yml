@@ -1,12 +1,8 @@
-# Sistema de Administracion del Asilo de Ancianos Cabeza de Algodon
 # Levanta 4 contenedores: base de datos, dos microservicios y la aplicacion base.
 # Comando:  docker compose up --build
 
 services:
 
-  # ---------------------------------------------------------------
-  # Base de datos MySQL (requisito del enunciado del proyecto)
-  # ---------------------------------------------------------------
   mysql:
     image: mysql:8.0
     container_name: asilo-mysql
@@ -14,7 +10,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root123
     ports:
-      - "3307:3306"           # 3307 afuera para no chocar con un MySQL local
+      - "3307:3306"         
     volumes:
       - datos_mysql:/var/lib/mysql
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -26,9 +22,6 @@ services:
     networks:
       - red-asilo
 
-  # ---------------------------------------------------------------
-  # Microservicio 1: costos y cargos
-  # ---------------------------------------------------------------
   ms-costos:
     build: ./ms-costos
     container_name: asilo-ms-costos
@@ -47,9 +40,6 @@ services:
     networks:
       - red-asilo
 
-  # ---------------------------------------------------------------
-  # Microservicio 2: notificaciones al familiar
-  # ---------------------------------------------------------------
   ms-notificaciones:
     build: ./ms-notificaciones
     container_name: asilo-ms-notificaciones
@@ -60,7 +50,6 @@ services:
       DB_USER: asilo
       DB_PASSWORD: asilo123
       DB_NAME: db_notificaciones
-      # Si se dejan vacias, los correos se registran en modo SIMULADA.
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USUARIO: ${SMTP_USUARIO:-}
@@ -74,9 +63,6 @@ services:
     networks:
       - red-asilo
 
-  # ---------------------------------------------------------------
-  # Aplicacion base que consume los microservicios
-  # ---------------------------------------------------------------
   app-base:
     build: ./app-base
     container_name: asilo-app-base
