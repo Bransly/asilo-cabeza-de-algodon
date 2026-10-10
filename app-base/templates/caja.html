@@ -159,7 +159,8 @@
                     <td class="text-end monto text-success">Q{{ '%.2f'|format(d.monto) }}</td>
                     <td class="text-end">
                       <form method="post"
-                            action="{{ url_for('eliminar_donacion', donacion_id=d.id) }}">
+                            action="{{ url_for('eliminar_donacion', donacion_id=d.id) }}"
+                            onsubmit="return confirm('Se eliminara esta donacion de Q{{ '%.2f'|format(d.monto) }}. Esta accion no se puede deshacer.');">
                         <button class="btn btn-sm text-danger" title="Eliminar">&#128465;</button>
                       </form>
                     </td>
@@ -248,7 +249,8 @@
                     <td class="small">{{ etiqueta_gasto[g.categoria] }}</td>
                     <td class="text-end monto">Q{{ '%.2f'|format(g.monto) }}</td>
                     <td class="text-end">
-                      <form method="post" action="{{ url_for('eliminar_gasto', gasto_id=g.id) }}">
+                      <form method="post" action="{{ url_for('eliminar_gasto', gasto_id=g.id) }}"
+                            onsubmit="return confirm('Se eliminara este gasto de Q{{ '%.2f'|format(g.monto) }}. Esta accion no se puede deshacer.');">
                         <button class="btn btn-sm text-danger" title="Eliminar">&#128465;</button>
                       </form>
                     </td>

@@ -136,7 +136,8 @@
               <td>{{ m.dosis }}</td>
               <td>{{ m.frecuencia }}</td>
               <td class="text-end">
-                <form method="post" action="{{ url_for('eliminar_medicamento', medicamento_id=m.id) }}">
+                <form method="post" action="{{ url_for('eliminar_medicamento', medicamento_id=m.id) }}"
+                      onsubmit="return confirm('Se quitara este medicamento permanente del expediente. ¿Continuar?');">
                   <input type="hidden" name="paciente_id" value="{{ paciente.id }}">
                   <button class="btn btn-sm btn-outline-danger">Quitar</button>
                 </form>
