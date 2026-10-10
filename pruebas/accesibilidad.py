@@ -37,6 +37,7 @@ PANTALLAS = [
     ("Reportes", "/reportes", "admin"),
     ("Reporte de analisis medico", "/reportes/analisis-medico?paciente_id=1", "admin"),
     ("Reporte de entradas", "/reportes/entradas", "admin"),
+    ("Usuarios", "/usuarios", "admin"),
     ("Bitacora", "/bitacora", "admin"),
     ("Cambiar contrasena", "/cuenta/contrasena", "admin"),
 ]

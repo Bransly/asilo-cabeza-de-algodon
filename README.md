@@ -93,7 +93,8 @@ repositorio**: son las que usted definió en `.env` (`CLAVE_INICIAL_ADMIN` y
 una sola vez en el registro de `app-base` (`docker compose logs app-base`).
 
 Son **claves temporales**: en el primer ingreso el sistema obliga a cada usuario a cambiarla
-(mínimo 10 caracteres, con letras y números).
+(mínimo 10 caracteres, con letras y números). Si alguien olvida su clave o queda bloqueado,
+el administrador la restablece en **Usuarios**: el sistema genera una clave temporal nueva.
 
 | Usuario | Rol | Accede a |
 |---|---|---|
@@ -131,8 +132,8 @@ export CLAVE_INICIAL_ADMIN=...  CLAVE_INICIAL_USUARIOS=...  API_KEY_SERVICIOS=..
 python pruebas/plan_pruebas.py --tolerancia
 ```
 
-Ejecuta los casos **CP-01 a CP-74** (seguridad, validación de datos, flujo clínico, costos,
-caja, reportes y tolerancia a fallas). Cada caso indica el requerimiento de la ERS que
+Ejecuta los casos **CP-01 a CP-77** (seguridad, validación de datos, flujo clínico, costos,
+caja, reportes, tolerancia a fallas y administración de usuarios). Cada caso indica el requerimiento de la ERS que
 verifica. El registro con fecha y resultado queda en `pruebas/resultados/`.
 
 Después del plan, dos revisiones adicionales:

@@ -15,9 +15,10 @@ Atiende el informe de revisión del SQA (hallazgos H-01 a H-11) y los pendientes
 - Validación de datos en el servidor (reglas RV-01 a RV-17): montos, porcentajes, edades,
   fechas, correos, longitudes y catálogos.
 - Cambio obligatorio de la contraseña inicial y política de contraseñas.
+- Administración de usuarios: desbloquear, restablecer clave temporal, activar y desactivar (RF-44).
 - Clave de servicio (`X-API-Key`) entre la aplicación y los microservicios (DEF-06).
 - Encabezados de seguridad HTTP y token de sesión en el servidor.
-- Plan de pruebas automatizado CP-01 a CP-74 con registro de resultados.
+- Plan de pruebas automatizado CP-01 a CP-77 con registro de resultados.
 - Pruebas de carga, volumen y accesibilidad (`pruebas/carga.py`, `pruebas/accesibilidad.py`).
 - `docs/DESPLIEGUE.md`, `docs/MICROSERVICIOS.md` y este historial.
 

@@ -1,7 +1,7 @@
 """
 PLAN DE PRUEBAS AUTOMATIZADO - Sistema del Asilo Cabeza de Algodon
 
-Ejecuta los casos CP-01 a CP-74 contra el sistema en ejecucion, por HTTP, tal
+Ejecuta los casos CP-01 a CP-77 contra el sistema en ejecucion, por HTTP, tal
 como lo haria un usuario o un atacante que se salta la pantalla. Cada caso
 indica el requerimiento o regla que verifica (RF, RNF, RN o RV de la ERS v1.1).
 
@@ -633,6 +633,46 @@ def pruebas_tolerancia(args, pid):
     ejecutar(args.iniciar_costos)
 
 
+# ================================================ 7. Administracion de usuarios
+def pruebas_usuarios():
+    A = "Administracion de usuarios"
+    admin = sesion("admin")
+    lista = admin.get(f"{BASE}/usuarios").text
+    ids = {u: int(i) for u, i in re.findall(
+        r'<code>([a-z]+)</code>(?:(?!<code>).)*?/usuarios/(\d+)/restablecer', lista, re.S)}
+
+    r = admin.post(f"{BASE}/usuarios/{ids['enfermeria']}/desbloquear")
+    _, r2 = entrar_crudo("enfermeria", clave_inicial("enfermeria"))
+    caso("CP-75", A, "El administrador desbloquea una cuenta bloqueada", "RF-44",
+         "Desbloqueada; el usuario puede ingresar", hay("desbloqueada", r)
+         and "/cuenta/contrasena" in r2.url)
+
+    vieja = sesion("caja")
+    r = admin.post(f"{BASE}/usuarios/{ids['caja']}/restablecer")
+    temporal = (re.search(r"Clave temporal de caja: (\S+) \.", r.text) or [None, ""])[1]
+    sigue = vieja.get(f"{BASE}/caja", allow_redirects=False)
+    s, r2 = entrar_crudo("caja", temporal)
+    bitacora = admin.get(f"{BASE}/bitacora").text
+    caso("CP-76", A, "Restablecer clave: temporal de un solo uso, cierra la sesion y no queda en bitacora",
+         "RF-44, RNF-05", "Clave temporal obliga a cambiarla; sesion anterior cerrada",
+         bool(temporal) and sigue.status_code == 302 and "/cuenta/contrasena" in r2.url
+         and temporal not in bitacora and "RESTABLECE_CONTRASENA" in bitacora)
+    nueva = "Pruebacaja2026x"
+    s.post(f"{BASE}/cuenta/contrasena", data={"actual": temporal, "nueva": nueva, "confirmacion": nueva})
+    CLAVES_NUEVAS["caja"] = nueva
+    SESIONES["caja"] = s
+
+    r = admin.post(f"{BASE}/usuarios/{ids['farmacia']}/desactivar")
+    _, r2 = entrar_crudo("farmacia", CLAVES_NUEVAS.get("farmacia", ""))
+    r3 = sesion("caja").post(f"{BASE}/usuarios/{ids['farmacia']}/activar")
+    r4 = admin.post(f"{BASE}/usuarios/{ids['admin']}/desactivar")
+    admin.post(f"{BASE}/usuarios/{ids['farmacia']}/activar")
+    caso("CP-77", A, "Una cuenta desactivada no ingresa; solo el administrador administra cuentas",
+         "RF-44, RF-37", "Ingreso rechazado; caja denegado; no se desactiva a si mismo",
+         hay("desactivada", r) and hay("Usuario o contrasena incorrectos", r2)
+         and hay("no tiene permiso", r3) and hay("su propia cuenta", r4))
+
+
 # =================================================================== registro
 def guardar_registro():
     carpeta = Path(__file__).parent / "resultados"
@@ -688,6 +728,7 @@ def main():
     pruebas_reportes(pid, facturado)
     if args.tolerancia:
         pruebas_tolerancia(args, pid)
+    pruebas_usuarios()
 
     archivo, correctos = guardar_registro()
     print(f"\n{correctos} de {len(RESULTADOS)} casos correctos. Registro: {archivo}")
