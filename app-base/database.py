@@ -18,7 +18,7 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT", "3306")
 DB_USER = os.getenv("DB_USER", "asilo")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "asilo123")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "")  # se define en .env; sin valor por defecto
 DB_NAME = os.getenv("DB_NAME", "db_asilo")
 
 if DB_HOST:

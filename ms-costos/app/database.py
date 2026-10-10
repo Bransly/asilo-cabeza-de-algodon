@@ -11,7 +11,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 # La cadena de conexion se lee de variables de entorno (nunca quemada en el codigo).
 DB_USER = os.getenv("DB_USER", "asilo")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "asilo123")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "")  # se define en .env; sin valor por defecto
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "3306")
 DB_NAME = os.getenv("DB_NAME", "db_costos")
