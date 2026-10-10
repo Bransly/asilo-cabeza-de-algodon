@@ -186,6 +186,55 @@ class AutenticacionService:
         self.bitacora.guardar(registro)
 
 
+# --- Administracion de usuarios (solo el administrador) ----------------------
+class UsuarioService:
+    """
+    Permite al administrador atender a un usuario que olvido su contrasena o
+    quedo bloqueado, y desactivar cuentas. No permite ver contrasenas: solo
+    genera una clave temporal nueva, que el usuario debe cambiar al ingresar.
+    """
+
+    def __init__(self, sesion):
+        self.usuarios = UsuarioRepository(sesion)
+
+    def listar(self):
+        return self.usuarios.listar()
+
+    def _obtener(self, usuario_id: int) -> Usuario:
+        usuario = self.usuarios.obtener(usuario_id)
+        if usuario is None:
+            raise v.ErrorNegocio("El usuario indicado no existe.")
+        return usuario
+
+    def restablecer_contrasena(self, usuario_id: int) -> tuple[Usuario, str]:
+        usuario = self._obtener(usuario_id)
+        temporal = "Tmp-" + secrets.token_urlsafe(9)
+        usuario.hash_contrasena = cifrar_contrasena(temporal)
+        usuario.debe_cambiar_contrasena = True
+        usuario.intentos_fallidos = 0
+        usuario.bloqueado_hasta = None
+        usuario.token_sesion = None          # cierra cualquier sesion abierta
+        self.usuarios.confirmar()
+        return usuario, temporal
+
+    def desbloquear(self, usuario_id: int) -> Usuario:
+        usuario = self._obtener(usuario_id)
+        usuario.intentos_fallidos = 0
+        usuario.bloqueado_hasta = None
+        self.usuarios.confirmar()
+        return usuario
+
+    def cambiar_estado(self, usuario_id: int, activo: bool) -> Usuario:
+        usuario = self._obtener(usuario_id)
+        if not activo and usuario.id == session.get("usuario_id"):
+            raise v.ErrorNegocio("No puede desactivar su propia cuenta.")
+        usuario.activo = activo
+        if not activo:
+            usuario.token_sesion = None
+        self.usuarios.confirmar()
+        return usuario
+
+
 # --- Control de acceso en cada peticion --------------------------------------
 def usuario_actual() -> dict | None:
     if "usuario_id" not in session:

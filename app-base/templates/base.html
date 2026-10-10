@@ -45,6 +45,7 @@
     <a href="{{ url_for('reportes') }}"
        class="{{ 'activo' if actual in ['reportes', 'ver_reporte'] }}">Reportes</a>
     {% if admin %}
+      <a href="{{ url_for('usuarios') }}" class="{{ 'activo' if actual == 'usuarios' }}">Usuarios</a>
       <a href="{{ url_for('bitacora') }}" class="{{ 'activo' if actual == 'bitacora' }}">Bitacora</a>
     {% endif %}
   </nav>

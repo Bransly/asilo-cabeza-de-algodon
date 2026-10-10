@@ -14,7 +14,7 @@ from datetime import date, datetime, timedelta
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 
 from auth import (
-    AutenticacionService, ErrorAutenticacion, requiere_rol, usuario_actual,
+    AutenticacionService, ErrorAutenticacion, UsuarioService, requiere_rol, usuario_actual,
 )
 from database import Sesion, crear_tablas
 from models import (
@@ -164,6 +164,45 @@ def bitacora():
         registros=BitacoraRepository(request.sesion).ultimos(150),
         estado_servicios=consultas.estado_servicios(),
     )
+
+
+@app.route("/usuarios")
+@requiere_rol(R.ADMINISTRADOR)
+def usuarios():
+    """Administracion de cuentas: desbloquear, restablecer contrasena, activar."""
+    return render_template(
+        "usuarios.html", usuarios_sistema=UsuarioService(request.sesion).listar(),
+        ahora=datetime.now(), estado_servicios=ConsultaService(request.sesion).estado_servicios())
+
+
+@app.post("/usuarios/<int:usuario_id>/<accion>")
+@requiere_rol(R.ADMINISTRADOR)
+def administrar_usuario(usuario_id: int, accion: str):
+    servicio = UsuarioService(request.sesion)
+    auditoria = AutenticacionService(request.sesion)
+    try:
+        if accion == "restablecer":
+            usuario, temporal = servicio.restablecer_contrasena(usuario_id)
+            auditoria.registrar("RESTABLECE_CONTRASENA", "Usuario", usuario_id, "EXITO",
+                                usuario.usuario)
+            # La clave temporal se muestra una sola vez y no queda en la bitacora.
+            flash(f"Clave temporal de {usuario.usuario}: {temporal} . Entreguela en persona; "
+                  "el sistema le pedira cambiarla al ingresar.", "warning")
+        elif accion == "desbloquear":
+            usuario = servicio.desbloquear(usuario_id)
+            auditoria.registrar("DESBLOQUEA_USUARIO", "Usuario", usuario_id, "EXITO", usuario.usuario)
+            flash(f"Cuenta {usuario.usuario} desbloqueada.", "success")
+        elif accion in ("activar", "desactivar"):
+            usuario = servicio.cambiar_estado(usuario_id, accion == "activar")
+            auditoria.registrar(accion.upper() + "_USUARIO", "Usuario", usuario_id, "EXITO",
+                                usuario.usuario)
+            flash(f"Cuenta {usuario.usuario} {'activada' if usuario.activo else 'desactivada'}.",
+                  "success")
+        else:
+            flash("Accion no valida.", "danger")
+    except ErrorNegocio as error:
+        flash(str(error), "danger")
+    return volver("usuarios")
 
 
 # ============================================================ Panel general

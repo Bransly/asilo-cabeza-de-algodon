@@ -328,3 +328,6 @@ a:hover { color: var(--pino); }
 }
 /* Codigo en linea (bitacora): contraste 7.5:1 sobre el fondo de las tablas. */
 code { color: #9d174d; }
+
+/* Acciones destructivas en texto rojo: contraste 6:1 (el rojo de Bootstrap da 4.3:1). */
+.text-danger { color: #b02a37 !important; }
