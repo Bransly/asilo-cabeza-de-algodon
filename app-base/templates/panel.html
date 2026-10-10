@@ -65,7 +65,7 @@
           <tr>
             <td class="text-muted">{{ s.id }}</td>
             <td>
-              <a href="{{ url_for('expediente', paciente_id=s.paciente.id) }}">{{ s.paciente.nombre }}</a>
+              {% if puede_ver_expediente %}<a href="{{ url_for('expediente', paciente_id=s.paciente.id) }}">{% endif %}{{ s.paciente.nombre }}{% if puede_ver_expediente %}</a>{% endif %}
               <div class="dato">{{ s.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</div>
             </td>
             <td>{{ s.especialidad.nombre }}</td>

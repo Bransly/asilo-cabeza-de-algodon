@@ -42,7 +42,7 @@
               {% endif %}
             </div>
             <div class="mt-1">
-              <a href="{{ url_for('expediente', paciente_id=s.paciente.id) }}">{{ s.paciente.nombre }}</a>
+              {% if puede_ver_expediente %}<a href="{{ url_for('expediente', paciente_id=s.paciente.id) }}">{% endif %}{{ s.paciente.nombre }}{% if puede_ver_expediente %}</a>{% endif %}
               <span class="dato">({{ s.paciente.edad }} anios)</span>
             </div>
             <div class="dato">Solicitada el {{ s.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</div>

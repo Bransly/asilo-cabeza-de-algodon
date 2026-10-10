@@ -61,6 +61,12 @@ CSP = "; ".join([
 
 R = RolUsuario
 
+# Quien abre expedientes. Laboratorio, farmacia y fundacion trabajan desde sus
+# bandejas y la visita; no ven el expediente completo ni la cuenta del familiar.
+ROLES_EXPEDIENTE = (R.MEDICO_GENERAL, R.MEDICO_ESPECIALISTA, R.ENFERMERIA, R.CAJA)
+# Quien ve el estado de cuenta del familiar (informacion financiera, RN-10).
+ROLES_CUENTA = ("ADMINISTRADOR", "CAJA")
+
 
 @app.before_request
 def abrir_sesion():
@@ -103,7 +109,10 @@ def volver(destino, **valores):
 @app.context_processor
 def datos_de_sesion():
     """Deja el usuario autenticado disponible en todas las plantillas."""
-    return {"usuario": usuario_actual(), "etiquetas_rol": ETIQUETA_ROL}
+    rol = session.get("rol")
+    return {"usuario": usuario_actual(), "etiquetas_rol": ETIQUETA_ROL,
+            "puede_ver_expediente": rol == "ADMINISTRADOR"
+            or rol in [r.value for r in ROLES_EXPEDIENTE]}
 
 
 # ================================================================ Seguridad
@@ -220,7 +229,7 @@ def panel():
 
 # =============================================================== Pacientes
 @app.route("/pacientes")
-@requiere_rol()
+@requiere_rol(*ROLES_EXPEDIENTE)
 def pacientes():
     servicio = PacienteService(request.sesion)
     consultas = ConsultaService(request.sesion)
@@ -248,7 +257,7 @@ def crear_paciente():
 
 
 @app.route("/pacientes/<int:paciente_id>")
-@requiere_rol()
+@requiere_rol(*ROLES_EXPEDIENTE)
 def expediente(paciente_id: int):
     servicio = PacienteService(request.sesion)
     consultas = ConsultaService(request.sesion)
@@ -260,7 +269,10 @@ def expediente(paciente_id: int):
         flash(str(error), "danger")
         return volver("pacientes")
 
-    cargos, cuenta = consultas.cuenta_del_paciente(paciente_id)
+    # La cuenta del familiar solo se consulta para los roles que pueden verla.
+    cargos, cuenta = ([], None)
+    if session.get("rol") in ROLES_CUENTA:
+        cargos, cuenta = consultas.cuenta_del_paciente(paciente_id)
 
     return render_template(
         "expediente.html",
@@ -270,6 +282,7 @@ def expediente(paciente_id: int):
         enfermeros=consultas.catalogo.enfermeros(),
         cargos=cargos,
         cuenta=cuenta,
+        puede_ver_cuenta=session.get("rol") in ROLES_CUENTA,
         correos=consultas.correos_del_paciente(paciente_id),
         estado_servicios=consultas.estado_servicios(),
     )

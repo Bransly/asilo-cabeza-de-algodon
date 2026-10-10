@@ -24,8 +24,8 @@
             <div class="dato">Solicitado el {{ e.fecha_solicitud.strftime('%d/%m/%Y %H:%M') }}</div>
             <div class="small mt-1">
               Interno:
-              <a href="{{ url_for('expediente', paciente_id=e.visita.paciente.id) }}">
-                {{ e.visita.paciente.nombre }}</a>
+              {% if puede_ver_expediente %}<a href="{{ url_for('expediente', paciente_id=e.visita.paciente.id) }}">{% endif %}
+                {{ e.visita.paciente.nombre }}{% if puede_ver_expediente %}</a>{% endif %}
             </div>
             <div class="small">Medico: {{ e.visita.medico.nombre }}</div>
             <div class="small">

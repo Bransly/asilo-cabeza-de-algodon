@@ -29,8 +29,8 @@
           <tr>
             <td class="small text-nowrap">{{ r.fecha_receta.strftime('%d/%m/%Y %H:%M') }}</td>
             <td>
-              <a href="{{ url_for('expediente', paciente_id=r.visita.paciente.id) }}">
-                {{ r.visita.paciente.nombre }}</a>
+              {% if puede_ver_expediente %}<a href="{{ url_for('expediente', paciente_id=r.visita.paciente.id) }}">{% endif %}
+                {{ r.visita.paciente.nombre }}{% if puede_ver_expediente %}</a>{% endif %}
               <div class="dato">
                 <a href="{{ url_for('visita', visita_id=r.visita.id) }}">Visita #{{ r.visita.id }}</a>, {{ r.visita.medico.nombre }}
               </div>
