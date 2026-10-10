@@ -17,7 +17,7 @@ Atiende el informe de revisión del SQA (hallazgos H-01 a H-11) y los pendientes
 - Cambio obligatorio de la contraseña inicial y política de contraseñas.
 - Clave de servicio (`X-API-Key`) entre la aplicación y los microservicios (DEF-06).
 - Encabezados de seguridad HTTP y token de sesión en el servidor.
-- Plan de pruebas automatizado CP-01 a CP-72 con registro de resultados.
+- Plan de pruebas automatizado CP-01 a CP-74 con registro de resultados.
 - `docs/DESPLIEGUE.md`, `docs/MICROSERVICIOS.md` y este historial.
 
 ### Cambiado

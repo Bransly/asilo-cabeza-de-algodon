@@ -131,7 +131,7 @@ export CLAVE_INICIAL_ADMIN=...  CLAVE_INICIAL_USUARIOS=...  API_KEY_SERVICIOS=..
 python pruebas/plan_pruebas.py --tolerancia
 ```
 
-Ejecuta los casos **CP-01 a CP-72** (seguridad, validación de datos, flujo clínico, costos,
+Ejecuta los casos **CP-01 a CP-74** (seguridad, validación de datos, flujo clínico, costos,
 caja, reportes y tolerancia a fallas). Cada caso indica el requerimiento de la ERS que
 verifica. El registro con fecha y resultado queda en `pruebas/resultados/`.
 

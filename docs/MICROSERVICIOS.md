@@ -77,4 +77,4 @@ configurado) y `FALLIDA` (error al enviar; el detalle queda registrado).
 Si un microservicio no responde, la aplicación base guarda igual la información clínica
 (solicitud, visita, entrega de medicamento) y muestra una advertencia indicando qué quedó
 pendiente. El indicador de la barra lateral muestra si cada servicio está en línea.
-Verificado por los casos CP-70 a CP-72.
+Verificado por los casos CP-72 a CP-74.
