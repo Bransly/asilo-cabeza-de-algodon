@@ -138,7 +138,7 @@ def pruebas_seguridad():
 
     s, r = entrar_crudo("admin", CLAVE_ADMIN)
     otra = s.get(f"{BASE}/pacientes")
-    caso("CP-04", A, "Con la clave inicial solo se puede cambiar la contrasena", "RNF-17",
+    caso("CP-04", A, "Con la clave inicial solo se puede cambiar la contrasena", "RF-42, RNF-17",
          "Redirige a /cuenta/contrasena", "/cuenta/contrasena" in r.url
          and "/cuenta/contrasena" in otra.url)
 
@@ -158,7 +158,7 @@ def pruebas_seguridad():
                data={"actual": CLAVE_ADMIN, "nueva": nueva, "confirmacion": nueva})
     CLAVES_NUEVAS["admin"] = nueva
     SESIONES["admin"] = s
-    caso("CP-07", A, "Cambio de contrasena valido habilita el sistema", "RNF-17",
+    caso("CP-07", A, "Cambio de contrasena valido habilita el sistema", "RF-42, RNF-17",
          "Contrasena actualizada y acceso al panel", hay("Contrasena actualizada", r))
 
     caja = sesion("caja")
@@ -171,7 +171,7 @@ def pruebas_seguridad():
          "Acceso denegado", hay("no tiene permiso", r))
 
     r = caja.get(f"{BASE}/bitacora")
-    caso("CP-10", A, "Caja no puede consultar la bitacora", "RF-40", "Acceso denegado",
+    caso("CP-10", A, "Caja no puede consultar la bitacora", "RF-37, RF-40", "Acceso denegado",
          hay("no tiene permiso", r))
 
     lab = sesion("laboratorio")
@@ -193,17 +193,17 @@ def pruebas_seguridad():
 
     admin = sesion("admin")
     r = admin.get(f"{BASE}/bitacora")
-    caso("CP-14", A, "La bitacora registra ingresos, fallos y accesos denegados", "RF-38",
+    caso("CP-14", A, "La bitacora registra ingresos, fallos y accesos denegados", "RF-38, RF-40",
          "INICIO_SESION, FALLIDO y ACCESO_DENEGADO presentes",
          all(t in r.text for t in ("INICIO_SESION", "ACCESO_DENEGADO", "Cuenta bloqueada")))
-    caso("CP-15", A, "Ninguna contrasena queda escrita en la bitacora", "RNF-05, H-09",
+    caso("CP-15", A, "Ninguna contrasena queda escrita en la bitacora", "RNF-05",
          "Ni la clave inicial ni las erroneas aparecen",
          all(t not in r.text for t in (CLAVE_USUARIOS, "malaContrasena", "contrasenaEquivocada",
                                        "usuarioQueNoExiste")))
 
     r = requests.get(f"{BASE}/login")
     cabeceras = r.headers
-    caso("CP-16", A, "Encabezados de seguridad HTTP presentes", "H-09",
+    caso("CP-16", A, "Encabezados de seguridad HTTP presentes", "RNF-18",
          "CSP, X-Frame-Options, nosniff y no-store",
          "Content-Security-Policy" in cabeceras and cabeceras.get("X-Frame-Options") == "DENY"
          and cabeceras.get("X-Content-Type-Options") == "nosniff"
@@ -211,7 +211,7 @@ def pruebas_seguridad():
 
     s, r = entrar_crudo("admin", CLAVES_NUEVAS["admin"])
     cookie = next((c for c in s.cookies if c.name == "session"), None)
-    caso("CP-17", A, "La cookie de sesion es HttpOnly y SameSite=Lax", "RNF-07, H-08",
+    caso("CP-17", A, "La cookie de sesion es HttpOnly y SameSite=Lax", "RNF-07, RNF-18",
          "Atributos presentes", cookie is not None and cookie.has_nonstandard_attr("HttpOnly")
          and cookie.get_nonstandard_attr("SameSite") == "Lax")
 
@@ -219,19 +219,19 @@ def pruebas_seguridad():
     copia.cookies.update(s.cookies)
     s.post(f"{BASE}/logout")
     r = copia.get(f"{BASE}/pacientes", allow_redirects=False)
-    caso("CP-18", A, "Al cerrar sesion, una copia de la cookie deja de servir", "H-08",
+    caso("CP-18", A, "Al cerrar sesion, una copia de la cookie deja de servir", "RF-36, RNF-07",
          "302 hacia /login", r.status_code == 302)
     SESIONES.pop("admin", None)
 
     r1 = api("GET", f"{URL_COSTOS}/cargos", clave=False)
     r2 = api("POST", f"{URL_NOTIF}/notificaciones/solicitud-medica", clave=False, json={})
     r3 = requests.get(f"{URL_COSTOS}/tarifas", headers={"X-API-Key": "clave-falsa"})
-    caso("CP-19", A, "Los microservicios rechazan peticiones sin clave de servicio", "H-08",
+    caso("CP-19", A, "Los microservicios rechazan peticiones sin clave de servicio", "RNF-19",
          "401 sin clave o con clave falsa",
          r1.status_code == 401 and r2.status_code == 401 and r3.status_code == 401)
 
     r = api("GET", f"{URL_COSTOS}/tarifas")
-    caso("CP-20", A, "Con la clave de servicio la API responde", "H-08", "200",
+    caso("CP-20", A, "Con la clave de servicio la API responde", "RNF-19", "200",
          r.status_code == 200)
 
 
@@ -285,7 +285,7 @@ def pruebas_expediente():
          and "&lt;script&gt;" in listado.text)
 
     r = admin.post(f"{BASE}/pacientes/{pid}/editar", data={"edad": "200"})
-    caso("CP-28", A, "La edicion tambien valida en el servidor", "RV-07",
+    caso("CP-28", A, "La edicion tambien valida en el servidor", "RF-02, RV-07",
          "Rechazada", hay("como maximo 120", r))
 
     r = requests.post(f"{BASE}/pacientes", data=interno_valido(edad="-5"),
@@ -353,7 +353,7 @@ def pruebas_flujo(pid):
          and hay("posterior al momento actual", r2))
 
     r = especialista.post(f"{BASE}/solicitudes/{sid}/visita", data={"tarifa_consulta_id": 2})
-    caso("CP-36", A, "No se abre visita si la fundacion no asigno medico", "RN-03",
+    caso("CP-36", A, "No se abre visita si la fundacion no asigno medico", "RF-08, RN-03",
          "Rechazada", hay("aun no asigna medico", r))
 
     r = fundacion.post(f"{BASE}/solicitudes/{sid}/asignar",
@@ -390,7 +390,7 @@ def pruebas_flujo(pid):
     r3 = especialista.post(f"{BASE}/visitas/{vid}/recetas",
                            data={"tarifa_id": 6, "cantidad": "30", "indicaciones": ""})
     caso("CP-42", A, "Receta con cantidad 0, mayor a 500 o sin indicaciones se rechaza",
-         "RV-11, RF-19", "Rechazada", hay("como minimo 1", r1) and hay("como maximo 500", r2)
+         "RF-19, RV-11", "Rechazada", hay("como minimo 1", r1) and hay("como maximo 500", r2)
          and hay("es obligatorio", r3))
 
     r = especialista.post(f"{BASE}/visitas/{vid}/recetas", data={**datos, "cantidad": "30"})
@@ -418,7 +418,7 @@ def pruebas_flujo(pid):
                   data={"resultado": "Hemoglobina 13.2 g/dL. Sin alteraciones."})
     r3 = lab.post(f"{BASE}/examenes/{eid}/resultado", data={"resultado": "Otro resultado"})
     caso("CP-46", A, "Resultado vacio se rechaza; el valido se guarda una sola vez",
-         "RF-17, CU-11", "Vacio rechazado, valido guardado, segundo rechazado",
+         "RF-16, RF-17", "Vacio rechazado, valido guardado, segundo rechazado",
          hay("es obligatorio", r1) and hay("Resultado cargado", r2) and hay("ya tiene resultado", r3))
 
     r = especialista.get(f"{BASE}/visitas/{vid}")
@@ -442,7 +442,7 @@ def pruebas_flujo(pid):
                       data={"diagnostico": "Hipertension arterial grado 1.",
                             "observaciones": "Control en 30 dias."})
     r2 = especialista.post(f"{BASE}/visitas/{vid}/cerrar")
-    caso("CP-49", A, "Sin diagnostico no se cierra; con diagnostico si", "RN-09, RF-14",
+    caso("CP-49", A, "Sin diagnostico no se cierra; con diagnostico si", "RF-12, RF-14, RN-09",
          "Primero rechazada, luego cerrada", hay("sin registrar el diagnostico", r1)
          and hay("Visita medica cerrada", r2))
 
@@ -458,7 +458,7 @@ def pruebas_costos(pid):
     caja = sesion("caja")
 
     cuenta = api("GET", f"{URL_COSTOS}/reportes/estado-cuenta/{pid}").json()
-    caso("CP-51", A, "Estado de cuenta del familiar con descuento", "RF-22",
+    caso("CP-51", A, "Estado de cuenta del familiar con descuento", "RF-22, RF-24",
          "Subtotal Q575.00, total Q361.00, ahorro Q214.00",
          cuenta["total_sin_descuento"] == 575.0 and cuenta["total_facturado"] == 361.0
          and cuenta["total_ahorrado"] == 214.0 and cuenta["saldo_pendiente"] == 361.0)
@@ -474,13 +474,13 @@ def pruebas_costos(pid):
     r2 = caja.post(f"{BASE}/cargos/{consulta['id']}/revertir",
                    data={"paciente_id": pid, "motivo": "Se cobro al interno equivocado"})
     estado = api("GET", f"{URL_COSTOS}/cargos/{consulta['id']}").json()["estado"]
-    caso("CP-53", A, "Revertir un pago exige motivo y devuelve el cargo a pendiente", "DEF-05",
+    caso("CP-53", A, "Revertir un pago exige motivo y devuelve el cargo a pendiente", "RF-41",
          "Sin motivo rechazado; con motivo PENDIENTE", hay("es obligatorio", r1)
          and hay("se revirtio", r2) and estado == "PENDIENTE")
     caja.post(f"{BASE}/cargos/{consulta['id']}/pagar", data={"paciente_id": pid})
 
     r = api("DELETE", f"{URL_COSTOS}/cargos/{consulta['id']}")
-    caso("CP-54", A, "No se elimina un cargo ya pagado", "Regla ms-costos", "400",
+    caso("CP-54", A, "No se elimina un cargo ya pagado", "RN-13", "400",
          r.status_code == 400)
 
     base = {"tipo_servicio": "EXAMEN", "descripcion": "Tarifa de prueba SQA"}
@@ -552,7 +552,7 @@ def pruebas_costos(pid):
     r3 = caja.post(f"{BASE}/caja/pagos-fundacion",
                    data={"monto": "50.00", "referencia": "FVD-0001", "fecha": hoy})
     caso("CP-62", A, "Pago a la fundacion: no mayor que la deuda y sin referencia repetida",
-         "RF-25, H-05", "Excedente rechazado, pago valido, referencia duplicada rechazada",
+         "RF-25, RF-43, RV-01", "Excedente rechazado, pago valido, referencia duplicada rechazada",
          hay("mayor que la deuda", r1) and hay("Pago a la fundacion registrado", r2)
          and hay("Ya existe un pago", r3))
     return total
