@@ -546,7 +546,7 @@ def pruebas_reportes(pid, facturado):
     caja, medico, lab = sesion("caja"), sesion("mgeneral"), sesion("laboratorio")
     hoy = date.today().isoformat()
     casos = [
-        ("CP-63", "costos-por-cita", caja, "RF-29", "Dr. Luis Herrera (Cardiología)"),
+        ("CP-63", "costos-por-cita", caja, "RF-29", "Dr. Luis Herrera (Cardiologia)"),
         ("CP-64", "analisis-medico", medico, "RF-30", "Hipertensión arterial grado 1"),
         ("CP-65", "cobros-por-paciente", caja, "RF-31", "Q361.00"),
         ("CP-66", "pagos-fundacion", caja, "RF-32, RF-25", "Deuda actual con la fundación"),
