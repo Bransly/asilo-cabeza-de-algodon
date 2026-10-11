@@ -1,8 +1,3 @@
-"""
-CAPA DE ENTIDADES / MODELOS
-Clases que representan los conceptos del negocio. No contienen reglas de negocio.
-Corresponden a las entidades Cobro / CuentaFamiliar del ERD del proyecto.
-"""
 import enum
 from datetime import datetime
 
@@ -12,12 +7,10 @@ from .database import Base
 
 
 def Dinero():
-    """DECIMAL(10,2) en MySQL: los centavos se guardan exactos, nunca como FLOAT."""
     return Numeric(10, 2, asdecimal=True)
 
 
 def Porcentaje():
-    """DECIMAL(5,2): de 0.00 a 100.00."""
     return Numeric(5, 2, asdecimal=True)
 
 
@@ -33,8 +26,6 @@ class EstadoCargo(str, enum.Enum):
 
 
 class Tarifa(Base):
-    """Precio de referencia de la fundacion y el descuento que otorga al asilo."""
-
     __tablename__ = "tarifas"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -46,8 +37,6 @@ class Tarifa(Base):
 
 
 class Cargo(Base):
-    """Cargo generado a la cuenta del familiar por consulta, examen o medicamento."""
-
     __tablename__ = "cargos"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -60,10 +49,9 @@ class Cargo(Base):
     descripcion = Column(String(150), nullable=False)
     cantidad = Column(Integer, nullable=False, default=1)
 
-    # Precio y descuento se COPIAN de la tarifa al crear el cargo: si la
-    # fundacion cambia su tarifa despues, el cargo conserva su monto original.
+    # Se copian de la tarifa: si la fundacion la cambia, el cargo conserva su monto.
     precio_base = Column(Dinero(), nullable=False)
-    descuento_aplicado = Column(Porcentaje(), nullable=False, default=0)  # porcentaje
+    descuento_aplicado = Column(Porcentaje(), nullable=False, default=0)
     subtotal = Column(Dinero(), nullable=False)   # precio_base * cantidad
     total = Column(Dinero(), nullable=False)      # subtotal menos descuento
 

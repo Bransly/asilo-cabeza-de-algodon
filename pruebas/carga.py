@@ -1,14 +1,4 @@
-"""
-PRUEBAS DE CARGA Y VOLUMEN (RNF-20 y RNF-21)
-
-  carga:   N usuarios simultaneos recorren las pantallas de uso diario durante
-           un tiempo fijo. Mide el tiempo de respuesta (promedio, p95, maximo)
-           y los errores.
-  volumen: crea muchos cargos en ms-costos y mide cuanto tardan el estado de
-           cuenta y los reportes que los recorren.
-
-Se ejecuta DESPUES de plan_pruebas.py (usa las contrasenas que ese plan deja
-cambiadas: Prueba<usuario>2026x).
+"""RNF-20 y RNF-21. Correr despues de plan_pruebas.py (usa sus contrasenas).
 
 Uso:
   python pruebas/carga.py carga --usuarios 20 --segundos 60
@@ -50,9 +40,7 @@ def percentil(valores, p):
 
 
 def carga(usuarios, segundos):
-    # El sistema mantiene una sola sesion vigente por usuario (cada ingreso
-    # renueva el token). Por eso se ingresa una vez por rol y cada hilo usa
-    # una copia de esa cookie, como varias pestanas del mismo navegador.
+    # Hay una sola sesion vigente por usuario: los hilos de un rol comparten su cookie.
     nombres = list(RECORRIDOS)
     cookies = {rol: entrar(rol).cookies for rol in nombres}
     sesiones = []

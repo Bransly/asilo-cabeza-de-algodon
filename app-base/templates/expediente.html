@@ -7,7 +7,6 @@
 {% set rol = usuario.rol if usuario else '' %}
 {% set admin = rol == 'ADMINISTRADOR' %}
 
-<!-- ------------------------------------------------ Datos del interno -->
 <div class="tarjeta mb-4">
   <div class="tarjeta-titulo d-flex justify-content-between align-items-center flex-wrap gap-2">
     <span>{{ paciente.nombre }}, {{ paciente.edad }} años</span>
@@ -83,7 +82,6 @@
 
 <div class="row g-4">
 
-  <!-- ------------------------------------------------ Ficha medica -->
   <div class="col-lg-7">
     <div class="tarjeta mb-4">
       <div class="tarjeta-titulo d-flex justify-content-between align-items-center">
@@ -120,7 +118,6 @@
       </div>
     </div>
 
-    <!-- --------------------------------- Medicinas de cajon -->
     <div class="tarjeta mb-4">
       <div class="tarjeta-titulo">Medicamentos permanentes</div>
       <div class="p-3">
@@ -169,7 +166,6 @@
     </div>
   </div>
 
-  <!-- ------------------------------------------------ Solicitudes -->
   <div class="col-lg-5">
     {% if admin or rol == 'MEDICO_GENERAL' %}
     <div class="tarjeta mb-4">
@@ -254,7 +250,6 @@
   </div>
 </div>
 
-<!-- ------------------------------------------- Historial medico -->
 <div class="tarjeta mt-4">
   <div class="tarjeta-titulo">Historial médico</div>
   <div class="p-3">
@@ -322,7 +317,6 @@
 </div>
 
 {% if puede_ver_cuenta %}
-<!-- ------------------------------------------- Cuenta del familiar -->
 {% if cuenta %}
 <div class="tarjeta mt-4">
   <div class="tarjeta-titulo d-flex justify-content-between align-items-center">
@@ -445,7 +439,6 @@
 
 {% endif %}
 
-<!-- ------------------------------------------- Correos al familiar -->
 <div class="tarjeta mt-4">
   <div class="tarjeta-titulo">Correos enviados al familiar</div>
   <div class="p-3">
@@ -467,7 +460,6 @@
   </div>
 </div>
 
-<!-- Confirmacion de cobro / eliminacion -->
 <div class="modal fade" id="modalConfirmar" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -503,7 +495,6 @@
   </div>
 </div>
 
-<!-- Confirmacion de baja del interno -->
 <div class="modal fade" id="modalBaja" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">

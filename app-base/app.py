@@ -1,13 +1,3 @@
-"""
-APLICACION BASE - Panel del Asilo Cabeza de Algodon
-
-Monolito del sistema: aqui vive el expediente clinico (pacientes, ficha medica,
-solicitudes, visitas, examenes y recetas). Los costos y los correos NO estan
-aqui: se delegan en los microservicios ms-costos y ms-notificaciones.
-
-Este archivo es solo la capa de presentacion: recibe HTTP, llama a la capa de
-negocio y devuelve una plantilla. No contiene reglas de negocio ni SQL.
-"""
 import os
 from datetime import date, datetime, timedelta
 
@@ -30,9 +20,7 @@ from services import (
 
 app = Flask(__name__)
 
-# La llave que firma la cookie de sesion NO tiene valor por defecto: si faltara,
-# cualquiera que leyera el codigo podria falsificar sesiones. Se define en el
-# archivo .env (fuera del repositorio) o en las variables del servidor.
+# Sin valor por defecto: con una llave conocida se podrian falsificar sesiones.
 app.secret_key = os.getenv("SECRET_KEY", "")
 if len(app.secret_key) < 32:
     raise RuntimeError(
@@ -40,14 +28,13 @@ if len(app.secret_key) < 32:
         "Puede generarla con: python -c \"import secrets; print(secrets.token_hex(32))\"")
 
 app.config.update(
-    SESSION_COOKIE_HTTPONLY=True,     # JavaScript no puede leer la cookie
-    SESSION_COOKIE_SAMESITE="Lax",    # mitiga CSRF entre sitios
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
     SESSION_COOKIE_SECURE=os.getenv("HTTPS", "").lower() == "true",
     PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
-    MAX_CONTENT_LENGTH=1024 * 1024,   # ningun formulario necesita mas de 1 MB
+    MAX_CONTENT_LENGTH=1024 * 1024,
 )
 
-# Fuentes externas permitidas por la politica de contenido (CSP).
 CSP = "; ".join([
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
@@ -61,10 +48,9 @@ CSP = "; ".join([
 
 R = RolUsuario
 
-# Quien abre expedientes. Laboratorio, farmacia y fundacion trabajan desde sus
-# bandejas y la visita; no ven el expediente completo ni la cuenta del familiar.
+# Laboratorio, farmacia y fundacion trabajan desde sus bandejas, no desde el expediente.
 ROLES_EXPEDIENTE = (R.MEDICO_GENERAL, R.MEDICO_ESPECIALISTA, R.ENFERMERIA, R.CAJA)
-# Quien ve el estado de cuenta del familiar (informacion financiera, RN-10).
+# RN-10: solo estos roles ven la cuenta del familiar.
 ROLES_CUENTA = ("ADMINISTRADOR", "CAJA")
 
 
@@ -75,7 +61,6 @@ def abrir_sesion():
 
 @app.after_request
 def encabezados_de_seguridad(respuesta):
-    """Encabezados HTTP de seguridad (hallazgo H-09 del SQA)."""
     respuesta.headers["Content-Security-Policy"] = CSP
     respuesta.headers["X-Content-Type-Options"] = "nosniff"
     respuesta.headers["X-Frame-Options"] = "DENY"
@@ -108,14 +93,12 @@ def volver(destino, **valores):
 
 @app.context_processor
 def datos_de_sesion():
-    """Deja el usuario autenticado disponible en todas las plantillas."""
     rol = session.get("rol")
     return {"usuario": usuario_actual(), "etiquetas_rol": ETIQUETA_ROL,
             "puede_ver_expediente": rol == "ADMINISTRADOR"
             or rol in [r.value for r in ROLES_EXPEDIENTE]}
 
 
-# ================================================================ Seguridad
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
@@ -148,7 +131,6 @@ def logout():
 @app.route("/cuenta/contrasena", methods=["GET", "POST"])
 @requiere_rol()
 def cambiar_contrasena():
-    """Cambio de contrasena; obligatorio en el primer ingreso."""
     if request.method == "GET":
         return render_template("contrasena.html", obligatorio=session.get("debe_cambiar"))
     try:
@@ -165,7 +147,6 @@ def cambiar_contrasena():
 @app.route("/bitacora")
 @requiere_rol(R.ADMINISTRADOR)
 def bitacora():
-    """Auditoria: quien hizo que, cuando y con que resultado."""
     from repository import BitacoraRepository
     consultas = ConsultaService(request.sesion)
     return render_template(
@@ -178,7 +159,6 @@ def bitacora():
 @app.route("/usuarios")
 @requiere_rol(R.ADMINISTRADOR)
 def usuarios():
-    """Administracion de cuentas: desbloquear, restablecer contrasena, activar."""
     return render_template(
         "usuarios.html", usuarios_sistema=UsuarioService(request.sesion).listar(),
         ahora=datetime.now(), estado_servicios=ConsultaService(request.sesion).estado_servicios())
@@ -214,7 +194,6 @@ def administrar_usuario(usuario_id: int, accion: str):
     return volver("usuarios")
 
 
-# ============================================================ Panel general
 @app.route("/")
 @requiere_rol()
 def panel():
@@ -227,7 +206,6 @@ def panel():
     )
 
 
-# =============================================================== Pacientes
 @app.route("/pacientes")
 @requiere_rol(*ROLES_EXPEDIENTE)
 def pacientes():
@@ -269,7 +247,6 @@ def expediente(paciente_id: int):
         flash(str(error), "danger")
         return volver("pacientes")
 
-    # La cuenta del familiar solo se consulta para los roles que pueden verla.
     cargos, cuenta = ([], None)
     if session.get("rol") in ROLES_CUENTA:
         cargos, cuenta = consultas.cuenta_del_paciente(paciente_id)
@@ -353,7 +330,6 @@ def eliminar_medicamento(medicamento_id: int):
     return volver("expediente", paciente_id=paciente_id)
 
 
-# ============================================================= Solicitudes
 @app.post("/solicitudes")
 @requiere_rol(R.MEDICO_GENERAL)
 def crear_solicitud():
@@ -375,7 +351,6 @@ def crear_solicitud():
 @app.route("/fundacion")
 @requiere_rol(R.FUNDACION, R.MEDICO_ESPECIALISTA)
 def fundacion():
-    """Modulo que se le proporciona a la fundacion para asignar medico y horario."""
     consultas = ConsultaService(request.sesion)
     filtro = request.args.get("estado", "PENDIENTE")
     estado = EstadoSolicitud(filtro) if filtro in EstadoSolicitud.__members__ else None
@@ -425,7 +400,6 @@ def abrir_visita(solicitud_id: int):
     return volver("fundacion")
 
 
-# ========================================================== Visita medica
 @app.route("/visitas/<int:visita_id>")
 @requiere_rol()
 def visita(visita_id: int):
@@ -498,7 +472,6 @@ def recetar(visita_id: int):
     return volver("visita", visita_id=visita_id)
 
 
-# ============================================================ Laboratorio
 @app.route("/laboratorio")
 @requiere_rol(R.LABORATORIO)
 def laboratorio():
@@ -524,7 +497,6 @@ def cargar_resultado(examen_id: int):
     return volver("laboratorio")
 
 
-# ================================================================ Farmacia
 @app.route("/farmacia")
 @requiere_rol(R.FARMACIA)
 def farmacia():
@@ -552,7 +524,6 @@ def entregar_medicamento(receta_id: int):
     return volver("farmacia")
 
 
-# ==================================================================== Caja
 @app.post("/cargos/<int:cargo_id>/pagar")
 @requiere_rol(R.CAJA)
 def pagar_cargo(cargo_id: int):
@@ -572,7 +543,6 @@ def pagar_cargo(cargo_id: int):
 @app.post("/cargos/<int:cargo_id>/revertir")
 @requiere_rol(R.CAJA)
 def revertir_pago(cargo_id: int):
-    """Corrige un pago marcado por error. Queda en la bitacora con su motivo."""
     paciente_id = request.form.get("paciente_id", type=int)
     motivo = request.form.get("motivo", "")
     auditoria = AutenticacionService(request.sesion)
@@ -602,9 +572,7 @@ def eliminar_cargo(cargo_id: int):
     return volver("expediente", paciente_id=paciente_id)
 
 
-# ==================================================================== Caja
 def _fecha(texto):
-    """Convierte el texto de un filtro de fecha; devuelve None si viene vacio."""
     if not texto:
         return None
     try:
@@ -628,7 +596,7 @@ def caja():
     try:
         fundacion = servicio.estado_con_fundacion()
     except ErrorNegocio:
-        fundacion = None   # ms-costos fuera de linea: la pantalla lo indica
+        fundacion = None
 
     return render_template(
         "caja.html",
@@ -759,7 +727,6 @@ def cobrar_cuota(cuota_id: int):
                   mes=request.form.get("mes", type=int))
 
 
-# ================================================================ Reportes
 REPORTES = {
     "costos-por-cita": {
         "titulo": "Costos por cita",
@@ -859,15 +826,12 @@ def ver_reporte(clave: str):
 
 
 def preparar_base_de_datos() -> None:
-    """Crea las tablas y carga los catalogos iniciales (solo si la base esta vacia)."""
     crear_tablas()
     cargar_datos_iniciales()
 
 
 if __name__ == "__main__":
-    # Solo para desarrollo local. En Docker la aplicacion corre con Gunicorn
-    # (ver wsgi.py y el Dockerfile). El modo debug nunca se activa por defecto:
-    # su consola permite ejecutar codigo en el servidor.
+    # Solo para desarrollo; en Docker corre con Gunicorn (wsgi.py).
     preparar_base_de_datos()
     app.run(host="127.0.0.1", port=int(os.getenv("PUERTO", "8000")),
             debug=os.getenv("FLASK_DEBUG", "").lower() == "true")

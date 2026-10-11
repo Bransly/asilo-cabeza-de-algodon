@@ -1,11 +1,3 @@
-"""
-CAPA DE PRESENTACION DEL MICROSERVICIO (API REST)
-Solo recibe peticiones HTTP, valida el formato y delega en la capa de negocio.
-No contiene reglas ni consultas SQL.
-
-Microservicio 1: COSTOS Y CARGOS
-Documentacion interactiva: http://localhost:8001/docs
-"""
 from typing import List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query, status
@@ -33,9 +25,7 @@ app = FastAPI(
         "Sistema de Administración del Asilo de Ancianos Cabeza de Algodón."
     ),
     version="1.1.0",
-    # Toda ruta exige la clave de servicio (salvo /salud). El navegador nunca
-    # llama a este servicio: lo hace la aplicacion base desde el servidor, por
-    # eso ya no se habilita CORS.
+    # Todas las rutas exigen la clave de servicio, salvo /salud.
     dependencies=[Depends(exigir_clave_de_servicio)],
 )
 
@@ -54,17 +44,11 @@ def _manejar(error: ReglaNegocioError) -> HTTPException:
     return HTTPException(status_code=error.codigo, detail=error.mensaje)
 
 
-# --------------------------------------------------------------------------
-# Salud del servicio (lo usa Docker y la aplicacion base)
-# --------------------------------------------------------------------------
 @app.get("/salud", tags=["Salud"])
 def salud():
     return {"servicio": "ms-costos", "estado": "activo"}
 
 
-# --------------------------------------------------------------------------
-# CRUD de tarifas
-# --------------------------------------------------------------------------
 @app.get("/tarifas", response_model=List[TarifaRespuesta], tags=["Tarifas"])
 def listar_tarifas(solo_activas: bool = False, db: Session = Depends(get_db)):
     return TarifaService(db).listar(solo_activas)
@@ -104,9 +88,6 @@ def eliminar_tarifa(tarifa_id: int, db: Session = Depends(get_db)):
         raise _manejar(error)
 
 
-# --------------------------------------------------------------------------
-# CRUD de cargos
-# --------------------------------------------------------------------------
 @app.get("/cargos", response_model=List[CargoRespuesta], tags=["Cargos"])
 def listar_cargos(
     paciente_id: Optional[int] = Query(default=None),
@@ -163,9 +144,6 @@ def eliminar_cargo(cargo_id: int, db: Session = Depends(get_db)):
         raise _manejar(error)
 
 
-# --------------------------------------------------------------------------
-# Reporte
-# --------------------------------------------------------------------------
 @app.get("/reportes/estado-cuenta/{paciente_id}", response_model=EstadoCuenta, tags=["Reportes"])
 def estado_cuenta(paciente_id: int, db: Session = Depends(get_db)):
     """Reporte de cobros por paciente con el ahorro obtenido por la fundacion."""

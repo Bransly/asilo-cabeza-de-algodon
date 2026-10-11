@@ -1,8 +1,3 @@
-"""
-ESQUEMAS (DTO)
-Definen que datos entran y que datos salen por la API. Validan formato y tipo,
-nunca reglas del negocio. Esto separa el contrato publico del modelo interno.
-"""
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
@@ -12,11 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from .models import EstadoCargo, TipoServicio
 
 
-# ---------- Tarifas ----------
-# Reglas de validacion RV-01 a RV-04: montos positivos con dos decimales como
-# maximo y descuento entre 0 y 100. Pydantic rechaza con 422 cualquier valor
-# fuera de rango, aunque la peticion llegue directo a la API sin pasar por la
-# pantalla.
+# RV-01 a RV-04: Pydantic responde 422 aunque la peticion no pase por la pantalla.
 Precio = Field(gt=0, le=Decimal("99999.99"), max_digits=7, decimal_places=2)
 Descuento = Field(ge=0, le=100, max_digits=5, decimal_places=2)
 
@@ -50,7 +41,6 @@ class TarifaRespuesta(BaseModel):
     activo: bool
 
 
-# ---------- Cargos ----------
 class CargoCrear(BaseModel):
     paciente_id: int = Field(gt=0)
     paciente_nombre: str = Field(min_length=3, max_length=120)
@@ -84,8 +74,6 @@ class ReversionPago(BaseModel):
 
 
 class EstadoCuenta(BaseModel):
-    """Salida del reporte de cobros por paciente exigido en el enunciado."""
-
     paciente_id: int
     paciente_nombre: str
     cantidad_cargos: int

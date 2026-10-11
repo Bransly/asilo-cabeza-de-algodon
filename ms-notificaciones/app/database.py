@@ -1,9 +1,3 @@
-"""
-CAPA DE ACCESO A DATOS - Conexion
-Este microservicio tiene su PROPIA base de datos (db_notificaciones).
-Es el principio de "base de datos por servicio": ms-costos no puede leer ni
-escribir en las tablas de este microservicio, solo puede llamar a su API.
-"""
 import os
 import time
 
@@ -11,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 DB_USER = os.getenv("DB_USER", "asilo")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "")  # se define en .env; sin valor por defecto
+DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "3306")
 DB_NAME = os.getenv("DB_NAME", "db_notificaciones")

@@ -1,9 +1,3 @@
-"""
-CAPA DE ACCESO A DATOS - Patron Repositorio
-Unica capa autorizada a ejecutar consultas. Devuelve objetos de la capa de
-entidades, nunca filas crudas. Usa el ORM con consultas parametrizadas para
-evitar inyeccion SQL, tal como se definio en el documento de capas.
-"""
 from typing import List, Optional
 
 from sqlalchemy.orm import Session

@@ -1,14 +1,7 @@
-"""
-REVISION DE ACCESIBILIDAD WCAG 2.1 NIVEL AA (RNF-22)
+"""RNF-22: axe-core sobre cada pantalla con Playwright (WCAG 2.1 AA).
 
-Abre cada pantalla en un navegador real (Chromium, con Playwright) y ejecuta
-axe-core, la herramienta de revision automatica de accesibilidad mas usada.
-Reporta las violaciones de las reglas WCAG 2.0/2.1 A y AA por pantalla.
-
-Requisitos:
-  pip install playwright && playwright install chromium
-  Archivo axe.min.js (npm install axe-core) indicado en AXE_JS.
-  Ejecutar despues de plan_pruebas.py (usa la contrasena PruebaAdmin2026x que deja ese plan).
+Requiere playwright + chromium y axe.min.js (npm install axe-core).
+Correr despues de plan_pruebas.py.
 
 Uso:
   AXE_JS=node_modules/axe-core/axe.min.js python pruebas/accesibilidad.py
@@ -21,7 +14,7 @@ from playwright.sync_api import sync_playwright
 
 BASE = os.getenv("BASE", "http://localhost:8000")
 AXE = Path(os.getenv("AXE_JS", "node_modules/axe-core/axe.min.js")).read_text()
-# Si el equipo no tiene salida a internet, Bootstrap se sirve desde una copia local.
+# Copia local de Bootstrap para equipos sin internet.
 BOOTSTRAP = os.getenv("BOOTSTRAP_LOCAL")
 
 PANTALLAS = [

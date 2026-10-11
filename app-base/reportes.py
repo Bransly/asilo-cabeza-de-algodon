@@ -1,14 +1,3 @@
-"""
-CAPA DE LOGICA DE NEGOCIO - REPORTES
-
-Genera los siete informes que pide el enunciado. Cada metodo devuelve una
-estructura uniforme (titulo, columnas, filas, totales) que la capa de
-presentacion sabe dibujar, de modo que un reporte nuevo no obliga a crear una
-pantalla nueva.
-
-Los datos clinicos salen de db_asilo y los cobros de ms-costos, que es quien
-aplica el descuento de la fundacion.
-"""
 from datetime import date, datetime
 
 from clientes import MicroservicioError
@@ -48,11 +37,9 @@ class ReporteService:
         self.gastos = GastoRepository(sesion)
         self.cuotas = CuotaRepository(sesion)
         self.pagos_fundacion = PagoFundacionRepository(sesion)
-        # Si ms-costos no responde, el reporte se genera sin cobros y la
-        # pantalla lo advierte, en lugar de mostrar ceros como si fueran reales.
+        # Sin ms-costos el reporte sale sin cobros y la pantalla lo advierte, en vez de mostrar ceros.
         self.sin_cobros = False
 
-    # ------------------------------------------------------------- apoyo
     def _cargos(self, paciente_id=None) -> list:
         try:
             return self.costos.listar_cargos(paciente_id)
@@ -79,9 +66,7 @@ class ReporteService:
             return f"Hasta el {fecha_larga(hasta)}"
         return "Todos los registros"
 
-    # --------------------------------------------------- 1. costos por cita
     def costos_por_cita(self, paciente_id: int, desde=None, hasta=None) -> dict:
-        """Costo de cada cita del interno, incluyendo examenes y medicamentos."""
         paciente = self.pacientes.obtener(paciente_id)
         cargos = [c for c in self._cargos(paciente_id) if self._en_rango(c, desde, hasta)]
 
@@ -132,9 +117,7 @@ class ReporteService:
                     "y los medicamentos entregados, ya con el descuento de la fundación.",
         }
 
-    # ----------------------------------------------- 2. analisis medico
     def analisis_medico(self, paciente_id: int) -> dict:
-        """Ficha medica del interno: por que fue recluido, padecimientos y medicamentos."""
         paciente = self.pacientes.obtener(paciente_id)
         historial = self.visitas.historial(paciente_id)
 
@@ -156,9 +139,7 @@ class ReporteService:
             "generado": datetime.now(),
         }
 
-    # ------------------------------------------- 3. cobros por rango de fecha
     def cobros_por_paciente(self, paciente_id: int, desde=None, hasta=None) -> dict:
-        """Cobros del interno en un rango de fechas, con el detalle de cada gasto medico."""
         paciente = self.pacientes.obtener(paciente_id)
         cargos = sorted(
             [c for c in self._cargos(paciente_id) if self._en_rango(c, desde, hasta)],
@@ -195,16 +176,8 @@ class ReporteService:
             "nota": "Cada línea es un gasto médico cargado a la cuenta del familiar.",
         }
 
-    # ------------------------------------------------ 4. pagos a la fundacion
     def pagos_a_la_fundacion(self, desde=None, hasta=None) -> dict:
-        """
-        Lo que la fundacion facturo al asilo por sus servicios, lo que el asilo
-        le pago y la deuda actual (RF-25 y RF-32).
-
-        Son dos cuentas distintas que no deben mezclarse:
-          - El familiar le paga al asilo (cargos de ms-costos).
-          - El asilo le paga a la fundacion (tabla pagos_fundacion).
-        """
+        """RF-25 y RF-32. El familiar le paga al asilo y el asilo a la fundacion: no se mezclan."""
         cargos = [c for c in self._cargos() if self._en_rango(c, desde, hasta)]
 
         resumen = {}
@@ -249,9 +222,7 @@ class ReporteService:
                     "independiente de si el familiar ya pago su cargo al asilo.",
         }
 
-    # ------------------------------------------------------- 5. entradas
     def entradas(self, desde=None, hasta=None) -> dict:
-        """Donaciones, cuotas de familiares y cobros recibidos, frente a los gastos."""
         filas = []
 
         total_donaciones = 0.0
@@ -308,7 +279,6 @@ class ReporteService:
             return False
         return True
 
-    # ------------------------------------------------ 6. examenes por paciente
     def examenes_por_paciente(self, paciente_id: int, desde=None, hasta=None) -> dict:
         paciente = self.pacientes.obtener(paciente_id)
         cargos = {c.get("visita_id"): c for c in self._cargos(paciente_id)
@@ -343,7 +313,6 @@ class ReporteService:
             "nota": "Incluye los exámenes solicitados en todas las visitas médicas del interno.",
         }
 
-    # -------------------------------------------- 7. medicamentos por paciente
     def medicamentos_por_paciente(self, paciente_id: int, desde=None, hasta=None) -> dict:
         paciente = self.pacientes.obtener(paciente_id)
 

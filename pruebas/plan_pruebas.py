@@ -1,27 +1,11 @@
-"""
-PLAN DE PRUEBAS AUTOMATIZADO - Sistema del Asilo Cabeza de Algodon
+"""Casos CP-01 a CP-78 por HTTP. Deja el registro en pruebas/resultados/.
 
-Ejecuta los casos CP-01 a CP-78 contra el sistema en ejecucion, por HTTP, tal
-como lo haria un usuario o un atacante que se salta la pantalla. Cada caso
-indica el requerimiento o regla que verifica (RF, RNF, RN o RV de la ERS v1.1).
-
-Al terminar deja la evidencia en pruebas/resultados/:
-  - registro_AAAA-MM-DD_HHMM.md   tabla legible para el informe de SQA
-  - registro_AAAA-MM-DD_HHMM.csv  mismos datos para hoja de calculo
-
-Requisitos:
-  - El sistema levantado sobre una base de datos NUEVA (docker compose down -v
-    y luego up), porque las pruebas cuentan con los datos de ejemplo iniciales.
-  - Las mismas variables del archivo .env: CLAVE_INICIAL_ADMIN,
-    CLAVE_INICIAL_USUARIOS y API_KEY_SERVICIOS.
+Requiere una base de datos nueva (docker compose down -v && up) y las variables
+CLAVE_INICIAL_ADMIN, CLAVE_INICIAL_USUARIOS y API_KEY_SERVICIOS del .env.
 
 Uso:
   python pruebas/plan_pruebas.py
-  python pruebas/plan_pruebas.py --tolerancia \\
-      --parar-costos "docker compose stop ms-costos" \\
-      --iniciar-costos "docker compose start ms-costos" \\
-      --parar-notificaciones "docker compose stop ms-notificaciones" \\
-      --iniciar-notificaciones "docker compose start ms-notificaciones"
+  python pruebas/plan_pruebas.py --tolerancia
 """
 import argparse
 import csv
@@ -47,7 +31,6 @@ SESIONES = {}
 CLAVES_NUEVAS = {}
 
 
-# ------------------------------------------------------------------ apoyo
 def caso(cp, area, descripcion, verifica, esperado, condicion, detalle=""):
     estado = "CORRECTO" if condicion else "FALLIDO"
     RESULTADOS.append({
@@ -70,7 +53,6 @@ def entrar_crudo(usuario, contrasena):
 
 
 def sesion(usuario):
-    """Sesion lista para usar. Si es el primer ingreso, cambia la clave inicial."""
     if usuario in SESIONES:
         return SESIONES[usuario]
     clave = CLAVES_NUEVAS.get(usuario, clave_inicial(usuario))
@@ -119,7 +101,7 @@ def interno_valido(**cambios):
     return datos
 
 
-# ============================================================ 1. Seguridad
+# 1. Seguridad
 def pruebas_seguridad():
     A = "Seguridad"
     r = requests.get(f"{BASE}/pacientes", allow_redirects=False)
@@ -235,7 +217,7 @@ def pruebas_seguridad():
          r.status_code == 200)
 
 
-# ===================================================== 2. Expediente y datos
+# 2. Expediente y datos
 def pruebas_expediente():
     A = "Expediente y validación"
     admin = sesion("admin")
@@ -316,7 +298,7 @@ def pruebas_expediente():
     return pid
 
 
-# ================================================ 3. Flujo clinico completo
+# 3. Flujo clinico completo
 def pruebas_flujo(pid):
     A = "Flujo de atención"
     medico, fundacion = sesion("mgeneral"), sesion("fundacion")
@@ -452,7 +434,7 @@ def pruebas_flujo(pid):
     return pid, vid
 
 
-# ============================================ 4. Costos, caja y fundacion
+# 4. Costos, caja y fundacion
 def pruebas_costos(pid):
     A = "Costos y caja"
     caja = sesion("caja")
@@ -558,7 +540,7 @@ def pruebas_costos(pid):
     return total
 
 
-# ================================================================ 5. Reportes
+# 5. Reportes
 def pruebas_reportes(pid, facturado):
     A = "Reportes"
     caja, medico, lab = sesion("caja"), sesion("mgeneral"), sesion("laboratorio")
@@ -590,10 +572,9 @@ def pruebas_reportes(pid, facturado):
          "RF-31", "Sin el cargo de hoy", r.status_code == 200 and not hay("Q361.00", r))
 
 
-# ====================================================== 6. Tolerancia a fallas
+# 6. Tolerancia a fallas
 def ejecutar(comando):
-    # Sin capturar la salida: un servicio que se reinicia en segundo plano
-    # heredaria la tuberia y la prueba quedaria esperando indefinidamente.
+    # Sin capturar la salida: un servicio reiniciado en segundo plano dejaria la prueba colgada.
     subprocess.run(comando, shell=True, check=False, stdout=subprocess.DEVNULL,
                    stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
     time.sleep(3)
@@ -611,7 +592,6 @@ def pruebas_tolerancia(args, pid):
          and hay("no se pudo avisar al familiar", r))
     ejecutar(args.iniciar_notificaciones)
 
-    # Se prepara una receta pendiente y luego se detiene el servicio de costos.
     fundacion = sesion("fundacion")
     sid = numero_en(r"Solicitud #(\d+)", r.text)
     futuro = (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%dT10:00")
@@ -633,7 +613,7 @@ def pruebas_tolerancia(args, pid):
     ejecutar(args.iniciar_costos)
 
 
-# ================================================ 7. Administracion de usuarios
+# 7. Administracion de usuarios
 def pruebas_usuarios():
     A = "Administración de usuarios"
     admin = sesion("admin")
@@ -687,7 +667,6 @@ def pruebas_permisos_expediente():
          and hay("Estado de cuenta", r4))
 
 
-# =================================================================== registro
 def guardar_registro():
     carpeta = Path(__file__).parent / "resultados"
     carpeta.mkdir(exist_ok=True)

@@ -1,10 +1,3 @@
-"""
-CAPA DE ACCESO A DATOS  (patron Repositorio)
-
-Unica capa autorizada a consultar la base de datos, tal como se definio en el
-documento "Estructura de Capas del Proyecto". La capa de negocio nunca escribe
-SQL ni conoce SQLAlchemy: solo llama estos metodos.
-"""
 from datetime import datetime
 
 from sqlalchemy import func, select
@@ -84,8 +77,6 @@ class MedicamentoPermanenteRepository(RepositorioBase):
 
 
 class CatalogoRepository(RepositorioBase):
-    """Especialidades, medicos y enfermeros que aporta la fundacion."""
-
     def especialidades(self):
         return list(self.sesion.scalars(select(Especialidad).order_by(Especialidad.nombre)))
 
@@ -151,7 +142,6 @@ class VisitaRepository(RepositorioBase):
         return self.sesion.scalars(consulta).first()
 
     def historial(self, paciente_id: int):
-        """Historial medico del interno, de la visita mas reciente a la mas antigua."""
         consulta = (
             select(VisitaMedica)
             .options(
@@ -259,8 +249,6 @@ def marcar_actualizada(ficha: FichaMedica) -> None:
 
 
 class UsuarioRepository(RepositorioBase):
-    """Acceso a credenciales. Nunca devuelve ni registra contrasenas en claro."""
-
     def obtener_por_nombre(self, nombre_usuario: str):
         return self.sesion.scalars(
             select(Usuario).where(Usuario.usuario == nombre_usuario)
@@ -396,8 +384,6 @@ class CuotaRepository(RepositorioBase):
 
 
 class PagoFundacionRepository(RepositorioBase):
-    """Pagos que el asilo hace a la fundacion (RF-25)."""
-
     def listar(self, desde=None, hasta=None):
         consulta = select(PagoFundacion)
         if desde:

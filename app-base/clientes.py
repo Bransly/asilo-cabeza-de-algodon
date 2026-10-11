@@ -1,17 +1,3 @@
-"""
-CAPA DE INTEGRACION DE LA APLICACION BASE
-Aqui se concentra TODA la comunicacion con los microservicios. El resto de la
-aplicacion no sabe que existe HTTP: solo llama metodos de Python.
-
-Patron "fachada de servicio remoto": la capa de negocio pide un cargo o un
-correo sin saber que detras hay una llamada HTTP.
-
-Autenticacion entre servicios: cada peticion lleva la cabecera X-API-Key con
-una clave compartida que se lee de la variable de entorno API_KEY_SERVICIOS.
-Los microservicios rechazan con 401 cualquier peticion sin esa clave, de modo
-que aunque su puerto quedara expuesto por error, nadie podria crear o pagar
-cargos sin pasar por la aplicacion base.
-"""
 import os
 from typing import Any, Dict, List, Optional
 
@@ -28,12 +14,7 @@ class MicroservicioError(Exception):
 
 
 class _SesionServicio(requests.Session):
-    """
-    Sesion HTTP con la clave de servicio en cada peticion. Si el microservicio
-    esta caido (conexion rechazada, tiempo agotado) la falla se convierte en
-    MicroservicioError, que la capa de negocio sabe manejar: el registro clinico
-    se guarda igual y el usuario recibe una advertencia (RNF-11).
-    """
+    """Una caida del servicio se vuelve MicroservicioError para avisar sin perder el registro (RNF-11)."""
 
     def request(self, *args, **kwargs):
         try:
@@ -49,7 +30,6 @@ def _http() -> requests.Session:
 
 
 def _procesar(respuesta: requests.Response) -> Any:
-    """Traduce la respuesta HTTP: un error del servicio se vuelve MicroservicioError."""
     if respuesta.status_code >= 400:
         try:
             detalle = respuesta.json().get("detail", respuesta.text)
@@ -62,8 +42,6 @@ def _procesar(respuesta: requests.Response) -> Any:
 
 
 class ClienteCostos:
-    """Consume el microservicio de costos y cargos."""
-
     def __init__(self, url_base: str = URL_COSTOS):
         self.url = url_base.rstrip("/")
         self.http = _http()
@@ -114,8 +92,6 @@ class ClienteCostos:
 
 
 class ClienteNotificaciones:
-    """Consume el microservicio de notificaciones."""
-
     def __init__(self, url_base: str = URL_NOTIFICACIONES):
         self.url = url_base.rstrip("/")
         self.http = _http()

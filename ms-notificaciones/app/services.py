@@ -1,13 +1,4 @@
-"""
-CAPA DE LOGICA DE NEGOCIO
-Requerimiento del enunciado:
-"El sistema debera enviar un correo electronico al familiar del paciente cuando
-se crea una solicitud para un medico, informando el estado del paciente y a que
-medico fue referido."
-
-Si no hay credenciales SMTP configuradas, el correo se registra en modo SIMULADA.
-Asi el sistema puede demostrarse sin depender de un servidor de correo real.
-"""
+"""Sin credenciales SMTP el correo se registra como SIMULADA, sin enviarse."""
 import os
 import smtplib
 from datetime import datetime
@@ -38,14 +29,7 @@ class NotificacionService:
     def __init__(self, db: Session):
         self.repo = NotificacionRepository(db)
 
-    # ---------------- Redaccion del mensaje ----------------
     def _redactar(self, datos: SolicitudMedicaNotificar) -> Tuple[str, str]:
-        """
-        Dos avisos cumplen juntos el requisito del enunciado ("informando el
-        estado del paciente y a que medico fue referido"):
-          - SOLICITUD_REGISTRADA: especialidad, motivo y estado del paciente.
-          - MEDICO_ASIGNADO: nombre del medico y fecha y hora de la cita.
-        """
         fecha = datetime.now().strftime("%d/%m/%Y %H:%M")
         saludo = f"Estimado(a) {datos.familiar_nombre}:\n\n"
         firma = "Atentamente,\nAsilo de Ancianos Cabeza de Algodón"
@@ -76,7 +60,6 @@ class NotificacionService:
             )
         return asunto, saludo + cuerpo + firma
 
-    # ---------------- Envio por SMTP ----------------
     def _enviar_correo(self, destino: str, asunto: str, cuerpo: str) -> Tuple[EstadoEnvio, Optional[str]]:
         if not SMTP_HOST or not SMTP_USUARIO:
             print(f"[ms-notificaciones] MODO SIMULADO -> {destino} | {asunto}")
@@ -98,7 +81,6 @@ class NotificacionService:
         except Exception as error:
             return EstadoEnvio.FALLIDA, str(error)[:250]
 
-    # ---------------- Caso de uso principal ----------------
     def notificar_solicitud(self, datos: SolicitudMedicaNotificar) -> Notificacion:
         asunto, mensaje = self._redactar(datos)
         estado, detalle = self._enviar_correo(datos.correo_destino, asunto, mensaje)

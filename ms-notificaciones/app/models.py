@@ -1,8 +1,3 @@
-"""
-CAPA DE ENTIDADES / MODELOS
-La notificacion se guarda siempre, aunque el correo falle. Esa bitacora es la
-evidencia de que se informo al familiar y sirve para la auditoria del sistema.
-"""
 import enum
 from datetime import datetime
 

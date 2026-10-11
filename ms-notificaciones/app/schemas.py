@@ -1,6 +1,3 @@
-"""
-ESQUEMAS (DTO) del microservicio de notificaciones.
-"""
 from datetime import datetime
 from typing import Optional
 
@@ -10,11 +7,6 @@ from .models import EstadoEnvio, TipoAviso
 
 
 class SolicitudMedicaNotificar(BaseModel):
-    """
-    Datos que envia la aplicacion base cuando el medico general crea una
-    solicitud de referencia a especialidad.
-    """
-
     tipo: TipoAviso = TipoAviso.SOLICITUD_REGISTRADA
     solicitud_id: Optional[int] = Field(default=None, gt=0)
     paciente_id: int = Field(gt=0)

@@ -1,10 +1,4 @@
-# ---------------------------------------------------------------------------
-# SOLO DESARROLLO. Docker Compose lo agrega automaticamente con
-# "docker compose up". Publica los puertos internos para revisar la
-# documentacion de las APIs (Swagger) y conectarse a MySQL.
-#
-# En produccion NO se usa: docker compose -f docker-compose.yml up -d
-# ---------------------------------------------------------------------------
+# Solo desarrollo: publica MySQL (3307) y las APIs (8001, 8002).
 services:
   mysql:
     ports:

@@ -1,12 +1,3 @@
-"""
-CAPA DE ENTIDADES / MODELOS  (aplicacion base)
-
-Clases del dominio clinico del asilo, tomadas del ERD documentado en la fase
-de analisis. No contienen reglas de negocio: solo estructura y relaciones.
-
-Los cobros NO estan aqui: viven en el microservicio ms-costos. La aplicacion
-base guarda unicamente el identificador del cargo que ese servicio devolvio.
-"""
 import enum
 from datetime import date, datetime
 
@@ -18,10 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
 
-# El dinero se guarda como DECIMAL(10,2) en MySQL, nunca como FLOAT: un FLOAT
-# no representa exactamente los centavos y acumula error al sumar. Python lo
-# recibe ya redondeado a dos decimales (asdecimal=False) para que los reportes
-# puedan operar sin conversiones; las reglas de negocio validan con Decimal.
+# DECIMAL(10,2), nunca FLOAT: el FLOAT acumula error en los centavos.
 def Dinero():
     return Numeric(10, 2, asdecimal=False)
 
@@ -42,10 +30,7 @@ class EstadoExamen(str, enum.Enum):
     CON_RESULTADO = "CON_RESULTADO"
 
 
-# --------------------------------------------------------------- Paciente
 class Paciente(Base):
-    """Interno del asilo."""
-
     __tablename__ = "pacientes"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -72,12 +57,6 @@ class Paciente(Base):
 
 
 class FichaMedica(Base):
-    """
-    Ficha clinica del interno. Agrupa psicopatologia y padecimientos, tal como
-    lo pide el enunciado: "permite ver los padecimientos y enfermedades que
-    cada uno ha presentado".
-    """
-
     __tablename__ = "fichas_medicas"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -106,7 +85,6 @@ class MedicamentoPermanente(Base):
     paciente: Mapped["Paciente"] = relationship(back_populates="medicamentos_permanentes")
 
 
-# ------------------------------------------------- Personal de la fundacion
 class Especialidad(Base):
     __tablename__ = "especialidades"
 
@@ -128,8 +106,6 @@ class Medico(Base):
 
 
 class Enfermero(Base):
-    """Personal que acompania al paciente durante la atencion."""
-
     __tablename__ = "enfermeros"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -137,13 +113,7 @@ class Enfermero(Base):
     turno: Mapped[str] = mapped_column(String(40), default="Matutino")
 
 
-# ------------------------------------------------------ Flujo de atencion
 class Solicitud(Base):
-    """
-    Referencia que hace el medico general hacia una especialidad. Aparece en el
-    modulo de la fundacion, que asigna medico y horario.
-    """
-
     __tablename__ = "solicitudes"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -168,12 +138,6 @@ class Solicitud(Base):
 
 
 class VisitaMedica(Base):
-    """
-    La solicitud atendida se convierte en visita medica. Concentra los datos
-    que el enunciado exige para la ficha: fecha, motivo, medico tratante,
-    examenes, resultados, diagnostico, medicamentos y observaciones.
-    """
-
     __tablename__ = "visitas_medicas"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -199,8 +163,6 @@ class VisitaMedica(Base):
 
 
 class OrdenExamen(Base):
-    """Examen de laboratorio solicitado dentro de una visita medica."""
-
     __tablename__ = "ordenes_examen"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -222,8 +184,6 @@ class OrdenExamen(Base):
 
 
 class MedicamentoRecetado(Base):
-    """Medicamento indicado por el medico y entregado por la farmacia."""
-
     __tablename__ = "medicamentos_recetados"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -243,10 +203,7 @@ class MedicamentoRecetado(Base):
     visita: Mapped["VisitaMedica"] = relationship(back_populates="recetas")
 
 
-# ------------------------------------------------------------- Seguridad
 class RolUsuario(str, enum.Enum):
-    """Roles definidos en la matriz del Documento de Diseno Arquitectonico."""
-
     ADMINISTRADOR = "ADMINISTRADOR"
     MEDICO_GENERAL = "MEDICO_GENERAL"
     MEDICO_ESPECIALISTA = "MEDICO_ESPECIALISTA"
@@ -270,11 +227,6 @@ ETIQUETA_ROL = {
 
 
 class Usuario(Base):
-    """
-    Credenciales y rol del personal del asilo y de la fundacion.
-    La contrasena se guarda unicamente como hash con sal (scrypt).
-    """
-
     __tablename__ = "usuarios"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -287,21 +239,12 @@ class Usuario(Base):
     intentos_fallidos: Mapped[int] = mapped_column(Integer, default=0)
     bloqueado_hasta: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     ultimo_acceso: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    # Las contrasenas iniciales son temporales: el usuario debe cambiarlas en su
-    # primer ingreso (politica de contrasenas, ERS RNF-17).
     debe_cambiar_contrasena: Mapped[bool] = mapped_column(Boolean, default=True)
-    # Identificador de la sesion vigente. Se renueva en cada ingreso y se borra
-    # al cerrar sesion: una cookie copiada deja de servir aunque siga firmada.
     token_sesion: Mapped[str | None] = mapped_column(String(64), nullable=True)
     fecha_creacion: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
 
 
 class RegistroBitacora(Base):
-    """
-    Bitacora de auditoria. Responde quien hizo que, cuando, sobre que entidad y
-    con que resultado, tal como exige el documento de arquitectura.
-    """
-
     __tablename__ = "bitacora"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -318,10 +261,7 @@ class RegistroBitacora(Base):
     fecha: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, index=True)
 
 
-# --------------------------------------------------------- Caja del asilo
 class OrigenDonacion(str, enum.Enum):
-    """Origenes que menciona el enunciado para las donaciones."""
-
     EMPRESA_INTERNACIONAL = "EMPRESA_INTERNACIONAL"
     EMPRESA_NACIONAL = "EMPRESA_NACIONAL"
     GOBIERNO = "GOBIERNO"
@@ -357,11 +297,6 @@ ETIQUETA_GASTO = {
 
 
 class Donacion(Base):
-    """
-    Ingreso que recibe el asilo. El enunciado pide distinguir el origen:
-    empresas internacionales, nacionales, gobierno y personas particulares.
-    """
-
     __tablename__ = "donaciones"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -375,8 +310,6 @@ class Donacion(Base):
 
 
 class Gasto(Base):
-    """Egreso operativo del asilo: luz, agua, alimentacion, mantenimiento."""
-
     __tablename__ = "gastos"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -389,14 +322,8 @@ class Gasto(Base):
 
 
 class CuotaMensual(Base):
-    """
-    Cuota que paga el familiar por tener al interno en el asilo. Se genera una
-    por interno y por mes, y se marca como pagada cuando caja recibe el pago.
-    """
-
     __tablename__ = "cuotas_mensuales"
-    # Una sola cuota por interno y por mes: la base lo garantiza aunque la
-    # regla de negocio fallara (RV-06).
+    # RV-06: una cuota por interno y mes, aunque la regla de negocio fallara.
     __table_args__ = (UniqueConstraint("paciente_id", "anio", "mes", name="uq_cuota_mes"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -413,14 +340,7 @@ class CuotaMensual(Base):
 
 
 class PagoFundacion(Base):
-    """
-    Pago que el asilo hace a la fundacion por las consultas, examenes y
-    medicamentos que esta presto a los internos (requerimiento RF-25).
-
-    Es distinto del cobro al familiar: el familiar le paga al asilo (cargos de
-    ms-costos) y el asilo le paga a la fundacion (esta tabla). La deuda con la
-    fundacion es lo facturado por sus servicios menos lo que el asilo ya pago.
-    """
+    """RF-25: lo que el asilo le paga a la fundacion; distinto del cobro al familiar."""
 
     __tablename__ = "pagos_fundacion"
 

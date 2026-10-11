@@ -1,17 +1,4 @@
-"""
-AUTENTICACION ENTRE SERVICIOS
-
-Solo la aplicacion base puede llamar a este microservicio. Cada peticion debe
-traer la cabecera X-API-Key con la clave compartida API_KEY_SERVICIOS, que se
-define en el archivo .env (fuera del repositorio) y nunca viaja al navegador.
-
-Sin la clave, la respuesta es 401. Asi, aunque el puerto del microservicio
-quedara expuesto por error, nadie podria crear, pagar o borrar registros
-saltandose los permisos por rol de la aplicacion base.
-
-Quedan libres /salud (lo usan Docker y el indicador de estado) y la
-documentacion /docs, que solo describe la API y no ejecuta nada sin la clave.
-"""
+"""Solo la aplicacion base conoce la clave X-API-Key; /salud y /docs quedan libres."""
 import os
 import secrets
 

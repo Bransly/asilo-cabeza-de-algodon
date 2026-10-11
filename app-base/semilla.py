@@ -1,10 +1,3 @@
-"""
-CARGA INICIAL DE DATOS
-
-Deja el sistema utilizable desde el primer arranque: las especialidades,
-medicos y enfermeros que aporta la fundacion, y tres internos de ejemplo con
-su ficha medica. Solo se ejecuta si la base de datos esta vacia.
-"""
 import os
 import secrets
 from datetime import date
@@ -31,12 +24,7 @@ ENFERMEROS = [
     ("Enf. Claudia Similox", "Matutino"),
 ]
 
-# Usuario de cada rol de la matriz de permisos. Las personas son ficticias.
-# Las contrasenas NO estan en el codigo: se leen de las variables de entorno
-# CLAVE_INICIAL_ADMIN y CLAVE_INICIAL_USUARIOS (archivo .env, fuera del
-# repositorio). Si no se definen, se genera una clave aleatoria y se muestra
-# una sola vez en el registro del contenedor. En ambos casos la clave es
-# temporal: el sistema obliga a cambiarla en el primer ingreso.
+# Claves iniciales desde .env; si faltan se genera una aleatoria. Siempre son temporales.
 USUARIOS = [
     ("Brandon Madrid", "admin", RolUsuario.ADMINISTRADOR),
     ("Dr. Carlos Say", "mgeneral", RolUsuario.MEDICO_GENERAL),

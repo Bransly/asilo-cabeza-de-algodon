@@ -1,9 +1,3 @@
-"""
-CAPA DE PRESENTACION DEL MICROSERVICIO (API REST)
-
-Microservicio 2: NOTIFICACIONES AL FAMILIAR
-Documentacion interactiva: http://localhost:8002/docs
-"""
 from typing import List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query, status

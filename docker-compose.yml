@@ -1,17 +1,6 @@
-# ---------------------------------------------------------------------------
-# Sistema de Administracion del Asilo de Ancianos Cabeza de Algodon
-#
-# Configuracion BASE (la de produccion). Solo publica el puerto de la
-# aplicacion; MySQL y los microservicios quedan en la red privada.
-#
-#   Desarrollo:  docker compose up --build
-#                (Docker agrega solo docker-compose.override.yml, que publica
-#                 los puertos 3307, 8001 y 8002 para revisar las APIs)
-#   Produccion:  docker compose -f docker-compose.yml up -d --build
-#
-# Todas las credenciales salen del archivo .env (copie .env.example).
-# El archivo .env esta en .gitignore: nunca se sube al repositorio.
-# ---------------------------------------------------------------------------
+# Produccion: docker compose -f docker-compose.yml up -d --build
+# Desarrollo: docker compose up --build (agrega docker-compose.override.yml)
+# Las credenciales salen de .env (copiar .env.example).
 
 x-base-datos: &base-datos
   DB_HOST: mysql
@@ -33,7 +22,6 @@ services:
       - datos_mysql:/var/lib/mysql
       - ./db/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
     healthcheck:
-      # La clave viaja por variable de entorno, no en la linea de comandos.
       test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysqladmin ping -h localhost -uroot"]
       interval: 10s
       timeout: 5s
@@ -88,7 +76,6 @@ services:
       CLAVE_INICIAL_USUARIOS: ${CLAVE_INICIAL_USUARIOS:-}
       # true solo cuando el sistema este detras de HTTPS (cookie Secure + HSTS).
       HTTPS: ${HTTPS:-false}
-      # Dentro de la red de Docker los servicios se llaman por su nombre.
       URL_MS_COSTOS: http://ms-costos:8001
       URL_MS_NOTIFICACIONES: http://ms-notificaciones:8002
     ports:

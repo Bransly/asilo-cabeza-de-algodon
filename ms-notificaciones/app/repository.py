@@ -1,6 +1,3 @@
-"""
-CAPA DE ACCESO A DATOS - Patron Repositorio
-"""
 from typing import List, Optional
 
 from sqlalchemy.orm import Session

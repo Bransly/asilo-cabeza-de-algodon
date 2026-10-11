@@ -1,12 +1,3 @@
-"""
-CAPA DE LOGICA DE NEGOCIO
-Aqui viven las reglas del asilo. Esta capa no sabe nada de HTTP ni de SQL:
-recibe datos, aplica reglas y delega la persistencia al repositorio.
-
-Regla principal implementada (enunciado del proyecto):
-"El costo de la cita, de los examenes de laboratorio y de farmacia son cargados
-a la cuenta del familiar siempre con el descuento que proporciona la fundacion."
-"""
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from typing import List, Optional
@@ -32,11 +23,7 @@ CIEN = Decimal("100")
 
 
 def _redondear(valor) -> Decimal:
-    """
-    Redondeo comercial a centavos (mitad hacia arriba): Q60.125 -> Q60.13.
-    Todo el calculo se hace con Decimal; nunca con float, que no representa
-    exactamente los centavos (0.1 + 0.2 != 0.3).
-    """
+    """Redondeo comercial a centavos (mitad hacia arriba): Q60.125 -> Q60.13."""
     return Decimal(str(valor)).quantize(CENTAVO, rounding=ROUND_HALF_UP)
 
 
@@ -97,7 +84,6 @@ class CargoService:
         self.tarifas = TarifaService(db)
 
     def registrar(self, datos: CargoCrear) -> Cargo:
-        """Calcula el cargo aplicando el descuento de la fundacion."""
         tarifa = self.tarifas.obtener(datos.tarifa_id)
 
         # Regla: no se puede cobrar con una tarifa dada de baja.
@@ -144,11 +130,7 @@ class CargoService:
         return self.repo.guardar(cargo)
 
     def revertir_pago(self, cargo_id: int, motivo: str) -> Cargo:
-        """
-        Corrige un pago registrado por error (defecto DEF-05). Es la unica
-        transicion PAGADO -> PENDIENTE y exige un motivo, que la aplicacion base
-        tambien deja en su bitacora de auditoria.
-        """
+        """Unica transicion PAGADO -> PENDIENTE; exige motivo (DEF-05)."""
         cargo = self.obtener(cargo_id)
         if cargo.estado != EstadoCargo.PAGADO:
             raise ReglaNegocioError("Solo se puede revertir un cargo que esta pagado")
@@ -165,7 +147,6 @@ class CargoService:
         self.repo.eliminar(cargo)
 
     def estado_cuenta(self, paciente_id: int) -> EstadoCuenta:
-        """Reporte de cobros por paciente (requerido en el modulo de reportes)."""
         cargos = self.repo.listar(paciente_id=paciente_id)
         if not cargos:
             raise ReglaNegocioError(f"El paciente {paciente_id} no tiene cargos registrados", 404)

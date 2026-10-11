@@ -1,15 +1,6 @@
 #!/bin/bash
-# ---------------------------------------------------------------------------
-# Inicializacion de MySQL. Se ejecuta automaticamente la PRIMERA vez que
-# arranca el contenedor (cuando el volumen de datos esta vacio).
-#
-# - Una base de datos por servicio (patron "database per service").
-# - Un usuario tecnico con privilegios minimos, sin permisos de
-#   administracion, tal como define el Documento de Diseno Arquitectonico.
-#
-# La contrasena del usuario tecnico NO esta escrita aqui: se toma de la
-# variable DB_PASSWORD del archivo .env.
-# ---------------------------------------------------------------------------
+# Corre solo la primera vez (volumen vacio): una base por servicio y un usuario
+# con privilegios minimos, cuya clave sale de DB_PASSWORD.
 set -euo pipefail
 
 : "${DB_USER:?Falta DB_USER en el archivo .env}"

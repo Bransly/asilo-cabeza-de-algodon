@@ -1,20 +1,7 @@
-"""
-REGLAS DE VALIDACION DE DATOS  (capa de logica de negocio)
-
-Todas las entradas que llegan del navegador se validan aqui, en el servidor.
-Las validaciones del formulario (atributos required, min, max) son solo una
-ayuda visual: una peticion directa que se salte la pantalla tambien pasa por
-estas funciones.
-
-Cada regla tiene un identificador RV-xx que coincide con la seccion
-"Reglas de validacion" de la ERS v1.1, para que el equipo de SQA pueda
-trazar cada caso de prueba hasta la regla que verifica.
-"""
 import re
 from datetime import date, datetime
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
-# --- Limites del negocio (documentados en la ERS, seccion 5.2) ---------------
 EDAD_MINIMA = 60          # RV-07: adulto mayor segun la Ley de Proteccion para las
 EDAD_MAXIMA = 120         #        Personas de la Tercera Edad (Decreto 80-96)
 MONTO_MAXIMO = Decimal("999999.99")    # RV-01: limite de la columna DECIMAL(10,2)
@@ -63,13 +50,7 @@ def entero(valor, campo: str, minimo: int | None = None, maximo: int | None = No
 
 def monto(valor, campo: str = "monto", maximo: Decimal = MONTO_MAXIMO,
           permitir_cero: bool = False) -> Decimal:
-    """
-    RV-01 a RV-03: el dinero se maneja como Decimal, nunca como float.
-    - Debe ser numerico.
-    - Mayor que cero (o cero, si el campo lo permite).
-    - Con dos decimales como maximo: Q10.005 se rechaza en lugar de redondearse
-      en silencio, porque un redondeo oculto es un error contable.
-    """
+    """RV-01 a RV-03. Mas de dos decimales se rechaza en vez de redondearse en silencio."""
     try:
         cantidad = Decimal(str(valor).strip().replace(",", ""))
     except (InvalidOperation, AttributeError):
@@ -87,11 +68,7 @@ def monto(valor, campo: str = "monto", maximo: Decimal = MONTO_MAXIMO,
 
 def fecha(valor, campo: str = "fecha", permitir_futura: bool = False,
           por_defecto_hoy: bool = True) -> date | None:
-    """
-    RV-08 y RV-09: la fecha debe existir en el calendario (31/09 se rechaza),
-    no puede ser anterior a 1950 y, salvo que el campo lo permita, no puede
-    estar en el futuro.
-    """
+    """RV-08 y RV-09: fecha real, desde 1950 y, salvo que se permita, no futura."""
     if not valor:
         return date.today() if por_defecto_hoy else None
     try:
@@ -143,10 +120,7 @@ def opcion(valor, enumeracion, campo: str):
 
 
 def contrasena_segura(valor: str) -> str:
-    """
-    RV-17: politica de contrasenas. Minimo 10 caracteres, con letras y numeros.
-    Se pide longitud antes que simbolos porque es lo que mas encarece un ataque.
-    """
+    """RV-17: minimo 10 caracteres, con letras y numeros."""
     if len(valor or "") < 10:
         raise ErrorValidacion("La contraseña debe tener al menos 10 caracteres.")
     if not re.search(r"[A-Za-z]", valor) or not re.search(r"[0-9]", valor):
