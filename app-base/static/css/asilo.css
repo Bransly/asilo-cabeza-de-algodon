@@ -261,6 +261,10 @@ a:hover > .kpi { box-shadow: var(--sombra-alta); transform: translateY(-1px); }
 
 .btn-danger { background: var(--granate); border-color: var(--granate); }
 
+/* El rojo de Bootstrap da 4.45:1 sobre el blanco calido de las tarjetas. */
+.btn-outline-danger { color: var(--granate); border-color: #dcb4b4; }
+.btn-outline-danger:hover { background: var(--granate); border-color: var(--granate); color: #fff; }
+
 .btn-outline-secondary { color: var(--tinta); border-color: var(--borde); background: var(--superficie); }
 .btn-outline-secondary:hover { background: var(--superficie-2); color: var(--tinta); border-color: #d4c8b6; }
 .btn-outline-secondary.active { background: var(--azul-claro); color: var(--marino);
