@@ -3,6 +3,8 @@
 # Las credenciales salen de .env (copiar .env.example).
 
 x-base-datos: &base-datos
+  # Sin esto los contenedores usan UTC y desde las 18:00 fechan todo con el dia siguiente.
+  TZ: America/Guatemala
   DB_HOST: mysql
   DB_PORT: 3306
   DB_USER: ${DB_USER:?Defina DB_USER en .env}
@@ -15,6 +17,7 @@ services:
     container_name: asilo-mysql
     restart: unless-stopped
     environment:
+      TZ: America/Guatemala
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Defina MYSQL_ROOT_PASSWORD en .env}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
