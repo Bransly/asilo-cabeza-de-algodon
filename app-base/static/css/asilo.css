@@ -5,6 +5,10 @@
   componentes para que el sistema tenga identidad propia y no el aspecto por
   defecto del framework.
 
+  Paleta "azul sereno sobre arena": un azul marino profundo da estructura y
+  confianza; los fondos crema y el acento terracota aportan calidez, para que
+  el sistema se sienta acogedor y no clinico.
+
   Criterios de diseno:
   - Legibilidad primero: el personal usa el sistema toda la jornada y buena
     parte de los usuarios son adultos mayores o personal clinico con prisa.
@@ -14,16 +18,24 @@
 
 :root {
   /* Color */
-  --pino: #143d2b;          /* barra lateral y titulos */
-  --verde: #1c6b47;         /* acciones principales */
-  --verde-claro: #e7f0eb;   /* fondos suaves y estados activos */
-  --tinta: #16211c;         /* texto */
-  --tinta-suave: #5c6b63;   /* texto secundario */
-  --papel: #eef1f0;         /* fondo de la aplicacion */
-  --superficie: #ffffff;    /* tarjetas y tablas */
-  --borde: #d7ded9;
+  --marino: #1d3557;        /* barra lateral y titulos */
+  --marino-hondo: #15283f;  /* degradado de la barra lateral */
+  --azul: #2b5b8a;          /* acciones principales */
+  --azul-hondo: #224a71;    /* acciones principales al pasar el cursor */
+  --azul-claro: #e9f0f7;    /* fondos suaves y estados activos */
+  --azul-borde: #c3d4e6;
+  --terracota: #b4532a;     /* acento calido: seleccion e indicadores */
+  --durazno: #f0b48f;       /* acento sobre fondo oscuro */
+  --tinta: #1f2733;         /* texto */
+  --tinta-suave: #5a6370;   /* texto secundario */
+  --papel: #f6f1e9;         /* fondo de la aplicacion (crema) */
+  --superficie: #fffdfa;    /* tarjetas y tablas */
+  --superficie-2: #faf6ef;  /* encabezados de tabla y filas resaltadas */
+  --borde: #e6ddcf;
+  --verde: #2d7650;         /* atendido / completado */
+  --verde-fondo: #e8f3ec;
   --ambar: #8a5a0b;         /* pendiente (contraste 5.5:1, WCAG AA) */
-  --ambar-fondo: #fdf5e4;
+  --ambar-fondo: #fdf3e1;
   --granate: #8f2a2a;       /* saldo por cobrar, acciones irreversibles */
   --granate-fondo: #fbeeee;
 
@@ -32,8 +44,11 @@
   --sans: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
 
   /* Medidas */
-  --lateral: 232px;
-  --radio: 6px;
+  --lateral: 240px;
+  --radio: 8px;
+  --radio-grande: 12px;
+  --sombra: 0 1px 2px rgba(60, 45, 25, 0.05), 0 4px 14px rgba(60, 45, 25, 0.06);
+  --sombra-alta: 0 2px 4px rgba(60, 45, 25, 0.06), 0 10px 26px rgba(60, 45, 25, 0.10);
 }
 
 /* ------------------------------------------------------------- base --- */
@@ -47,21 +62,23 @@ body {
 
 h1, h2, h3, h4, h5, h6, .titular {
   font-family: var(--serif);
-  color: var(--pino);
+  color: var(--marino);
   font-weight: 600;
   letter-spacing: -0.005em;
 }
 
-a { color: var(--verde); text-decoration-thickness: 1px; text-underline-offset: 2px; }
-a:hover { color: var(--pino); }
+a { color: var(--azul); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { color: var(--marino); }
 
 /* Los montos alinean por columna gracias a los numerales tabulares. */
 .monto, td.monto, .kpi-valor { font-variant-numeric: tabular-nums; }
 
 :focus-visible {
-  outline: 2px solid var(--verde);
+  outline: 2px solid var(--azul);
   outline-offset: 2px;
 }
+
+::selection { background: #f6d9c6; color: var(--tinta); }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
@@ -72,21 +89,32 @@ a:hover { color: var(--pino); }
   position: fixed;
   inset: 0 auto 0 0;
   width: var(--lateral);
-  background: var(--pino);
-  color: #dbe7e0;
+  background: linear-gradient(180deg, var(--marino) 0%, var(--marino-hondo) 100%);
+  color: #dbe4ef;
   display: flex;
   flex-direction: column;
   z-index: 1030;
 }
 
 .lateral .marca {
-  padding: 1.1rem 1.15rem 0.9rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 1.25rem 1.2rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  position: relative;
+}
+
+/* Filete calido bajo el nombre: el toque de identidad. */
+.lateral .marca::after {
+  content: "";
+  position: absolute;
+  left: 1.2rem; bottom: -1px;
+  width: 36px; height: 2px;
+  background: var(--durazno);
+  border-radius: 2px;
 }
 
 .lateral .marca .nombre {
   font-family: var(--serif);
-  font-size: 1.02rem;
+  font-size: 1.08rem;
   font-weight: 600;
   color: #fff;
   line-height: 1.25;
@@ -96,36 +124,37 @@ a:hover { color: var(--pino); }
 
 .lateral .marca .lugar {
   font-size: 0.78rem;
-  color: #9fb8ab;
-  margin-top: 0.15rem;
+  color: #a9bbd0;
+  margin-top: 0.2rem;
 }
 
-.lateral nav { padding: 0.75rem 0.6rem; flex: 1; overflow-y: auto; }
+.lateral nav { padding: 0.9rem 0.7rem; flex: 1; overflow-y: auto; }
 
 .lateral nav a {
   display: block;
-  padding: 0.5rem 0.65rem;
-  margin-bottom: 0.15rem;
+  padding: 0.55rem 0.8rem;
+  margin-bottom: 0.2rem;
   border-radius: var(--radio);
-  color: #cfe0d6;
+  color: #d3deea;
   text-decoration: none;
-  font-size: 0.93rem;
+  font-size: 0.94rem;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.lateral nav a:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.lateral nav a:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
 
 .lateral nav a.activo {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.13);
   color: #fff;
   font-weight: 600;
-  box-shadow: inset 3px 0 0 #7fc0a0;
+  box-shadow: inset 3px 0 0 var(--durazno);
 }
 
 .lateral .servicios {
-  padding: 0.85rem 1.15rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.9rem 1.2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
   font-size: 0.78rem;
-  color: #9fb8ab;
+  color: #a9bbd0;
 }
 
 .lateral .servicios .punto {
@@ -136,27 +165,31 @@ a:hover { color: var(--pino); }
   vertical-align: middle;
 }
 
-.punto.activo { background: #6ec295; }
-.punto.caido { background: #d98a8a; }
+.punto.activo { background: #7fd1a3; box-shadow: 0 0 0 3px rgba(127, 209, 163, 0.18); }
+.punto.caido { background: #f09a8a; box-shadow: 0 0 0 3px rgba(240, 154, 138, 0.18); }
 
 /* ------------------------------------------------- barra superior --- */
 .contenido { margin-left: var(--lateral); }
 
 .superior {
-  background: var(--superficie);
+  background: rgba(255, 253, 250, 0.92);
+  backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--borde);
-  padding: 0.7rem 1.5rem;
+  padding: 0.8rem 1.75rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 1020;
 }
 
 .superior .seccion {
   font-family: var(--serif);
-  font-size: 1.15rem;
-  color: var(--pino);
+  font-size: 1.3rem;
+  color: var(--marino);
   margin: 0;
 }
 
@@ -164,21 +197,22 @@ a:hover { color: var(--pino); }
 .superior .quien .nombre { font-weight: 600; font-size: 0.92rem; }
 .superior .quien .rol { font-size: 0.8rem; color: var(--tinta-suave); }
 
-.area { padding: 1.5rem; max-width: 1400px; }
+.area { padding: 1.75rem; max-width: 1400px; }
 
 /* ------------------------------------------------------- tarjetas --- */
 .tarjeta {
   background: var(--superficie);
   border: 1px solid var(--borde);
-  border-radius: var(--radio);
+  border-radius: var(--radio-grande);
+  box-shadow: var(--sombra);
 }
 
 .tarjeta-titulo {
   font-family: var(--serif);
-  font-size: 1.03rem;
+  font-size: 1.06rem;
   font-weight: 600;
-  color: var(--pino);
-  padding: 0.85rem 1.1rem;
+  color: var(--marino);
+  padding: 0.95rem 1.2rem;
   border-bottom: 1px solid var(--borde);
 }
 
@@ -186,64 +220,88 @@ a:hover { color: var(--pino); }
 .kpi {
   background: var(--superficie);
   border: 1px solid var(--borde);
-  border-left: 3px solid var(--borde);
-  border-radius: var(--radio);
-  padding: 0.8rem 0.95rem;
+  border-top: 3px solid var(--azul-borde);
+  border-radius: var(--radio-grande);
+  padding: 0.95rem 1.1rem;
   height: 100%;
+  box-shadow: var(--sombra);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-.kpi-etiqueta { font-size: 0.82rem; color: var(--tinta-suave); }
-.kpi-valor { font-size: 1.4rem; font-weight: 600; color: var(--tinta); line-height: 1.2; }
+a:hover > .kpi { box-shadow: var(--sombra-alta); transform: translateY(-1px); }
 
-.kpi-principal { border-left-color: var(--granate); background: var(--granate-fondo); }
-.kpi-principal .kpi-valor { color: var(--granate); font-size: 1.7rem; }
+.kpi-etiqueta { font-size: 0.82rem; color: var(--tinta-suave); }
+.kpi-valor { font-family: var(--serif); font-size: 1.75rem; font-weight: 600;
+             color: var(--marino); line-height: 1.2; margin-top: 0.15rem; }
+
+.kpi-principal { border-top-color: var(--granate); background: var(--granate-fondo); }
+.kpi-principal .kpi-valor { color: var(--granate); font-size: 2rem; }
 
 .dato { font-size: 0.85rem; color: var(--tinta-suave); }
 
-/* ---------------------------------------------------------- tablas --- */
-.table { --bs-table-color: var(--tinta); margin-bottom: 0; }
+/* El gris de Bootstrap da 4.2:1 sobre el crema; este da 5.4:1. */
+.text-muted { color: var(--tinta-suave) !important; }
 
-.table > thead th {
+/* ---------------------------------------------------------- tablas --- */
+.table {
+  --bs-table-color: var(--tinta);
+  --bs-table-bg: transparent;
+  margin-bottom: 0;
+}
+
+.table > thead th,
+.table > thead.table-light th {
   font-family: var(--sans);
   font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--tinta-suave);
-  background: #f5f7f6;
+  background: var(--superficie-2);
   border-bottom: 1px solid var(--borde);
   white-space: nowrap;
 }
 
-.table > tbody td { border-color: #e8edea; vertical-align: middle; }
-.table > tbody tr:hover > td { background: #f7faf8; }
+.table > tbody td { border-color: #efe8dc; vertical-align: middle; }
+.table > tbody tr:hover > td { background: #fbf7f1; }
+
+.bg-light { background-color: var(--superficie-2) !important; }
+.border { border-color: var(--borde) !important; }
 
 /* --------------------------------------------------------- estados --- */
-.badge { font-weight: 600; font-size: 0.75rem; padding: 0.32em 0.6em; border-radius: 3px; }
+.badge { font-weight: 600; font-size: 0.75rem; padding: 0.36em 0.7em; border-radius: 999px; }
 .bg-success { background: var(--verde) !important; }
 .bg-warning { background: var(--ambar-fondo) !important; color: var(--ambar) !important;
-              box-shadow: inset 0 0 0 1px #e8d5aa; }
+              box-shadow: inset 0 0 0 1px #ecd6a8; }
 .bg-danger { background: var(--granate) !important; }
-.bg-primary { background: #1f5c7a !important; }
-.bg-secondary { background: #6b7a72 !important; }
+.bg-primary { background: var(--azul) !important; }
+.bg-secondary { background: #6b7280 !important; }
+
+.text-success { color: var(--verde) !important; }
 
 /* --------------------------------------------------------- botones --- */
-.btn { border-radius: var(--radio); font-weight: 600; font-size: 0.9rem; }
+.btn { border-radius: var(--radio); font-weight: 600; font-size: 0.9rem;
+       transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease; }
 
-.btn-success { background: var(--verde); border-color: var(--verde); }
-.btn-success:hover, .btn-success:focus { background: #175a3b; border-color: #175a3b; }
+/* La accion principal de cada formulario es azul. */
+.btn-success { background: var(--azul); border-color: var(--azul); }
+.btn-success:hover, .btn-success:focus, .btn-success:active {
+  background: var(--azul-hondo) !important; border-color: var(--azul-hondo) !important;
+}
 
-.btn-primary { background: #1f5c7a; border-color: #1f5c7a; }
-.btn-primary:hover { background: #1a4d66; border-color: #1a4d66; }
+.btn-primary { background: var(--marino); border-color: var(--marino); }
+.btn-primary:hover, .btn-primary:focus { background: var(--marino-hondo); border-color: var(--marino-hondo); }
 
 .btn-danger { background: var(--granate); border-color: var(--granate); }
 
-.btn-outline-secondary { color: var(--tinta); border-color: var(--borde); }
-.btn-outline-secondary:hover { background: #eef1f0; color: var(--tinta); border-color: #c3cdc7; }
-.btn-outline-secondary.active { background: var(--verde-claro); color: var(--pino);
-                                border-color: #b9d3c5; }
+.btn-outline-secondary { color: var(--tinta); border-color: var(--borde); background: var(--superficie); }
+.btn-outline-secondary:hover { background: var(--superficie-2); color: var(--tinta); border-color: #d4c8b6; }
+.btn-outline-secondary.active { background: var(--azul-claro); color: var(--marino);
+                                border-color: var(--azul-borde); }
 
-.btn-outline-success { color: var(--verde); border-color: #b9d3c5; }
-.btn-outline-success:hover { background: var(--verde); border-color: var(--verde); }
+.btn-outline-success { color: var(--azul); border-color: var(--azul-borde); }
+.btn-outline-success:hover { background: var(--azul); border-color: var(--azul); color: #fff; }
+
+.btn-link { color: var(--azul); }
 
 /* Acciones destructivas: discretas hasta que se usan. */
 .btn-eliminar, .btn.text-danger { color: var(--granate); border-color: transparent; }
@@ -251,45 +309,53 @@ a:hover { color: var(--pino); }
 
 /* ----------------------------------------------------- formularios --- */
 .form-label { font-size: 0.85rem; font-weight: 600; color: var(--tinta); margin-bottom: 0.25rem; }
-.form-control, .form-select { border-color: #cfd8d3; border-radius: var(--radio); font-size: 0.93rem; }
+.form-control, .form-select { border-color: #d9cfbf; border-radius: var(--radio); font-size: 0.93rem;
+                              background-color: #fff; }
 .form-control:focus, .form-select:focus {
-  border-color: var(--verde);
-  box-shadow: 0 0 0 3px rgba(28, 107, 71, 0.13);
+  border-color: var(--azul);
+  box-shadow: 0 0 0 3px rgba(43, 91, 138, 0.15);
 }
+.form-check-input:checked { background-color: var(--azul); border-color: var(--azul); }
 .form-text { font-size: 0.82rem; color: var(--tinta-suave); }
 
 /* Panel de calculo del cargo: el dato mas importante del modulo de cobros. */
 .calculo {
-  background: var(--verde-claro);
-  border: 1px solid #c3dccd;
+  background: var(--azul-claro);
+  border: 1px solid var(--azul-borde);
   border-radius: var(--radio);
-  padding: 0.8rem 0.95rem;
+  padding: 0.85rem 1rem;
 }
 .calculo .linea { display: flex; justify-content: space-between; font-size: 0.9rem; padding: 0.12rem 0; }
 .calculo .total {
-  border-top: 1px solid #b3d2c1;
+  border-top: 1px solid #b3c8de;
   margin-top: 0.45rem; padding-top: 0.45rem;
-  font-size: 1.05rem; font-weight: 600; color: var(--pino);
+  font-size: 1.05rem; font-weight: 600; color: var(--marino);
 }
 
 /* ------------------------------------------------------- mensajes --- */
 .alert { border-radius: var(--radio); border-width: 1px; font-size: 0.93rem; }
-.alert-success { background: var(--verde-claro); border-color: #b9d3c5; color: #14532d; }
+.alert-success { background: var(--verde-fondo); border-color: #bcdcc8; color: #1d5a3a; }
+.alert-info { background: var(--azul-claro); border-color: var(--azul-borde); color: var(--marino); }
 .alert-danger { background: var(--granate-fondo); border-color: #e3bcbc; color: var(--granate); }
-.alert-warning { background: var(--ambar-fondo); border-color: #e8d5aa; color: #7a5209; }
+.alert-warning { background: var(--ambar-fondo); border-color: #ecd6a8; color: #7a5209; }
 
 /* -------------------------------------------------------- pestanas --- */
 .nav-tabs { border-bottom-color: var(--borde); }
-.nav-tabs .nav-link { color: var(--tinta-suave); border: none; font-weight: 600; padding: 0.55rem 0.9rem; }
-.nav-tabs .nav-link:hover { color: var(--pino); border: none; }
+.nav-tabs .nav-link { color: var(--tinta-suave); border: none; font-weight: 600; padding: 0.6rem 0.95rem; }
+.nav-tabs .nav-link:hover { color: var(--marino); border: none; }
 .nav-tabs .nav-link.active {
-  color: var(--pino); background: transparent; border: none;
-  box-shadow: inset 0 -2px 0 var(--verde);
+  color: var(--marino); background: transparent; border: none;
+  box-shadow: inset 0 -2px 0 var(--terracota);
 }
+
+/* --------------------------------------------------------- ventanas --- */
+.modal-content { border: none; border-radius: var(--radio-grande); box-shadow: var(--sombra-alta);
+                 background: var(--superficie); }
+.modal-header, .modal-footer { border-color: var(--borde); }
 
 /* ------------------------------------------------- correo y fichas --- */
 .correo {
-  background: #f6f8f7;
+  background: var(--superficie-2);
   border: 1px solid var(--borde);
   border-radius: var(--radio);
   font-size: 0.85rem;
@@ -311,10 +377,12 @@ a:hover { color: var(--pino); }
     flex-wrap: wrap;
   }
   .lateral .marca { border-bottom: none; padding: 0.8rem 1rem; }
+  .lateral .marca::after { display: none; }
   .lateral nav { display: flex; gap: 0.2rem; overflow-x: auto; padding: 0 0.6rem 0.6rem; }
   .lateral nav a { white-space: nowrap; }
   .lateral .servicios { border-top: none; margin-left: auto; }
   .contenido { margin-left: 0; }
+  .superior { position: static; padding: 0.7rem 1rem; }
   .area { padding: 1rem; }
 }
 
@@ -323,7 +391,7 @@ a:hover { color: var(--pino); }
   .lateral, .superior, .sin-impresion, .alert { display: none !important; }
   .contenido { margin-left: 0; }
   .area { padding: 0; max-width: 100%; }
-  .tarjeta { border: none; }
+  .tarjeta { border: none; box-shadow: none; }
   body { background: #fff; font-size: 11pt; }
 }
 /* Codigo en linea (bitacora): contraste 7.5:1 sobre el fondo de las tablas. */
