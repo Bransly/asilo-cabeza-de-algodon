@@ -1,0 +1,79 @@
+id,area,caso,verifica,esperado,resultado,detalle,fecha
+CP-01,Seguridad,"Sin sesión, una pantalla redirige al ingreso","RF-36, RNF-06",302 hacia /login,CORRECTO,,2026-10-10 21:11:48
+CP-02,Seguridad,Sin sesión no se ejecuta una acción POST,RNF-06,302 hacia /login,CORRECTO,,2026-10-10 21:11:48
+CP-03,Seguridad,Contraseña incorrecta y usuario inexistente dan el mismo mensaje,RNF-08,Mensaje genérico idéntico,CORRECTO,,2026-10-10 21:11:48
+CP-04,Seguridad,Con la clave inicial solo se puede cambiar la contraseña,"RF-42, RNF-17",Redirige a /cuenta/contrasena,CORRECTO,,2026-10-10 21:11:48
+CP-05,Seguridad,Contraseña nueva de menos de 10 caracteres se rechaza,RV-17,Rechazada con mensaje,CORRECTO,,2026-10-10 21:11:48
+CP-06,Seguridad,Contraseña sin números se rechaza,RV-17,Rechazada con mensaje,CORRECTO,,2026-10-10 21:11:48
+CP-07,Seguridad,Cambio de contraseña válido habilita el sistema,"RF-42, RNF-17",Contraseña actualizada y acceso al panel,CORRECTO,,2026-10-10 21:11:49
+CP-08,Seguridad,Caja no puede registrar un diagnóstico (petición directa),"RN-10, RNF-06",Acceso denegado,CORRECTO,,2026-10-10 21:11:49
+CP-09,Seguridad,Caja no puede abrir el módulo de laboratorio,RF-37,Acceso denegado,CORRECTO,,2026-10-10 21:11:49
+CP-10,Seguridad,Caja no puede consultar la bitácora,"RF-37, RF-40",Acceso denegado,CORRECTO,,2026-10-10 21:11:50
+CP-11,Seguridad,Laboratorio no accede a reportes financieros,RN-10,Acceso denegado,CORRECTO,,2026-10-10 21:11:50
+CP-12,Seguridad,El médico general no ve acciones de cobro,RNF-02,Sin botones de pago,CORRECTO,,2026-10-10 21:11:51
+CP-13,Seguridad,Tras 5 intentos fallidos la cuenta se bloquea sin revelar que existe,"RF-39, RNF-08",Clave correcta rechazada con el mensaje genérico,CORRECTO,,2026-10-10 21:11:51
+CP-14,Seguridad,"La bitácora registra ingresos, fallos y accesos denegados","RF-38, RF-40","INICIO_SESION, FALLIDO y ACCESO_DENEGADO presentes",CORRECTO,,2026-10-10 21:11:52
+CP-15,Seguridad,Ninguna contraseña queda escrita en la bitácora,RNF-05,Ni la clave inicial ni las erróneas aparecen,CORRECTO,,2026-10-10 21:11:52
+CP-16,Seguridad,Encabezados de seguridad HTTP presentes,RNF-18,"CSP, X-Frame-Options, nosniff y no-store",CORRECTO,,2026-10-10 21:11:52
+CP-17,Seguridad,La cookie de sesión es HttpOnly y SameSite=Lax,"RNF-07, RNF-18",Atributos presentes,CORRECTO,,2026-10-10 21:11:52
+CP-18,Seguridad,"Al cerrar sesión, una copia de la cookie deja de servir","RF-36, RNF-07",302 hacia /login,CORRECTO,,2026-10-10 21:11:52
+CP-19,Seguridad,Los microservicios rechazan peticiones sin clave de servicio,RNF-19,401 sin clave o con clave falsa,CORRECTO,,2026-10-10 21:11:52
+CP-20,Seguridad,Con la clave de servicio la API responde,RNF-19,200,CORRECTO,,2026-10-10 21:11:52
+CP-21,Expediente y validación,Alta de un interno con datos válidos,RF-01,Interno registrado,CORRECTO,,2026-10-10 21:11:52
+CP-22,Expediente y validación,Edad fuera de 60-120 o no numérica se rechaza,"RV-07, RV-13",Rechazada con mensaje,CORRECTO,,2026-10-10 21:11:52
+CP-23,Expediente y validación,"Fecha de ingreso futura, inexistente (31/09) o anterior a 1950 se rechaza","RV-08, RV-09",Rechazada,CORRECTO,,2026-10-10 21:11:52
+CP-24,Expediente y validación,Correo del familiar con formato inválido se rechaza,RV-14,Rechazado,CORRECTO,,2026-10-10 21:11:52
+CP-25,Expediente y validación,"Cuota negativa, cero o con 3 decimales se rechaza","RV-01, RV-02, RV-05",Rechazada,CORRECTO,,2026-10-10 21:11:53
+CP-26,Expediente y validación,Nombre vacío o de más de 120 caracteres se rechaza,RV-12,Rechazado,CORRECTO,,2026-10-10 21:11:53
+CP-27,Expediente y validación,Inyección SQL y script se guardan como texto inofensivo,RNF-10,Tabla intacta y script escapado,CORRECTO,,2026-10-10 21:11:53
+CP-28,Expediente y validación,La edición también válida en el servidor,"RF-02, RV-07",Rechazada,CORRECTO,,2026-10-10 21:11:53
+CP-29,Expediente y validación,"Petición directa con datos inválidos, sin pasar por la pantalla","RNF-06, RV-07",Rechazada,CORRECTO,,2026-10-10 21:11:53
+CP-30,Expediente y validación,Ficha médica y medicamento permanente; medicamento sin nombre se rechaza,"RF-04, RF-05, RV-12","Ficha actualizada, medicamento agregado, vacío rechazado",CORRECTO,,2026-10-10 21:11:53
+CP-31,Expediente y validación,La baja es lógica: sale del listado y el expediente se conserva,"RF-03, RN-11",No aparece en internos activos; expediente accesible,CORRECTO,,2026-10-10 21:11:53
+CP-32,Flujo de atención,Solicitud sin motivo se rechaza,RV-12,Rechazada,CORRECTO,,2026-10-10 21:11:56
+CP-33,Flujo de atención,Solicitud a una especialidad inexistente se rechaza,RV-16,Rechazada,CORRECTO,,2026-10-10 21:11:56
+CP-34,Flujo de atención,Solicitud válida y aviso al familiar (especialidad y motivo),"RF-07, RF-11, RN-02",Solicitud creada y correo SOLICITUD_REGISTRADA,CORRECTO,,2026-10-10 21:11:56
+CP-35,Flujo de atención,Médico de otra especialidad o cita en el pasado se rechaza,"RN-04, RV-10",Rechazada,CORRECTO,,2026-10-10 21:11:56
+CP-36,Flujo de atención,No se abre visita si la fundación no asignó médico,"RF-08, RN-03",Rechazada,CORRECTO,,2026-10-10 21:11:56
+CP-37,Flujo de atención,"Al asignar, el familiar recibe el nombre del médico y la cita","RF-09, RF-11",Correo MEDICO_ASIGNADO con el médico,CORRECTO,,2026-10-10 21:11:56
+CP-38,Flujo de atención,Una tarifa de examen no puede cobrarse como consulta,RV-16,Rechazada,CORRECTO,,2026-10-10 21:11:56
+CP-39,Flujo de atención,La solicitud se convierte en visita y carga la consulta con descuento,"RF-10, RF-21, RN-06",Visita abierta; Q350.00 - 35% = Q227.50,CORRECTO,,2026-10-10 21:11:57
+CP-40,Flujo de atención,Una solicitud no se convierte en visita dos veces,RN-05,Rechazada,CORRECTO,,2026-10-10 21:11:57
+CP-41,Flujo de atención,El especialista ve la ficha médica del interno en la visita,RF-13,Ficha visible,CORRECTO,,2026-10-10 21:11:57
+CP-42,Flujo de atención,"Receta con cantidad 0, mayor a 500 o sin indicaciones se rechaza","RF-19, RV-11",Rechazada,CORRECTO,,2026-10-10 21:11:57
+CP-43,Flujo de atención,Receta válida queda pendiente de entrega y sin cobro,"RF-19, RN-07",Indicado y sin cargo de medicamento,CORRECTO,,2026-10-10 21:11:57
+CP-44,Flujo de atención,El examen se cobra al solicitarlo con descuento,"RF-15, RN-07",Q120.00 - 50% = Q60.00,CORRECTO,,2026-10-10 21:11:57
+CP-45,Flujo de atención,No se cierra la visita con exámenes sin resultado,RN-09,Rechazada,CORRECTO,,2026-10-10 21:11:57
+CP-46,Flujo de atención,Resultado vacío se rechaza; el válido se guarda una sola vez,"RF-16, RF-17","Vacío rechazado, válido guardado, segundo rechazado",CORRECTO,,2026-10-10 21:11:58
+CP-47,Flujo de atención,El médico consulta el resultado del laboratorio,RF-18,Resultado visible en la visita,CORRECTO,,2026-10-10 21:11:58
+CP-48,Flujo de atención,Entregar cobra el medicamento una sola vez,"RF-20, RN-07, RN-08",30 x Q3.50 - 30% = Q73.50; segunda entrega rechazada,CORRECTO,,2026-10-10 21:11:58
+CP-49,Flujo de atención,Sin diagnóstico no se cierra; con diagnóstico si,"RF-12, RF-14, RN-09","Primero rechazada, luego cerrada",CORRECTO,,2026-10-10 21:11:58
+CP-50,Flujo de atención,El historial del interno muestra la visita cerrada,RF-06,Diagnóstico en el historial,CORRECTO,,2026-10-10 21:11:58
+CP-51,Costos y caja,Estado de cuenta del familiar con descuento,"RF-22, RF-24","Subtotal Q575.00, total Q361.00, ahorro Q214.00",CORRECTO,,2026-10-10 21:11:58
+CP-52,Costos y caja,Un cargo se paga una sola vez (doble clic o reenvío),RF-23,Segundo pago rechazado,CORRECTO,,2026-10-10 21:11:58
+CP-53,Costos y caja,Revertir un pago exige motivo y devuelve el cargo a pendiente,RF-41,Sin motivo rechazado; con motivo PENDIENTE,CORRECTO,,2026-10-10 21:11:58
+CP-54,Costos y caja,No se elimina un cargo ya pagado,RN-13,400,CORRECTO,,2026-10-10 21:11:59
+CP-55,Costos y caja,"Descuento fuera de 0-100, precio negativo o con 3 decimales se rechaza","RV-01, RV-03, RV-04",422 en los cuatro casos,CORRECTO,,2026-10-10 21:11:59
+CP-56,Costos y caja,Redondeo comercial a centavos con Decimal,RV-03,Q0.25 - 50% = Q0.125 -> Q0.13,CORRECTO,,2026-10-10 21:11:59
+CP-57,Costos y caja,Cambiar la tarifa no altera un cargo ya generado,RN-06,El cargo conserva Q0.13,CORRECTO,,2026-10-10 21:11:59
+CP-58,Costos y caja,"Donación válida; origen inventado, monto negativo o fecha futura se rechaza","RF-26, RV-01, RV-08, RV-16","Una registrada, tres rechazadas",CORRECTO,,2026-10-10 21:11:59
+CP-59,Costos y caja,Gasto válido; monto con letras se rechaza,"RF-28, RV-13","Uno registrado, otro rechazado",CORRECTO,,2026-10-10 21:11:59
+CP-60,Costos y caja,Las cuotas del mes se generan una sola vez; mes 13 se rechaza,"RF-27, RV-06",Generadas; segunda vez sin duplicar; mes inválido rechazado,CORRECTO,,2026-10-10 21:11:59
+CP-61,Costos y caja,Una cuota se cobra una sola vez,RF-27,Segundo cobro rechazado,CORRECTO,,2026-10-10 21:12:00
+CP-62,Costos y caja,Pago a la fundación: no mayor que la deuda y sin referencia repetida,"RF-25, RF-43, RV-01","Excedente rechazado, pago válido, referencia duplicada rechazada",CORRECTO,,2026-10-10 21:12:00
+CP-63,Reportes,Reporte 'costos-por-cita' con datos del periodo,RF-29,Contiene 'Dr. Luis Herrera (Cardiologia)',CORRECTO,,2026-10-10 21:12:00
+CP-64,Reportes,Reporte 'analisis-medico' con datos del periodo,RF-30,Contiene 'Hipertensión arterial grado 1',CORRECTO,,2026-10-10 21:12:00
+CP-65,Reportes,Reporte 'cobros-por-paciente' con datos del periodo,RF-31,Contiene 'Q361.00',CORRECTO,,2026-10-10 21:12:00
+CP-66,Reportes,Reporte 'pagos-fundacion' con datos del periodo,"RF-32, RF-25",Contiene 'Deuda actual con la fundación',CORRECTO,,2026-10-10 21:12:00
+CP-67,Reportes,Reporte 'entradas' con datos del periodo,RF-33,Contiene 'Pagos a la fundación del periodo',CORRECTO,,2026-10-10 21:12:00
+CP-68,Reportes,Reporte 'examenes-por-paciente' con datos del periodo,RF-34,Contiene 'Hemoglobina 13.2',CORRECTO,,2026-10-10 21:12:00
+CP-69,Reportes,Reporte 'medicamentos-por-paciente' con datos del periodo,RF-35,Contiene 'Losartán',CORRECTO,,2026-10-10 21:12:00
+CP-70,Reportes,La deuda con la fundación es lo facturado menos lo pagado,RF-25,Deuda Q161.00,CORRECTO,,2026-10-10 21:12:00
+CP-71,Reportes,El filtro por rango de fechas excluye lo que esta fuera del periodo,RF-31,Sin el cargo de hoy,CORRECTO,,2026-10-10 21:12:00
+CP-72,Tolerancia a fallas,Sin servicio de correo la solicitud se guarda y se advierte,"RNF-11, RN-12",Solicitud creada con advertencia,CORRECTO,,2026-10-10 21:12:13
+CP-73,Tolerancia a fallas,Sin servicio de costos la entrega se registra y se advierte el cargo,"RNF-11, RN-12",Entregado con advertencia,CORRECTO,,2026-10-10 21:12:33
+CP-74,Tolerancia a fallas,El reporte advierte que no incluye cargos si costos no responde,RNF-12,Aviso visible,CORRECTO,,2026-10-10 21:12:49
+CP-75,Administración de usuarios,El administrador desbloquea una cuenta bloqueada,RF-44,Desbloqueada; el usuario puede ingresar,CORRECTO,,2026-10-10 21:12:54
+CP-76,Administración de usuarios,"Restablecer clave: temporal de un solo uso, cierra la sesión y no queda en bitácora","RF-44, RNF-05",Clave temporal obliga a cambiarla; sesión anterior cerrada,CORRECTO,,2026-10-10 21:12:54
+CP-77,Administración de usuarios,Una cuenta desactivada no ingresa; solo el administrador administra cuentas,"RF-44, RF-37",Ingreso rechazado; caja denegado; no se desactiva a si mismo,CORRECTO,,2026-10-10 21:12:54
+CP-78,Seguridad,Laboratorio y fundación no abren expedientes; solo caja ve la cuenta del familiar,"RN-10, RF-37",Laboratorio y fundación denegados; médico sin estado de cuenta; caja con estado de cuenta,CORRECTO,,2026-10-10 21:12:55
