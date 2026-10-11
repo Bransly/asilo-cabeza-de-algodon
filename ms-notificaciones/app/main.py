@@ -18,9 +18,9 @@ from .services import NotificacionService, ReglaNegocioError
 app = FastAPI(
     title="Microservicio de Notificaciones",
     description=(
-        "Envia y registra el correo que se manda al familiar cuando se crea una "
-        "solicitud de atencion medica. "
-        "Sistema de Administracion del Asilo de Ancianos Cabeza de Algodon."
+        "Envía y registra el correo que se manda al familiar cuando se crea una "
+        "solicitud de atención médica. "
+        "Sistema de Administración del Asilo de Ancianos Cabeza de Algodón."
     ),
     version="1.1.0",
     dependencies=[Depends(exigir_clave_de_servicio)],

@@ -164,7 +164,7 @@ class AtencionService:
             raise ErrorNegocio("El interno indicado no existe o fue dado de baja.")
         if paciente.ficha is None:
             raise ErrorNegocio(
-                "El interno no tiene ficha medica. Complete la ficha antes de referirlo.")
+                "El interno no tiene ficha médica. Complete la ficha antes de referirlo.")
         motivo = v.texto(datos.get("motivo"), "motivo de la referencia", minimo=3, maximo=300)
 
         especialidad_id = v.entero(datos.get("especialidad_id"), "especialidad", 1)
@@ -230,7 +230,7 @@ class AtencionService:
 
         medico = self.sesion.get(Medico, v.entero(datos.get("medico_id"), "medico", 1))
         if medico is None:
-            raise ErrorNegocio("El medico indicado no existe.")
+            raise ErrorNegocio("El médico indicado no existe.")
         if medico.especialidad_id != solicitud.especialidad_id:
             raise ErrorNegocio(
                 f"{medico.nombre} no pertenece a la especialidad solicitada "
@@ -256,9 +256,9 @@ class AtencionService:
         solicitud = self._buscar_solicitud(solicitud_id)
         if solicitud.estado == EstadoSolicitud.PENDIENTE:
             raise ErrorNegocio(
-                "La fundacion aun no asigna medico ni horario a esta solicitud.")
+                "La fundación aún no asigna médico ni horario a esta solicitud.")
         if solicitud.visita is not None:
-            raise ErrorNegocio("Esta solicitud ya tiene una visita medica registrada.")
+            raise ErrorNegocio("Esta solicitud ya tiene una visita médica registrada.")
         if tarifa_consulta_id:
             # Se valida antes de crear la visita: una tarifa que no es de consulta
             # no debe dejar una visita a medio registrar.
@@ -298,7 +298,7 @@ class AtencionService:
     def cerrar_visita(self, visita_id: int) -> VisitaMedica:
         visita = self._buscar_visita(visita_id)
         if not visita.diagnostico.strip():
-            raise ErrorNegocio("No se puede cerrar la visita sin registrar el diagnostico.")
+            raise ErrorNegocio("No se puede cerrar la visita sin registrar el diagnóstico.")
         pendientes = [e for e in visita.examenes if e.estado == EstadoExamen.SOLICITADO]
         if pendientes:
             raise ErrorNegocio(
@@ -312,7 +312,7 @@ class AtencionService:
     def ordenar_examen(self, visita_id: int, datos: dict):
         visita = self._buscar_visita(visita_id)
         if visita.estado == EstadoVisita.CERRADA:
-            raise ErrorNegocio("La visita esta cerrada: no admite examenes nuevos.")
+            raise ErrorNegocio("La visita está cerrada: no admite exámenes nuevos.")
 
         tarifa = self._buscar_tarifa(v.entero(datos.get("tarifa_id"), "examen", 1), "EXAMEN")
         examen = OrdenExamen(
@@ -347,7 +347,7 @@ class AtencionService:
     def recetar_medicamento(self, visita_id: int, datos: dict) -> MedicamentoRecetado:
         visita = self._buscar_visita(visita_id)
         if visita.estado == EstadoVisita.CERRADA:
-            raise ErrorNegocio("La visita esta cerrada: no admite recetas nuevas.")
+            raise ErrorNegocio("La visita está cerrada: no admite recetas nuevas.")
 
         tarifa = self._buscar_tarifa(v.entero(datos.get("tarifa_id"), "medicamento", 1),
                                      "MEDICAMENTO")
@@ -400,14 +400,14 @@ class AtencionService:
             return cargo, None
         except MicroservicioError as error:
             return None, (
-                "El registro clinico se guardo, pero el cargo no se pudo enviar al "
+                "El registro clínico se guardó, pero el cargo no se pudo enviar al "
                 f"servicio de costos. {error}")
 
     def _buscar_tarifa(self, tarifa_id: int, tipo: str | None = None) -> dict:
         try:
             tarifas = self.costos.listar_tarifas()
         except MicroservicioError as error:
-            raise ErrorNegocio(f"No se pudo consultar el catalogo de tarifas. {error}")
+            raise ErrorNegocio(f"No se pudo consultar el catálogo de tarifas. {error}")
         tarifa = next((t for t in tarifas if t["id"] == tarifa_id), None)
         if tarifa is None:
             raise ErrorNegocio("La tarifa seleccionada no existe o esta inactiva.")
@@ -424,7 +424,7 @@ class AtencionService:
     def _buscar_visita(self, visita_id: int) -> VisitaMedica:
         visita = self.visitas.obtener(visita_id)
         if visita is None:
-            raise ErrorNegocio("La visita medica indicada no existe.")
+            raise ErrorNegocio("La visita médica indicada no existe.")
         return visita
 
 
@@ -502,10 +502,10 @@ class CajaService:
     # ---------- donaciones ----------
     def registrar_donacion(self, datos: dict, usuario: str = "") -> Donacion:
         donacion = Donacion(
-            origen=v.opcion(datos.get("origen"), OrigenDonacion, "origen de la donacion"),
+            origen=v.opcion(datos.get("origen"), OrigenDonacion, "origen de la donación"),
             donante=v.texto(datos.get("donante"), "donante", minimo=3, maximo=150),
             monto=float(v.monto(datos.get("monto"))),
-            fecha=v.fecha(datos.get("fecha"), "fecha de la donacion"),
+            fecha=v.fecha(datos.get("fecha"), "fecha de la donación"),
             descripcion=v.texto(datos.get("descripcion"), "descripcion", obligatorio=False,
                                 maximo=300),
             recibo=v.texto(datos.get("recibo"), "recibo", obligatorio=False, maximo=40),
@@ -516,15 +516,15 @@ class CajaService:
     def eliminar_donacion(self, donacion_id: int) -> Donacion:
         donacion = self.donaciones.obtener(donacion_id)
         if donacion is None:
-            raise ErrorNegocio("La donacion indicada no existe.")
+            raise ErrorNegocio("La donación indicada no existe.")
         self.donaciones.eliminar(donacion)
         return donacion
 
     # ---------- gastos ----------
     def registrar_gasto(self, datos: dict, usuario: str = "") -> Gasto:
         gasto = Gasto(
-            categoria=v.opcion(datos.get("categoria"), CategoriaGasto, "categoria del gasto"),
-            descripcion=v.texto(datos.get("descripcion"), "descripcion del gasto", minimo=3,
+            categoria=v.opcion(datos.get("categoria"), CategoriaGasto, "categoría del gasto"),
+            descripcion=v.texto(datos.get("descripcion"), "descripción del gasto", minimo=3,
                                 maximo=300),
             monto=float(v.monto(datos.get("monto"))),
             fecha=v.fecha(datos.get("fecha"), "fecha del gasto"),
@@ -583,7 +583,7 @@ class CajaService:
             cargos = self.costos.listar_cargos()
         except MicroservicioError as error:
             raise ErrorNegocio(
-                f"No se pudo consultar lo facturado por la fundacion. {error}")
+                f"No se pudo consultar lo facturado por la fundación. {error}")
         facturado = sum(Decimal(str(c["total"])) for c in cargos)
         pagado = Decimal(str(self.pagos_fundacion.total()))
         return {"facturado": float(facturado), "pagado": float(pagado),
@@ -591,7 +591,7 @@ class CajaService:
 
     def registrar_pago_fundacion(self, datos: dict, usuario: str = "") -> PagoFundacion:
         monto = v.monto(datos.get("monto"), "monto del pago")
-        referencia = v.texto(datos.get("referencia"), "referencia o numero de factura",
+        referencia = v.texto(datos.get("referencia"), "referencia o número de factura",
                              minimo=3, maximo=60)
         if self.pagos_fundacion.existe_referencia(referencia):
             raise ErrorNegocio(
@@ -601,7 +601,7 @@ class CajaService:
         if monto > deuda:
             raise ErrorNegocio(
                 f"El pago (Q{monto:,.2f}) es mayor que la deuda actual con la "
-                f"fundacion (Q{deuda:,.2f}).")
+                f"fundación (Q{deuda:,.2f}).")
         pago = PagoFundacion(
             fecha=v.fecha(datos.get("fecha"), "fecha del pago"),
             monto=float(monto),
@@ -631,7 +631,7 @@ class CobroService:
 
     def revertir_pago(self, cargo_id: int, motivo: str) -> dict:
         """Corrige un pago registrado por error (DEF-05). Exige el motivo."""
-        motivo = v.texto(motivo, "motivo de la reversion", minimo=5, maximo=200)
+        motivo = v.texto(motivo, "motivo de la reversión", minimo=5, maximo=200)
         try:
             return self.costos.revertir_pago(cargo_id, motivo)
         except MicroservicioError as error:

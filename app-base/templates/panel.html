@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block titulo %}Panel - Asilo Cabeza de Algodon{% endblock %}
+{% block titulo %}Panel - Asilo Cabeza de Algodón{% endblock %}
 
 {% block seccion %}Panel general{% endblock %}
 
@@ -30,7 +30,7 @@
   <div class="col-6 col-lg">
     <a href="{{ url_for('laboratorio') }}" class="text-decoration-none text-reset">
       <div class="kpi">
-        <div class="kpi-etiqueta">Examenes sin resultado</div>
+        <div class="kpi-etiqueta">Exámenes sin resultado</div>
         <div class="kpi-valor">{{ resumen.examenes_pendientes }}</div>
       </div>
     </a>
@@ -47,7 +47,7 @@
 
 <div class="tarjeta">
   <div class="tarjeta-titulo d-flex justify-content-between align-items-center">
-    <span>Ultimas solicitudes de atencion</span>
+    <span>Últimas solicitudes de atención</span>
     <a href="{{ url_for('fundacion', estado='TODAS') }}" class="small">Ver todas</a>
   </div>
   <div class="p-3">
@@ -56,8 +56,8 @@
       <table class="table table-sm align-middle mb-0">
         <thead class="table-light">
           <tr>
-            <th>#</th><th>Interno</th><th>Especialidad</th><th>Medico</th>
-            <th>Estado</th><th class="text-end">Accion</th>
+            <th>#</th><th>Interno</th><th>Especialidad</th><th>Médico</th>
+            <th>Estado</th><th class="text-end">Acción</th>
           </tr>
         </thead>
         <tbody>
@@ -94,7 +94,7 @@
     </div>
     {% else %}
       <p class="text-muted mb-0">
-        Aun no hay solicitudes. Entre al expediente de un interno y refieralo a una especialidad.
+        Aún no hay solicitudes. Entre al expediente de un interno y refiéralo a una especialidad.
       </p>
     {% endif %}
   </div>

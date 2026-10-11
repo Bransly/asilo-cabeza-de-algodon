@@ -29,17 +29,17 @@ PANTALLAS = [
     ("Panel", "/", "admin"),
     ("Internos", "/pacientes", "admin"),
     ("Expediente", "/pacientes/1", "admin"),
-    ("Solicitudes (fundacion)", "/fundacion?estado=ATENDIDA", "admin"),
+    ("Solicitudes (fundación)", "/fundacion?estado=ATENDIDA", "admin"),
     ("Laboratorio", "/laboratorio", "admin"),
     ("Farmacia", "/farmacia", "admin"),
     ("Caja", "/caja", "admin"),
-    ("Visita medica", "/visitas/1", "admin"),
+    ("Visita médica", "/visitas/1", "admin"),
     ("Reportes", "/reportes", "admin"),
-    ("Reporte de analisis medico", "/reportes/analisis-medico?paciente_id=1", "admin"),
+    ("Reporte de análisis médico", "/reportes/analisis-medico?paciente_id=1", "admin"),
     ("Reporte de entradas", "/reportes/entradas", "admin"),
     ("Usuarios", "/usuarios", "admin"),
-    ("Bitacora", "/bitacora", "admin"),
-    ("Cambiar contrasena", "/cuenta/contrasena", "admin"),
+    ("Bitácora", "/bitacora", "admin"),
+    ("Cambiar contraseña", "/cuenta/contrasena", "admin"),
 ]
 
 
@@ -85,7 +85,7 @@ def main():
                 print(f"   - [{v['impacto']}] {v['id']} ({v['nodos']}): {v['ayuda']}")
         navegador.close()
 
-    lineas = [f"# Revision de accesibilidad WCAG 2.1 AA ({datetime.now():%d/%m/%Y %H:%M})", "",
+    lineas = [f"# Revisión de accesibilidad WCAG 2.1 AA ({datetime.now():%d/%m/%Y %H:%M})", "",
               "Herramienta: axe-core en Chromium. Reglas: wcag2a, wcag2aa, wcag21a, wcag21aa.", "",
               "| Pantalla | Ruta | Violaciones | Detalle |", "|---|---|---|---|"]
     for nombre, ruta, res in filas:

@@ -88,7 +88,7 @@ class TarifaService:
                     activo=True,
                 )
             )
-        print("[ms-costos] Catalogo de tarifas inicial cargado")
+        print("[ms-costos] Catálogo de tarifas inicial cargado")
 
 
 class CargoService:

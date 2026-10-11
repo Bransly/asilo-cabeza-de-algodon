@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block titulo %}Internos - Asilo Cabeza de Algodon{% endblock %}
+{% block titulo %}Internos - Asilo Cabeza de Algodón{% endblock %}
 
 {% block seccion %}Internos del asilo{% endblock %}
 
@@ -45,7 +45,7 @@
           </table>
         </div>
         {% else %}
-          <p class="text-muted mb-0">Todavia no hay internos registrados.</p>
+          <p class="text-muted mb-0">Todavía no hay internos registrados.</p>
         {% endif %}
       </div>
     </div>
@@ -83,10 +83,10 @@
           <div class="col-7">
             <label for="pacientes_correo_familiar_6{{ "-" ~ loop.index if loop is defined }}" class="form-label">Correo del familiar</label>
             <input id="pacientes_correo_familiar_6{{ "-" ~ loop.index if loop is defined }}" name="correo_familiar" type="email" class="form-control" required>
-            <div class="form-text">Ahi se avisara cada solicitud medica.</div>
+            <div class="form-text">Ahí se avisará cada solicitud médica.</div>
           </div>
           <div class="col-5">
-            <label for="pacientes_telefono_familiar_7{{ "-" ~ loop.index if loop is defined }}" class="form-label">Telefono</label>
+            <label for="pacientes_telefono_familiar_7{{ "-" ~ loop.index if loop is defined }}" class="form-label">Teléfono</label>
             <input id="pacientes_telefono_familiar_7{{ "-" ~ loop.index if loop is defined }}" name="telefono_familiar" class="form-control" maxlength="30">
           </div>
           <div class="col-6">
@@ -97,9 +97,9 @@
           <div class="col-12"><hr class="my-2"></div>
 
           <div class="col-12">
-            <label for="pacientes_psicopatologia_9{{ "-" ~ loop.index if loop is defined }}" class="form-label">Psicopatologia</label>
+            <label for="pacientes_psicopatologia_9{{ "-" ~ loop.index if loop is defined }}" class="form-label">Psicopatología</label>
             <input id="pacientes_psicopatologia_9{{ "-" ~ loop.index if loop is defined }}" name="psicopatologia" class="form-control"
-                   placeholder="Deterioro cognitivo leve, depresion, etc.">
+                   placeholder="Deterioro cognitivo leve, depresión, etc.">
           </div>
           <div class="col-12">
             <label for="pacientes_padecimientos_10{{ "-" ~ loop.index if loop is defined }}" class="form-label">Padecimientos conocidos</label>
@@ -107,7 +107,7 @@
           </div>
 
           <div class="col-12 mt-3">
-            <button class="btn btn-success w-100">Registrar interno y crear su ficha medica</button>
+            <button class="btn btn-success w-100">Registrar interno y crear su ficha médica</button>
           </div>
         </form>
       </div>

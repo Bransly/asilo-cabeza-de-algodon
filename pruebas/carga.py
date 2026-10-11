@@ -110,7 +110,7 @@ def volumen(cantidad):
     caja = entrar("caja")
     medidas = {}
     for nombre, ruta in [("Estado de cuenta (expediente)", "/pacientes/1"),
-                         ("Reporte de pagos a la fundacion", "/reportes/pagos-fundacion"),
+                         ("Reporte de pagos a la fundación", "/reportes/pagos-fundacion"),
                          ("Reporte de entradas", "/reportes/entradas"),
                          ("Reporte de cobros por paciente", "/reportes/cobros-por-paciente?paciente_id=1"),
                          ("Pantalla de caja", "/caja")]:
@@ -136,10 +136,10 @@ def main():
     if a.modo == "carga":
         r = carga(a.usuarios, a.segundos)
         lineas = [f"# Prueba de carga ({datetime.now():%d/%m/%Y %H:%M})", "",
-                  f"- Usuarios simultaneos: {r['usuarios']}", f"- Duracion: {r['segundos']} s",
+                  f"- Usuarios simultáneos: {r['usuarios']}", f"- Duración: {r['segundos']} s",
                   f"- Peticiones: {r['peticiones']} ({r['por_segundo']:.1f} por segundo)",
                   f"- Errores: {r['errores']}", f"- Tiempo promedio: {r['promedio_ms']:.0f} ms",
-                  f"- Percentil 95: {r['p95_ms']:.0f} ms", f"- Maximo: {r['maximo_ms']:.0f} ms"]
+                  f"- Percentil 95: {r['p95_ms']:.0f} ms", f"- Máximo: {r['maximo_ms']:.0f} ms"]
     else:
         r = volumen(a.cargos)
         lineas = [f"# Prueba de volumen ({datetime.now():%d/%m/%Y %H:%M})", "",

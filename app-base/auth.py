@@ -42,7 +42,7 @@ class ErrorAutenticacion(Exception):
 # Un solo mensaje para todos los rechazos del ingreso. Si "cuenta bloqueada" o
 # "cuenta inactiva" tuvieran su propio texto, un atacante podria usarlos para
 # saber que usuarios existen. El motivo real queda en la bitacora.
-MENSAJE_GENERICO = ("Usuario o contrasena incorrectos, o la cuenta esta bloqueada "
+MENSAJE_GENERICO = ("Usuario o contraseña incorrectos, o la cuenta está bloqueada "
                     "temporalmente.")
 
 
@@ -148,15 +148,15 @@ class AutenticacionService:
         """Politica de contrasenas (RV-17) y cambio obligatorio en el primer ingreso."""
         usuario = self.usuarios.obtener(session.get("usuario_id") or 0)
         if usuario is None:
-            raise ErrorAutenticacion("Inicie sesion para continuar.")
+            raise ErrorAutenticacion("Inicie sesión para continuar.")
         if not contrasena_valida(usuario, actual or ""):
             self.registrar("CAMBIO_CONTRASENA", "Usuario", usuario.id, "FALLIDO",
-                           "Contrasena actual incorrecta")
-            raise ErrorAutenticacion("La contrasena actual no es correcta.")
+                           "Contraseña actual incorrecta")
+            raise ErrorAutenticacion("La contraseña actual no es correcta.")
         if nueva != confirmacion:
-            raise ErrorAutenticacion("La confirmacion no coincide con la nueva contrasena.")
+            raise ErrorAutenticacion("La confirmación no coincide con la nueva contraseña.")
         if contrasena_valida(usuario, nueva):
-            raise ErrorAutenticacion("La nueva contrasena debe ser distinta de la actual.")
+            raise ErrorAutenticacion("La nueva contraseña debe ser distinta de la actual.")
         try:
             v.contrasena_segura(nueva)
         except v.ErrorValidacion as error:
@@ -281,19 +281,19 @@ def requiere_rol(*roles_permitidos):
         @wraps(vista)
         def envoltura(*args, **kwargs):
             if usuario_actual() is None:
-                flash("Inicie sesion para continuar.", "warning")
+                flash("Inicie sesión para continuar.", "warning")
                 return redirect(url_for("login", siguiente=request.path))
 
             if sesion_expirada() or not sesion_vigente_en_servidor():
                 session.clear()
-                flash("Su sesion vencio o fue cerrada. Vuelva a ingresar.", "warning")
+                flash("Su sesión venció o fue cerrada. Vuelva a ingresar.", "warning")
                 return redirect(url_for("login"))
 
             refrescar_actividad()
 
             # Con la contrasena inicial solo se puede entrar a cambiarla.
             if session.get("debe_cambiar") and request.endpoint != "cambiar_contrasena":
-                flash("Por seguridad, cambie su contrasena inicial antes de continuar.",
+                flash("Por seguridad, cambie su contraseña inicial antes de continuar.",
                       "warning")
                 return redirect(url_for("cambiar_contrasena"))
 
@@ -305,7 +305,7 @@ def requiere_rol(*roles_permitidos):
                     AutenticacionService(request.sesion).registrar(
                         "ACCESO_DENEGADO", vista.__name__, None, "DENEGADO",
                         f"Rol {rol} intento {request.method} {request.path}")
-                    flash("Su rol no tiene permiso para realizar esa accion.", "danger")
+                    flash("Su rol no tiene permiso para realizar esa acción.", "danger")
                     return redirect(url_for("panel"))
 
             return vista(*args, **kwargs)

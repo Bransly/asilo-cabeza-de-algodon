@@ -28,9 +28,9 @@ from .services import CargoService, ReglaNegocioError, TarifaService
 app = FastAPI(
     title="Microservicio de Costos y Cargos",
     description=(
-        "Calcula y administra los cargos de consultas, examenes de laboratorio y "
-        "farmacia aplicando el descuento de la fundacion. "
-        "Sistema de Administracion del Asilo de Ancianos Cabeza de Algodon."
+        "Calcula y administra los cargos de consultas, exámenes de laboratorio y "
+        "farmacia aplicando el descuento de la fundación. "
+        "Sistema de Administración del Asilo de Ancianos Cabeza de Algodón."
     ),
     version="1.1.0",
     # Toda ruta exige la clave de servicio (salvo /salud). El navegador nunca

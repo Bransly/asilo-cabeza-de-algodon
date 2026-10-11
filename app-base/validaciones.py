@@ -44,7 +44,7 @@ def texto(valor, campo: str, obligatorio: bool = True, maximo: int = 300,
     if limpio and len(limpio) < minimo:
         raise ErrorValidacion(f"El campo '{campo}' debe tener al menos {minimo} caracteres.")
     if len(limpio) > maximo:
-        raise ErrorValidacion(f"El campo '{campo}' admite como maximo {maximo} caracteres.")
+        raise ErrorValidacion(f"El campo '{campo}' admite como máximo {maximo} caracteres.")
     return limpio
 
 
@@ -53,11 +53,11 @@ def entero(valor, campo: str, minimo: int | None = None, maximo: int | None = No
     try:
         numero = int(str(valor).strip())
     except (TypeError, ValueError):
-        raise ErrorValidacion(f"El campo '{campo}' debe ser un numero entero.")
+        raise ErrorValidacion(f"El campo '{campo}' debe ser un número entero.")
     if minimo is not None and numero < minimo:
-        raise ErrorValidacion(f"El campo '{campo}' debe ser como minimo {minimo}.")
+        raise ErrorValidacion(f"El campo '{campo}' debe ser como mínimo {minimo}.")
     if maximo is not None and numero > maximo:
-        raise ErrorValidacion(f"El campo '{campo}' debe ser como maximo {maximo}.")
+        raise ErrorValidacion(f"El campo '{campo}' debe ser como máximo {maximo}.")
     return numero
 
 
@@ -73,13 +73,13 @@ def monto(valor, campo: str = "monto", maximo: Decimal = MONTO_MAXIMO,
     try:
         cantidad = Decimal(str(valor).strip().replace(",", ""))
     except (InvalidOperation, AttributeError):
-        raise ErrorValidacion(f"El {campo} debe ser un numero.")
+        raise ErrorValidacion(f"El {campo} debe ser un número.")
     if not cantidad.is_finite():
-        raise ErrorValidacion(f"El {campo} debe ser un numero.")
+        raise ErrorValidacion(f"El {campo} debe ser un número.")
     if cantidad < 0 or (cantidad == 0 and not permitir_cero):
         raise ErrorValidacion(f"El {campo} debe ser mayor que cero.")
     if cantidad != cantidad.quantize(CENTAVO):
-        raise ErrorValidacion(f"El {campo} admite como maximo dos decimales.")
+        raise ErrorValidacion(f"El {campo} admite como máximo dos decimales.")
     if cantidad > maximo:
         raise ErrorValidacion(f"El {campo} no puede ser mayor que Q{maximo:,.2f}.")
     return cantidad.quantize(CENTAVO, rounding=ROUND_HALF_UP)
@@ -97,7 +97,7 @@ def fecha(valor, campo: str = "fecha", permitir_futura: bool = False,
     try:
         dia = datetime.strptime(str(valor).strip(), "%Y-%m-%d").date()
     except ValueError:
-        raise ErrorValidacion(f"La {campo} no es una fecha valida.")
+        raise ErrorValidacion(f"La {campo} no es una fecha válida.")
     if dia < FECHA_MINIMA:
         raise ErrorValidacion(f"La {campo} no puede ser anterior al {FECHA_MINIMA:%d/%m/%Y}.")
     if not permitir_futura and dia > date.today():
@@ -110,11 +110,11 @@ def fecha_hora_futura(valor, campo: str = "fecha de la cita") -> datetime:
     try:
         momento = datetime.strptime(str(valor).strip(), "%Y-%m-%dT%H:%M")
     except (TypeError, ValueError):
-        raise ErrorValidacion(f"La {campo} no es valida.")
+        raise ErrorValidacion(f"La {campo} no es válida.")
     if momento <= datetime.now():
         raise ErrorValidacion(f"La {campo} debe ser posterior al momento actual.")
     if momento.year > date.today().year + 1:
-        raise ErrorValidacion(f"La {campo} no puede programarse a mas de un anio.")
+        raise ErrorValidacion(f"La {campo} no puede programarse a más de un año.")
     return momento
 
 
@@ -122,7 +122,7 @@ def correo(valor, campo: str = "correo del familiar") -> str:
     """RV-14: formato de correo valido; sin el, el aviso al familiar fallaria."""
     limpio = texto(valor, campo, maximo=150)
     if not PATRON_CORREO.match(limpio):
-        raise ErrorValidacion(f"El {campo} no tiene un formato valido.")
+        raise ErrorValidacion(f"El {campo} no tiene un formato válido.")
     return limpio.lower()
 
 
@@ -130,7 +130,7 @@ def telefono(valor) -> str:
     """RV-15: solo digitos, espacios, guiones y el signo +."""
     limpio = (valor or "").strip()
     if not PATRON_TELEFONO.match(limpio):
-        raise ErrorValidacion("El telefono solo admite numeros, espacios y guiones.")
+        raise ErrorValidacion("El teléfono solo admite números, espacios y guiones.")
     return limpio
 
 
@@ -139,7 +139,7 @@ def opcion(valor, enumeracion, campo: str):
     try:
         return enumeracion(valor)
     except ValueError:
-        raise ErrorValidacion(f"El valor indicado para '{campo}' no es valido.")
+        raise ErrorValidacion(f"El valor indicado para '{campo}' no es válido.")
 
 
 def contrasena_segura(valor: str) -> str:
@@ -148,9 +148,9 @@ def contrasena_segura(valor: str) -> str:
     Se pide longitud antes que simbolos porque es lo que mas encarece un ataque.
     """
     if len(valor or "") < 10:
-        raise ErrorValidacion("La contrasena debe tener al menos 10 caracteres.")
+        raise ErrorValidacion("La contraseña debe tener al menos 10 caracteres.")
     if not re.search(r"[A-Za-z]", valor) or not re.search(r"[0-9]", valor):
-        raise ErrorValidacion("La contrasena debe combinar letras y numeros.")
+        raise ErrorValidacion("La contraseña debe combinar letras y números.")
     if len(valor) > 128:
-        raise ErrorValidacion("La contrasena admite como maximo 128 caracteres.")
+        raise ErrorValidacion("La contraseña admite como máximo 128 caracteres.")
     return valor

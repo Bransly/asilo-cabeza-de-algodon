@@ -10,7 +10,7 @@
 <!-- ------------------------------------------------ Datos del interno -->
 <div class="tarjeta mb-4">
   <div class="tarjeta-titulo d-flex justify-content-between align-items-center flex-wrap gap-2">
-    <span>{{ paciente.nombre }}, {{ paciente.edad }} anios</span>
+    <span>{{ paciente.nombre }}, {{ paciente.edad }} años</span>
     <div class="d-flex gap-2">
       {% if admin %}
       <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse"
@@ -32,7 +32,7 @@
         <div class="dato">Familiar responsable</div>
         <div>{{ paciente.familiar_nombre }}</div>
         <div class="dato mt-2">Contacto</div>
-        <div>{{ paciente.correo_familiar }}<br>{{ paciente.telefono_familiar or 'Sin telefono' }}</div>
+        <div>{{ paciente.correo_familiar }}<br>{{ paciente.telefono_familiar or 'Sin teléfono' }}</div>
       </div>
       <div class="col-md-4">
         <div class="dato">Cuota mensual</div>
@@ -66,7 +66,7 @@
                  class="form-control">
         </div>
         <div class="col-md-4">
-          <label for="expediente_telefono_familiar_6{{ "-" ~ loop.index if loop is defined }}" class="form-label">Telefono</label>
+          <label for="expediente_telefono_familiar_6{{ "-" ~ loop.index if loop is defined }}" class="form-label">Teléfono</label>
           <input id="expediente_telefono_familiar_6{{ "-" ~ loop.index if loop is defined }}" name="telefono_familiar" value="{{ paciente.telefono_familiar }}" class="form-control">
         </div>
         <div class="col-12">
@@ -87,7 +87,7 @@
   <div class="col-lg-7">
     <div class="tarjeta mb-4">
       <div class="tarjeta-titulo d-flex justify-content-between align-items-center">
-        <span>Ficha medica</span>
+        <span>Ficha médica</span>
         {% if paciente.ficha %}
           <span class="dato">Actualizada {{ paciente.ficha.actualizada.strftime('%d/%m/%Y %H:%M') }}</span>
         {% endif %}
@@ -96,7 +96,7 @@
         <form method="post" action="{{ url_for('guardar_ficha', paciente_id=paciente.id) }}"
               class="row g-2">
           <div class="col-md-6">
-            <label for="expediente_psicopatologia_8{{ "-" ~ loop.index if loop is defined }}" class="form-label">Psicopatologia</label>
+            <label for="expediente_psicopatologia_8{{ "-" ~ loop.index if loop is defined }}" class="form-label">Psicopatología</label>
             <textarea id="expediente_psicopatologia_8{{ "-" ~ loop.index if loop is defined }}" name="psicopatologia" rows="2" class="form-control">{{ paciente.ficha.psicopatologia if paciente.ficha }}</textarea>
           </div>
           <div class="col-md-6">
@@ -137,7 +137,7 @@
               <td>{{ m.frecuencia }}</td>
               <td class="text-end">
                 <form method="post" action="{{ url_for('eliminar_medicamento', medicamento_id=m.id) }}"
-                      onsubmit="return confirm('Se quitara este medicamento permanente del expediente. ¿Continuar?');">
+                      onsubmit="return confirm('Se quitará este medicamento permanente del expediente. ¿Continuar?');">
                   <input type="hidden" name="paciente_id" value="{{ paciente.id }}">
                   <button class="btn btn-sm btn-outline-danger">Quitar</button>
                 </form>
@@ -176,8 +176,8 @@
       <div class="tarjeta-titulo">Referir a una especialidad</div>
       <div class="p-3">
         <p class="dato">
-          El medico general evalua al interno y lo remite. La solicitud aparece en el
-          modulo de la fundacion y se avisa por correo al familiar.
+          El médico general evalúa al interno y lo remite. La solicitud aparece en el
+          módulo de la fundación y se avisa por correo al familiar.
         </p>
         <form method="post" action="{{ url_for('crear_solicitud') }}">
           <input type="hidden" name="paciente_id" value="{{ paciente.id }}">
@@ -190,7 +190,7 @@
             </select>
           </div>
           <div class="mb-2">
-            <label for="expediente_enfermero_id_13{{ "-" ~ loop.index if loop is defined }}" class="form-label">Enfermero(a) que acompania</label>
+            <label for="expediente_enfermero_id_13{{ "-" ~ loop.index if loop is defined }}" class="form-label">Enfermero(a) que acompaña</label>
             <select id="expediente_enfermero_id_13{{ "-" ~ loop.index if loop is defined }}" name="enfermero_id" class="form-select">
               <option value="">Sin asignar</option>
               {% for enf in enfermeros %}
@@ -201,7 +201,7 @@
           <div class="mb-2">
             <label for="expediente_motivo_14{{ "-" ~ loop.index if loop is defined }}" class="form-label">Motivo de la referencia</label>
             <textarea id="expediente_motivo_14{{ "-" ~ loop.index if loop is defined }}" name="motivo" rows="2" class="form-control" required
-                      placeholder="Presion arterial elevada durante la evaluacion"></textarea>
+                      placeholder="Presión arterial elevada durante la evaluación"></textarea>
           </div>
           <div class="mb-3">
             <label for="expediente_estado_paciente_15{{ "-" ~ loop.index if loop is defined }}" class="form-label">Estado actual del interno</label>
@@ -212,7 +212,7 @@
             Crear solicitud y avisar al familiar
           </button>
           {% if not paciente.ficha %}
-            <div class="form-text text-danger">Complete primero la ficha medica.</div>
+            <div class="form-text text-danger">Complete primero la ficha médica.</div>
           {% endif %}
         </form>
       </div>
@@ -227,7 +227,7 @@
           <div class="d-flex justify-content-between align-items-start gap-2 {% if not loop.last %}border-bottom pb-2 mb-2{% endif %}">
             <div>
               <strong class="small">#{{ s.id }} &middot; {{ s.especialidad.nombre }}</strong>
-              <div class="dato">{{ s.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}{% if s.enfermero %}, acompana {{ s.enfermero.nombre }}{% endif %}</div>
+              <div class="dato">{{ s.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}{% if s.enfermero %}, acompaña {{ s.enfermero.nombre }}{% endif %}</div>
               <div class="small">{{ s.motivo }}</div>
             </div>
             <div class="text-end">
@@ -256,7 +256,7 @@
 
 <!-- ------------------------------------------- Historial medico -->
 <div class="tarjeta mt-4">
-  <div class="tarjeta-titulo">Historial medico</div>
+  <div class="tarjeta-titulo">Historial médico</div>
   <div class="p-3">
     {% if historial %}
       {% for v in historial %}
@@ -280,15 +280,15 @@
 
         <div class="row g-3 mt-1">
           <div class="col-md-6">
-            <div class="dato">Diagnostico</div>
+            <div class="dato">Diagnóstico</div>
             <div class="texto-ficha">{{ v.diagnostico or 'Pendiente' }}</div>
           </div>
           <div class="col-md-6">
-            <div class="dato">Observaciones medicas</div>
+            <div class="dato">Observaciones médicas</div>
             <div class="texto-ficha">{{ v.observaciones or '-' }}</div>
           </div>
           <div class="col-md-6">
-            <div class="dato">Examenes de laboratorio</div>
+            <div class="dato">Exámenes de laboratorio</div>
             {% if v.examenes %}
               <ul class="small mb-0 ps-3">
                 {% for e in v.examenes %}
@@ -316,7 +316,7 @@
       </div>
       {% endfor %}
     {% else %}
-      <p class="text-muted mb-0">Este interno todavia no tiene visitas medicas registradas.</p>
+      <p class="text-muted mb-0">Este interno todavía no tiene visitas médicas registradas.</p>
     {% endif %}
   </div>
 </div>
@@ -351,7 +351,7 @@
       </div>
       <div class="col-6 col-md-3">
         <div class="kpi">
-          <div class="kpi-etiqueta">Ahorro de la fundacion</div>
+          <div class="kpi-etiqueta">Ahorro de la fundación</div>
           <div class="kpi-valor monto text-success">Q{{ '%.2f'|format(cuenta.total_ahorrado) }}</div>
           <div class="dato">sobre Q{{ '%.2f'|format(cuenta.total_sin_descuento) }}</div>
         </div>
@@ -436,7 +436,7 @@
     <p class="text-muted small mb-0 d-none" id="sinResultados">No hay cargos con ese estado.</p>
     {% else %}
       <p class="text-muted mb-0">
-        Sin cargos registrados. Los cargos se generan solos al abrir una visita medica,
+        Sin cargos registrados. Los cargos se generan solos al abrir una visita médica,
         solicitar un examen o entregar un medicamento.
       </p>
     {% endif %}
@@ -472,7 +472,7 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="modalTitulo">Confirmar accion</h5>
+        <h5 class="modal-title" id="modalTitulo">Confirmar acción</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
@@ -482,14 +482,14 @@
           <div class="monto" id="modalMonto"></div>
         </div>
         <p class="small text-danger mt-2 mb-0 d-none" id="modalAviso">
-          Esta accion no se puede deshacer.
+          Esta acción no se puede deshacer.
         </p>
         <div class="mt-3 d-none" id="bloqueMotivo">
-          <label class="form-label" for="campoMotivo">Motivo de la reversion</label>
+          <label class="form-label" for="campoMotivo">Motivo de la reversión</label>
           <textarea aria-label="Motivo" id="campoMotivo" name="motivo" form="formConfirmar" class="form-control"
                     rows="2" minlength="5" maxlength="200"
                     placeholder="Ej.: se marco como pagado el cargo de otro interno"></textarea>
-          <div class="form-text">Queda registrado en la bitacora de auditoria.</div>
+          <div class="form-text">Queda registrado en la bitácora de auditoría.</div>
         </div>
       </div>
       <div class="modal-footer">
@@ -512,9 +512,9 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <p class="mb-2">{{ paciente.nombre }} dejara de aparecer en el listado de internos activos.</p>
+        <p class="mb-2">{{ paciente.nombre }} dejará de aparecer en el listado de internos activos.</p>
         <p class="small text-muted mb-0">
-          El expediente clinico y su historial se conservan: es una baja logica, no un borrado.
+          El expediente clínico y su historial se conservan: es una baja lógica, no un borrado.
         </p>
       </div>
       <div class="modal-footer">
@@ -536,9 +536,9 @@ if (modal) {
     const origen = evento.relatedTarget;
     const tipo = origen.dataset.tipo;
     const textos = {
-      pagar: ['Registrar pago', 'Se marcara como pagado el siguiente cargo:', 'btn-success', 'Confirmar pago'],
-      eliminar: ['Eliminar cargo', 'Se eliminara de forma definitiva el siguiente cargo de la cuenta del familiar:', 'btn-danger', 'Si, eliminar'],
-      revertir: ['Revertir pago', 'El siguiente cargo volvera a quedar pendiente de pago:', 'btn-warning', 'Revertir pago'],
+      pagar: ['Registrar pago', 'Se marcará como pagado el siguiente cargo:', 'btn-success', 'Confirmar pago'],
+      eliminar: ['Eliminar cargo', 'Se eliminará de forma definitiva el siguiente cargo de la cuenta del familiar:', 'btn-danger', 'Si, eliminar'],
+      revertir: ['Revertir pago', 'El siguiente cargo volverá a quedar pendiente de pago:', 'btn-warning', 'Revertir pago'],
     }[tipo];
     document.getElementById('formConfirmar').action = origen.dataset.accion;
     document.getElementById('modalDescripcion').textContent = origen.dataset.descripcion;

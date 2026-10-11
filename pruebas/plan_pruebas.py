@@ -113,7 +113,7 @@ def interno_valido(**cambios):
         "motivo_ingreso": "Ingreso de prueba del plan SQA.",
         "familiar_nombre": "Familiar de Prueba", "correo_familiar": "familiar.prueba@ejemplo.com",
         "telefono_familiar": "5555-1234", "cuota_mensual": "800.00",
-        "psicopatologia": "Ninguna.", "padecimientos": "Hipertension arterial.",
+        "psicopatologia": "Ninguna.", "padecimientos": "Hipertensión arterial.",
     }
     datos.update(cambios)
     return datos
@@ -123,55 +123,55 @@ def interno_valido(**cambios):
 def pruebas_seguridad():
     A = "Seguridad"
     r = requests.get(f"{BASE}/pacientes", allow_redirects=False)
-    caso("CP-01", A, "Sin sesion, una pantalla redirige al ingreso", "RF-36, RNF-06",
+    caso("CP-01", A, "Sin sesión, una pantalla redirige al ingreso", "RF-36, RNF-06",
          "302 hacia /login", r.status_code == 302 and "/login" in r.headers.get("Location", ""))
 
     r = requests.post(f"{BASE}/cargos/1/pagar", data={"paciente_id": 1}, allow_redirects=False)
-    caso("CP-02", A, "Sin sesion no se ejecuta una accion POST", "RNF-06",
+    caso("CP-02", A, "Sin sesión no se ejecuta una acción POST", "RNF-06",
          "302 hacia /login", r.status_code == 302 and "/login" in r.headers.get("Location", ""))
 
     _, r1 = entrar_crudo("caja", "contrasenaEquivocada1")
     _, r2 = entrar_crudo("usuarioQueNoExiste", "loQueSea123")
-    generico = "Usuario o contrasena incorrectos"
-    caso("CP-03", A, "Contrasena incorrecta y usuario inexistente dan el mismo mensaje",
-         "RNF-08", "Mensaje generico identico", hay(generico, r1) and hay(generico, r2))
+    generico = "Usuario o contraseña incorrectos"
+    caso("CP-03", A, "Contraseña incorrecta y usuario inexistente dan el mismo mensaje",
+         "RNF-08", "Mensaje genérico idéntico", hay(generico, r1) and hay(generico, r2))
 
     s, r = entrar_crudo("admin", CLAVE_ADMIN)
     otra = s.get(f"{BASE}/pacientes")
-    caso("CP-04", A, "Con la clave inicial solo se puede cambiar la contrasena", "RF-42, RNF-17",
+    caso("CP-04", A, "Con la clave inicial solo se puede cambiar la contraseña", "RF-42, RNF-17",
          "Redirige a /cuenta/contrasena", "/cuenta/contrasena" in r.url
          and "/cuenta/contrasena" in otra.url)
 
     r = s.post(f"{BASE}/cuenta/contrasena",
                data={"actual": CLAVE_ADMIN, "nueva": "corta1", "confirmacion": "corta1"})
-    caso("CP-05", A, "Contrasena nueva de menos de 10 caracteres se rechaza", "RV-17",
+    caso("CP-05", A, "Contraseña nueva de menos de 10 caracteres se rechaza", "RV-17",
          "Rechazada con mensaje", hay("al menos 10 caracteres", r))
 
     r = s.post(f"{BASE}/cuenta/contrasena",
                data={"actual": CLAVE_ADMIN, "nueva": "soloLetrasLargas",
                      "confirmacion": "soloLetrasLargas"})
-    caso("CP-06", A, "Contrasena sin numeros se rechaza", "RV-17", "Rechazada con mensaje",
-         hay("letras y numeros", r))
+    caso("CP-06", A, "Contraseña sin números se rechaza", "RV-17", "Rechazada con mensaje",
+         hay("letras y números", r))
 
     nueva = "PruebaAdmin2026x"
     r = s.post(f"{BASE}/cuenta/contrasena",
                data={"actual": CLAVE_ADMIN, "nueva": nueva, "confirmacion": nueva})
     CLAVES_NUEVAS["admin"] = nueva
     SESIONES["admin"] = s
-    caso("CP-07", A, "Cambio de contrasena valido habilita el sistema", "RF-42, RNF-17",
-         "Contrasena actualizada y acceso al panel", hay("Contrasena actualizada", r))
+    caso("CP-07", A, "Cambio de contraseña válido habilita el sistema", "RF-42, RNF-17",
+         "Contraseña actualizada y acceso al panel", hay("Contraseña actualizada", r))
 
     caja = sesion("caja")
     r = caja.post(f"{BASE}/visitas/1/diagnostico", data={"diagnostico": "no autorizado"})
-    caso("CP-08", A, "Caja no puede registrar un diagnostico (peticion directa)", "RN-10, RNF-06",
+    caso("CP-08", A, "Caja no puede registrar un diagnóstico (petición directa)", "RN-10, RNF-06",
          "Acceso denegado", hay("no tiene permiso", r))
 
     r = caja.get(f"{BASE}/laboratorio")
-    caso("CP-09", A, "Caja no puede abrir el modulo de laboratorio", "RF-37",
+    caso("CP-09", A, "Caja no puede abrir el módulo de laboratorio", "RF-37",
          "Acceso denegado", hay("no tiene permiso", r))
 
     r = caja.get(f"{BASE}/bitacora")
-    caso("CP-10", A, "Caja no puede consultar la bitacora", "RF-37, RF-40", "Acceso denegado",
+    caso("CP-10", A, "Caja no puede consultar la bitácora", "RF-37, RF-40", "Acceso denegado",
          hay("no tiene permiso", r))
 
     lab = sesion("laboratorio")
@@ -181,23 +181,23 @@ def pruebas_seguridad():
 
     medico = sesion("mgeneral")
     r = medico.get(f"{BASE}/pacientes/1")
-    caso("CP-12", A, "El medico general no ve acciones de cobro", "RNF-02",
+    caso("CP-12", A, "El médico general no ve acciones de cobro", "RNF-02",
          "Sin botones de pago", 'data-tipo="pagar"' not in r.text and r.status_code == 200)
 
     for _ in range(5):
         entrar_crudo("enfermeria", "malaContrasena99")
     _, r = entrar_crudo("enfermeria", clave_inicial("enfermeria"))
     caso("CP-13", A, "Tras 5 intentos fallidos la cuenta se bloquea sin revelar que existe",
-         "RF-39, RNF-08", "Clave correcta rechazada con el mensaje generico",
+         "RF-39, RNF-08", "Clave correcta rechazada con el mensaje genérico",
          hay(generico, r) and "/login" in r.url)
 
     admin = sesion("admin")
     r = admin.get(f"{BASE}/bitacora")
-    caso("CP-14", A, "La bitacora registra ingresos, fallos y accesos denegados", "RF-38, RF-40",
+    caso("CP-14", A, "La bitácora registra ingresos, fallos y accesos denegados", "RF-38, RF-40",
          "INICIO_SESION, FALLIDO y ACCESO_DENEGADO presentes",
          all(t in r.text for t in ("INICIO_SESION", "ACCESO_DENEGADO", "Cuenta bloqueada")))
-    caso("CP-15", A, "Ninguna contrasena queda escrita en la bitacora", "RNF-05",
-         "Ni la clave inicial ni las erroneas aparecen",
+    caso("CP-15", A, "Ninguna contraseña queda escrita en la bitácora", "RNF-05",
+         "Ni la clave inicial ni las erróneas aparecen",
          all(t not in r.text for t in (CLAVE_USUARIOS, "malaContrasena", "contrasenaEquivocada",
                                        "usuarioQueNoExiste")))
 
@@ -211,7 +211,7 @@ def pruebas_seguridad():
 
     s, r = entrar_crudo("admin", CLAVES_NUEVAS["admin"])
     cookie = next((c for c in s.cookies if c.name == "session"), None)
-    caso("CP-17", A, "La cookie de sesion es HttpOnly y SameSite=Lax", "RNF-07, RNF-18",
+    caso("CP-17", A, "La cookie de sesión es HttpOnly y SameSite=Lax", "RNF-07, RNF-18",
          "Atributos presentes", cookie is not None and cookie.has_nonstandard_attr("HttpOnly")
          and cookie.get_nonstandard_attr("SameSite") == "Lax")
 
@@ -219,7 +219,7 @@ def pruebas_seguridad():
     copia.cookies.update(s.cookies)
     s.post(f"{BASE}/logout")
     r = copia.get(f"{BASE}/pacientes", allow_redirects=False)
-    caso("CP-18", A, "Al cerrar sesion, una copia de la cookie deja de servir", "RF-36, RNF-07",
+    caso("CP-18", A, "Al cerrar sesión, una copia de la cookie deja de servir", "RF-36, RNF-07",
          "302 hacia /login", r.status_code == 302)
     SESIONES.pop("admin", None)
 
@@ -237,20 +237,20 @@ def pruebas_seguridad():
 
 # ===================================================== 2. Expediente y datos
 def pruebas_expediente():
-    A = "Expediente y validacion"
+    A = "Expediente y validación"
     admin = sesion("admin")
 
     r = admin.post(f"{BASE}/pacientes", data=interno_valido())
     pid = numero_en(r"/pacientes/(\d+)", r.url)
-    caso("CP-21", A, "Alta de un interno con datos validos", "RF-01",
+    caso("CP-21", A, "Alta de un interno con datos válidos", "RF-01",
          "Interno registrado", hay("Interno registrado", r) and pid is not None)
 
     r1 = admin.post(f"{BASE}/pacientes", data=interno_valido(edad="45"))
     r2 = admin.post(f"{BASE}/pacientes", data=interno_valido(edad="130"))
     r3 = admin.post(f"{BASE}/pacientes", data=interno_valido(edad="abc"))
-    caso("CP-22", A, "Edad fuera de 60-120 o no numerica se rechaza", "RV-07, RV-13",
-         "Rechazada con mensaje", hay("como minimo 60", r1) and hay("como maximo 120", r2)
-         and hay("numero entero", r3))
+    caso("CP-22", A, "Edad fuera de 60-120 o no numérica se rechaza", "RV-07, RV-13",
+         "Rechazada con mensaje", hay("como mínimo 60", r1) and hay("como máximo 120", r2)
+         and hay("número entero", r3))
 
     manana = (date.today() + timedelta(days=1)).isoformat()
     r1 = admin.post(f"{BASE}/pacientes", data=interno_valido(fecha_ingreso=manana))
@@ -258,11 +258,11 @@ def pruebas_expediente():
     r3 = admin.post(f"{BASE}/pacientes", data=interno_valido(fecha_ingreso="1900-01-01"))
     caso("CP-23", A, "Fecha de ingreso futura, inexistente (31/09) o anterior a 1950 se rechaza",
          "RV-08, RV-09", "Rechazada", hay("no puede estar en el futuro", r1)
-         and hay("no es una fecha valida", r2) and hay("no puede ser anterior", r3))
+         and hay("no es una fecha válida", r2) and hay("no puede ser anterior", r3))
 
     r = admin.post(f"{BASE}/pacientes", data=interno_valido(correo_familiar="no-es-correo"))
-    caso("CP-24", A, "Correo del familiar con formato invalido se rechaza", "RV-14",
-         "Rechazado", hay("no tiene un formato valido", r))
+    caso("CP-24", A, "Correo del familiar con formato inválido se rechaza", "RV-14",
+         "Rechazado", hay("no tiene un formato válido", r))
 
     r1 = admin.post(f"{BASE}/pacientes", data=interno_valido(cuota_mensual="-100"))
     r2 = admin.post(f"{BASE}/pacientes", data=interno_valido(cuota_mensual="0"))
@@ -273,43 +273,43 @@ def pruebas_expediente():
 
     r1 = admin.post(f"{BASE}/pacientes", data=interno_valido(nombre=""))
     r2 = admin.post(f"{BASE}/pacientes", data=interno_valido(nombre="A" * 500))
-    caso("CP-26", A, "Nombre vacio o de mas de 120 caracteres se rechaza", "RV-12",
-         "Rechazado", hay("es obligatorio", r1) and hay("como maximo 120", r2))
+    caso("CP-26", A, "Nombre vacío o de más de 120 caracteres se rechaza", "RV-12",
+         "Rechazado", hay("es obligatorio", r1) and hay("como máximo 120", r2))
 
     inyeccion = "Robert'); DROP TABLE pacientes;-- <script>alert(1)</script>"
     r = admin.post(f"{BASE}/pacientes", data=interno_valido(nombre=inyeccion))
     listado = admin.get(f"{BASE}/pacientes")
-    caso("CP-27", A, "Inyeccion SQL y script se guardan como texto inofensivo", "RNF-10",
+    caso("CP-27", A, "Inyección SQL y script se guardan como texto inofensivo", "RNF-10",
          "Tabla intacta y script escapado", listado.status_code == 200
          and "Rosa Elvira Perez" in listado.text and "<script>alert(1)</script>" not in listado.text
          and "&lt;script&gt;" in listado.text)
 
     r = admin.post(f"{BASE}/pacientes/{pid}/editar", data={"edad": "200"})
-    caso("CP-28", A, "La edicion tambien valida en el servidor", "RF-02, RV-07",
-         "Rechazada", hay("como maximo 120", r))
+    caso("CP-28", A, "La edición también válida en el servidor", "RF-02, RV-07",
+         "Rechazada", hay("como máximo 120", r))
 
     r = requests.post(f"{BASE}/pacientes", data=interno_valido(edad="-5"),
                       cookies=admin.cookies)
-    caso("CP-29", A, "Peticion directa con datos invalidos, sin pasar por la pantalla",
-         "RNF-06, RV-07", "Rechazada", hay("como minimo 60", r))
+    caso("CP-29", A, "Petición directa con datos inválidos, sin pasar por la pantalla",
+         "RNF-06, RV-07", "Rechazada", hay("como mínimo 60", r))
 
     medico = sesion("mgeneral")
     r1 = medico.post(f"{BASE}/pacientes/{pid}/ficha", data={
-        "psicopatologia": "Ninguna.", "padecimientos": "Hipertension arterial.",
+        "psicopatologia": "Ninguna.", "padecimientos": "Hipertensión arterial.",
         "alergias": "Penicilina", "observaciones": "Dieta baja en sodio."})
     r2 = medico.post(f"{BASE}/pacientes/{pid}/medicamentos", data={
-        "nombre": "Losartan 50mg", "dosis": "1 tableta", "frecuencia": "Cada 24 horas"})
+        "nombre": "Losartán 50mg", "dosis": "1 tableta", "frecuencia": "Cada 24 horas"})
     r3 = medico.post(f"{BASE}/pacientes/{pid}/medicamentos", data={"nombre": ""})
-    caso("CP-30", A, "Ficha medica y medicamento permanente; medicamento sin nombre se rechaza",
-         "RF-04, RF-05, RV-12", "Ficha actualizada, medicamento agregado, vacio rechazado",
-         hay("Ficha medica actualizada", r1) and hay("Medicamento permanente agregado", r2)
+    caso("CP-30", A, "Ficha médica y medicamento permanente; medicamento sin nombre se rechaza",
+         "RF-04, RF-05, RV-12", "Ficha actualizada, medicamento agregado, vacío rechazado",
+         hay("Ficha médica actualizada", r1) and hay("Medicamento permanente agregado", r2)
          and hay("es obligatorio", r3) and hay("Penicilina", r2))
 
     otro = admin.post(f"{BASE}/pacientes", data=interno_valido(nombre="Interno Para Baja"))
     bid = numero_en(r"/pacientes/(\d+)", otro.url)
     r = admin.post(f"{BASE}/pacientes/{bid}/baja")
     expediente = admin.get(f"{BASE}/pacientes/{bid}")
-    caso("CP-31", A, "La baja es logica: sale del listado y el expediente se conserva",
+    caso("CP-31", A, "La baja es lógica: sale del listado y el expediente se conserva",
          "RF-03, RN-11", "No aparece en internos activos; expediente accesible",
          hay("dado de baja", r) and "Interno Para Baja" not in admin.get(f"{BASE}/pacientes").text
          and expediente.status_code == 200 and hay("Interno Para Baja", expediente))
@@ -318,7 +318,7 @@ def pruebas_expediente():
 
 # ================================================ 3. Flujo clinico completo
 def pruebas_flujo(pid):
-    A = "Flujo de atencion"
+    A = "Flujo de atención"
     medico, fundacion = sesion("mgeneral"), sesion("fundacion")
     especialista, lab, farmacia = sesion("especialista"), sesion("laboratorio"), sesion("farmacia")
 
@@ -328,17 +328,17 @@ def pruebas_flujo(pid):
          hay("es obligatorio", r))
 
     r = medico.post(f"{BASE}/solicitudes", data={"paciente_id": pid, "especialidad_id": 99,
-                                                 "motivo": "Control de presion"})
+                                                 "motivo": "Control de presión"})
     caso("CP-33", A, "Solicitud a una especialidad inexistente se rechaza", "RV-16",
          "Rechazada", hay("especialidad indicada no existe", r))
 
     r = medico.post(f"{BASE}/solicitudes", data={
         "paciente_id": pid, "especialidad_id": 1, "enfermero_id": 1,
-        "motivo": "Presion arterial elevada en la evaluacion inicial.",
+        "motivo": "Presión arterial elevada en la evaluación inicial.",
         "estado_paciente": "Estable"})
     sid = numero_en(r"Solicitud #(\d+)", r.text)
     correos = correos_de(pid)
-    caso("CP-34", A, "Solicitud valida y aviso al familiar (especialidad y motivo)",
+    caso("CP-34", A, "Solicitud válida y aviso al familiar (especialidad y motivo)",
          "RF-07, RF-11, RN-02", "Solicitud creada y correo SOLICITUD_REGISTRADA",
          sid is not None and any(c["tipo"] == "SOLICITUD_REGISTRADA" for c in correos))
 
@@ -348,20 +348,20 @@ def pruebas_flujo(pid):
                         data={"medico_id": 2, "fecha_asignada": futuro})
     r2 = fundacion.post(f"{BASE}/solicitudes/{sid}/asignar",
                         data={"medico_id": 1, "fecha_asignada": pasado})
-    caso("CP-35", A, "Medico de otra especialidad o cita en el pasado se rechaza",
+    caso("CP-35", A, "Médico de otra especialidad o cita en el pasado se rechaza",
          "RN-04, RV-10", "Rechazada", hay("no pertenece a la especialidad", r1)
          and hay("posterior al momento actual", r2))
 
     r = especialista.post(f"{BASE}/solicitudes/{sid}/visita", data={"tarifa_consulta_id": 2})
-    caso("CP-36", A, "No se abre visita si la fundacion no asigno medico", "RF-08, RN-03",
-         "Rechazada", hay("aun no asigna medico", r))
+    caso("CP-36", A, "No se abre visita si la fundación no asignó médico", "RF-08, RN-03",
+         "Rechazada", hay("aún no asigna médico", r))
 
     r = fundacion.post(f"{BASE}/solicitudes/{sid}/asignar",
                        data={"medico_id": 1, "fecha_asignada": futuro})
     correos = correos_de(pid)
     aviso = next((c for c in correos if c["tipo"] == "MEDICO_ASIGNADO"), None)
-    caso("CP-37", A, "Al asignar, el familiar recibe el nombre del medico y la cita",
-         "RF-09, RF-11", "Correo MEDICO_ASIGNADO con el medico",
+    caso("CP-37", A, "Al asignar, el familiar recibe el nombre del médico y la cita",
+         "RF-09, RF-11", "Correo MEDICO_ASIGNADO con el médico",
          hay("asignada a", r) and aviso is not None and "Dr. Luis Herrera" in aviso["mensaje"])
 
     r = fundacion.post(f"{BASE}/solicitudes/{sid}/visita", data={"tarifa_consulta_id": 3})
@@ -381,8 +381,8 @@ def pruebas_flujo(pid):
          or len([c for c in cargos_de(pid) if c["tipo_servicio"] == "CONSULTA"]) == 1)
 
     r = especialista.get(f"{BASE}/visitas/{vid}")
-    caso("CP-41", A, "El especialista ve la ficha medica del interno en la visita", "RF-13",
-         "Ficha visible", hay("Hipertension arterial", r))
+    caso("CP-41", A, "El especialista ve la ficha médica del interno en la visita", "RF-13",
+         "Ficha visible", hay("Hipertensión arterial", r))
 
     datos = {"tarifa_id": 6, "indicaciones": "1 tableta cada 24 horas"}
     r1 = especialista.post(f"{BASE}/visitas/{vid}/recetas", data={**datos, "cantidad": "0"})
@@ -390,11 +390,11 @@ def pruebas_flujo(pid):
     r3 = especialista.post(f"{BASE}/visitas/{vid}/recetas",
                            data={"tarifa_id": 6, "cantidad": "30", "indicaciones": ""})
     caso("CP-42", A, "Receta con cantidad 0, mayor a 500 o sin indicaciones se rechaza",
-         "RF-19, RV-11", "Rechazada", hay("como minimo 1", r1) and hay("como maximo 500", r2)
+         "RF-19, RV-11", "Rechazada", hay("como mínimo 1", r1) and hay("como máximo 500", r2)
          and hay("es obligatorio", r3))
 
     r = especialista.post(f"{BASE}/visitas/{vid}/recetas", data={**datos, "cantidad": "30"})
-    caso("CP-43", A, "Receta valida queda pendiente de entrega y sin cobro", "RF-19, RN-07",
+    caso("CP-43", A, "Receta válida queda pendiente de entrega y sin cobro", "RF-19, RN-07",
          "Indicado y sin cargo de medicamento", hay("Medicamento indicado", r)
          and not any(c["tipo_servicio"] == "MEDICAMENTO" for c in cargos_de(pid)))
 
@@ -406,9 +406,9 @@ def pruebas_flujo(pid):
          and examen["total"] == 60.00)
 
     especialista.post(f"{BASE}/visitas/{vid}/diagnostico",
-                      data={"diagnostico": "Hipertension no controlada.", "observaciones": ""})
+                      data={"diagnostico": "Hipertensión no controlada.", "observaciones": ""})
     r = especialista.post(f"{BASE}/visitas/{vid}/cerrar")
-    caso("CP-45", A, "No se cierra la visita con examenes sin resultado", "RN-09",
+    caso("CP-45", A, "No se cierra la visita con exámenes sin resultado", "RN-09",
          "Rechazada", hay("sin resultado", r))
 
     bandeja = lab.get(f"{BASE}/laboratorio")
@@ -417,12 +417,12 @@ def pruebas_flujo(pid):
     r2 = lab.post(f"{BASE}/examenes/{eid}/resultado",
                   data={"resultado": "Hemoglobina 13.2 g/dL. Sin alteraciones."})
     r3 = lab.post(f"{BASE}/examenes/{eid}/resultado", data={"resultado": "Otro resultado"})
-    caso("CP-46", A, "Resultado vacio se rechaza; el valido se guarda una sola vez",
-         "RF-16, RF-17", "Vacio rechazado, valido guardado, segundo rechazado",
+    caso("CP-46", A, "Resultado vacío se rechaza; el válido se guarda una sola vez",
+         "RF-16, RF-17", "Vacío rechazado, válido guardado, segundo rechazado",
          hay("es obligatorio", r1) and hay("Resultado cargado", r2) and hay("ya tiene resultado", r3))
 
     r = especialista.get(f"{BASE}/visitas/{vid}")
-    caso("CP-47", A, "El medico consulta el resultado del laboratorio", "RF-18",
+    caso("CP-47", A, "El médico consulta el resultado del laboratorio", "RF-18",
          "Resultado visible en la visita", hay("Hemoglobina 13.2", r))
 
     bandeja = farmacia.get(f"{BASE}/farmacia")
@@ -439,16 +439,16 @@ def pruebas_flujo(pid):
                       data={"diagnostico": "", "observaciones": ""})
     r1 = especialista.post(f"{BASE}/visitas/{vid}/cerrar")
     especialista.post(f"{BASE}/visitas/{vid}/diagnostico",
-                      data={"diagnostico": "Hipertension arterial grado 1.",
-                            "observaciones": "Control en 30 dias."})
+                      data={"diagnostico": "Hipertensión arterial grado 1.",
+                            "observaciones": "Control en 30 días."})
     r2 = especialista.post(f"{BASE}/visitas/{vid}/cerrar")
-    caso("CP-49", A, "Sin diagnostico no se cierra; con diagnostico si", "RF-12, RF-14, RN-09",
-         "Primero rechazada, luego cerrada", hay("sin registrar el diagnostico", r1)
-         and hay("Visita medica cerrada", r2))
+    caso("CP-49", A, "Sin diagnóstico no se cierra; con diagnóstico si", "RF-12, RF-14, RN-09",
+         "Primero rechazada, luego cerrada", hay("sin registrar el diagnóstico", r1)
+         and hay("Visita médica cerrada", r2))
 
     medico_r = medico.get(f"{BASE}/pacientes/{pid}")
     caso("CP-50", A, "El historial del interno muestra la visita cerrada", "RF-06",
-         "Diagnostico en el historial", hay("Hipertension arterial grado 1", medico_r))
+         "Diagnóstico en el historial", hay("Hipertensión arterial grado 1", medico_r))
     return pid, vid
 
 
@@ -466,7 +466,7 @@ def pruebas_costos(pid):
     consulta = next(c for c in cargos_de(pid) if c["tipo_servicio"] == "CONSULTA")
     r1 = caja.post(f"{BASE}/cargos/{consulta['id']}/pagar", data={"paciente_id": pid})
     r2 = caja.post(f"{BASE}/cargos/{consulta['id']}/pagar", data={"paciente_id": pid})
-    caso("CP-52", A, "Un cargo se paga una sola vez (doble clic o reenvio)", "RF-23",
+    caso("CP-52", A, "Un cargo se paga una sola vez (doble clic o reenvío)", "RF-23",
          "Segundo pago rechazado", hay("marcado como pagado", r1) and hay("ya estaba cancelado", r2))
 
     r1 = caja.post(f"{BASE}/cargos/{consulta['id']}/revertir",
@@ -476,7 +476,7 @@ def pruebas_costos(pid):
     estado = api("GET", f"{URL_COSTOS}/cargos/{consulta['id']}").json()["estado"]
     caso("CP-53", A, "Revertir un pago exige motivo y devuelve el cargo a pendiente", "RF-41",
          "Sin motivo rechazado; con motivo PENDIENTE", hay("es obligatorio", r1)
-         and hay("se revirtio", r2) and estado == "PENDIENTE")
+         and hay("se revirtió", r2) and estado == "PENDIENTE")
     caja.post(f"{BASE}/cargos/{consulta['id']}/pagar", data={"paciente_id": pid})
 
     r = api("DELETE", f"{URL_COSTOS}/cargos/{consulta['id']}")
@@ -517,25 +517,25 @@ def pruebas_costos(pid):
     r3 = caja.post(f"{BASE}/caja/donaciones", data={**don, "monto": "-10"})
     r4 = caja.post(f"{BASE}/caja/donaciones",
                    data={**don, "fecha": (date.today() + timedelta(days=3)).isoformat()})
-    caso("CP-58", A, "Donacion valida; origen inventado, monto negativo o fecha futura se rechaza",
+    caso("CP-58", A, "Donación válida; origen inventado, monto negativo o fecha futura se rechaza",
          "RF-26, RV-01, RV-08, RV-16", "Una registrada, tres rechazadas",
-         hay("Donacion registrada", r1) and hay("no es valido", r2)
+         hay("Donación registrada", r1) and hay("no es válido", r2)
          and hay("mayor que cero", r3) and hay("futuro", r4))
 
-    gasto = {"categoria": "ENERGIA_ELECTRICA", "descripcion": "Energia electrica del mes",
+    gasto = {"categoria": "ENERGIA_ELECTRICA", "descripcion": "Energía eléctrica del mes",
              "monto": "650.40", "fecha": hoy}
     r1 = caja.post(f"{BASE}/caja/gastos", data=gasto)
     r2 = caja.post(f"{BASE}/caja/gastos", data={**gasto, "monto": "abc"})
-    caso("CP-59", A, "Gasto valido; monto con letras se rechaza", "RF-28, RV-13",
-         "Uno registrado, otro rechazado", hay("Gasto registrado", r1) and hay("debe ser un numero", r2))
+    caso("CP-59", A, "Gasto válido; monto con letras se rechaza", "RF-28, RV-13",
+         "Uno registrado, otro rechazado", hay("Gasto registrado", r1) and hay("debe ser un número", r2))
 
     anio, mes = date.today().year, date.today().month
     r1 = caja.post(f"{BASE}/caja/cuotas", data={"anio": anio, "mes": mes})
     r2 = caja.post(f"{BASE}/caja/cuotas", data={"anio": anio, "mes": mes})
     r3 = caja.post(f"{BASE}/caja/cuotas", data={"anio": anio, "mes": 13})
     caso("CP-60", A, "Las cuotas del mes se generan una sola vez; mes 13 se rechaza",
-         "RF-27, RV-06", "Generadas; segunda vez sin duplicar; mes invalido rechazado",
-         hay("Se generaron", r1) and hay("ya estaban generadas", r2) and hay("como maximo 12", r3))
+         "RF-27, RV-06", "Generadas; segunda vez sin duplicar; mes inválido rechazado",
+         hay("Se generaron", r1) and hay("ya estaban generadas", r2) and hay("como máximo 12", r3))
 
     pantalla = caja.get(f"{BASE}/caja?anio={anio}&mes={mes}")
     cid = numero_en(r"/cuotas/(\d+)/cobrar", pantalla.text)
@@ -551,9 +551,9 @@ def pruebas_costos(pid):
                    data={"monto": "200.00", "referencia": "FVD-0001", "fecha": hoy})
     r3 = caja.post(f"{BASE}/caja/pagos-fundacion",
                    data={"monto": "50.00", "referencia": "FVD-0001", "fecha": hoy})
-    caso("CP-62", A, "Pago a la fundacion: no mayor que la deuda y sin referencia repetida",
-         "RF-25, RF-43, RV-01", "Excedente rechazado, pago valido, referencia duplicada rechazada",
-         hay("mayor que la deuda", r1) and hay("Pago a la fundacion registrado", r2)
+    caso("CP-62", A, "Pago a la fundación: no mayor que la deuda y sin referencia repetida",
+         "RF-25, RF-43, RV-01", "Excedente rechazado, pago válido, referencia duplicada rechazada",
+         hay("mayor que la deuda", r1) and hay("Pago a la fundación registrado", r2)
          and hay("Ya existe un pago", r3))
     return total
 
@@ -564,13 +564,13 @@ def pruebas_reportes(pid, facturado):
     caja, medico, lab = sesion("caja"), sesion("mgeneral"), sesion("laboratorio")
     hoy = date.today().isoformat()
     casos = [
-        ("CP-63", "costos-por-cita", caja, "RF-29", "Dr. Luis Herrera (Cardiologia)"),
-        ("CP-64", "analisis-medico", medico, "RF-30", "Hipertension arterial grado 1"),
+        ("CP-63", "costos-por-cita", caja, "RF-29", "Dr. Luis Herrera (Cardiología)"),
+        ("CP-64", "analisis-medico", medico, "RF-30", "Hipertensión arterial grado 1"),
         ("CP-65", "cobros-por-paciente", caja, "RF-31", "Q361.00"),
-        ("CP-66", "pagos-fundacion", caja, "RF-32, RF-25", "Deuda actual con la fundacion"),
-        ("CP-67", "entradas", caja, "RF-33", "Pagos a la fundacion del periodo"),
+        ("CP-66", "pagos-fundacion", caja, "RF-32, RF-25", "Deuda actual con la fundación"),
+        ("CP-67", "entradas", caja, "RF-33", "Pagos a la fundación del periodo"),
         ("CP-68", "examenes-por-paciente", lab, "RF-34", "Hemoglobina 13.2"),
-        ("CP-69", "medicamentos-por-paciente", medico, "RF-35", "Losartan"),
+        ("CP-69", "medicamentos-por-paciente", medico, "RF-35", "Losartán"),
     ]
     for cp, clave, quien, rf, texto in casos:
         r = quien.get(f"{BASE}/reportes/{clave}", params={"paciente_id": pid,
@@ -580,7 +580,7 @@ def pruebas_reportes(pid, facturado):
 
     r = caja.get(f"{BASE}/reportes/pagos-fundacion")
     deuda = facturado - 200.00
-    caso("CP-70", A, "La deuda con la fundacion es lo facturado menos lo pagado", "RF-25",
+    caso("CP-70", A, "La deuda con la fundación es lo facturado menos lo pagado", "RF-25",
          f"Deuda Q{deuda:,.2f}", hay(f"Q{deuda:,.2f}", r))
 
     manana = (date.today() + timedelta(days=1)).isoformat()
@@ -605,9 +605,9 @@ def pruebas_tolerancia(args, pid):
 
     ejecutar(args.parar_notificaciones)
     r = medico.post(f"{BASE}/solicitudes", data={
-        "paciente_id": 1, "especialidad_id": 4, "motivo": "Control geriatrico de rutina"})
+        "paciente_id": 1, "especialidad_id": 4, "motivo": "Control geriátrico de rutina"})
     caso("CP-72", A, "Sin servicio de correo la solicitud se guarda y se advierte",
-         "RNF-11, RN-12", "Solicitud creada con advertencia", hay("enviada a la fundacion", r)
+         "RNF-11, RN-12", "Solicitud creada con advertencia", hay("enviada a la fundación", r)
          and hay("no se pudo avisar al familiar", r))
     ejecutar(args.iniciar_notificaciones)
 
@@ -629,13 +629,13 @@ def pruebas_tolerancia(args, pid):
          and hay("no se pudo enviar al servicio de costos", r))
     r = sesion("caja").get(f"{BASE}/reportes/pagos-fundacion")
     caso("CP-74", A, "El reporte advierte que no incluye cargos si costos no responde",
-         "RNF-12", "Aviso visible", hay("no respondio", r))
+         "RNF-12", "Aviso visible", hay("no respondió", r))
     ejecutar(args.iniciar_costos)
 
 
 # ================================================ 7. Administracion de usuarios
 def pruebas_usuarios():
-    A = "Administracion de usuarios"
+    A = "Administración de usuarios"
     admin = sesion("admin")
     lista = admin.get(f"{BASE}/usuarios").text
     ids = {u: int(i) for u, i in re.findall(
@@ -653,8 +653,8 @@ def pruebas_usuarios():
     sigue = vieja.get(f"{BASE}/caja", allow_redirects=False)
     s, r2 = entrar_crudo("caja", temporal)
     bitacora = admin.get(f"{BASE}/bitacora").text
-    caso("CP-76", A, "Restablecer clave: temporal de un solo uso, cierra la sesion y no queda en bitacora",
-         "RF-44, RNF-05", "Clave temporal obliga a cambiarla; sesion anterior cerrada",
+    caso("CP-76", A, "Restablecer clave: temporal de un solo uso, cierra la sesión y no queda en bitácora",
+         "RF-44, RNF-05", "Clave temporal obliga a cambiarla; sesión anterior cerrada",
          bool(temporal) and sigue.status_code == 302 and "/cuenta/contrasena" in r2.url
          and temporal not in bitacora and "RESTABLECE_CONTRASENA" in bitacora)
     nueva = "Pruebacaja2026x"
@@ -669,7 +669,7 @@ def pruebas_usuarios():
     admin.post(f"{BASE}/usuarios/{ids['farmacia']}/activar")
     caso("CP-77", A, "Una cuenta desactivada no ingresa; solo el administrador administra cuentas",
          "RF-44, RF-37", "Ingreso rechazado; caja denegado; no se desactiva a si mismo",
-         hay("desactivada", r) and hay("Usuario o contrasena incorrectos", r2)
+         hay("desactivada", r) and hay("Usuario o contraseña incorrectos", r2)
          and hay("no tiene permiso", r3) and hay("su propia cuenta", r4))
 
 
@@ -680,8 +680,8 @@ def pruebas_permisos_expediente():
     r2 = fun.get(f"{BASE}/pacientes")
     r3 = medico.get(f"{BASE}/pacientes/1")
     r4 = caja.get(f"{BASE}/pacientes/1")
-    caso("CP-78", A, "Laboratorio y fundacion no abren expedientes; solo caja ve la cuenta del familiar",
-         "RN-10, RF-37", "Laboratorio y fundacion denegados; medico sin estado de cuenta; caja con estado de cuenta",
+    caso("CP-78", A, "Laboratorio y fundación no abren expedientes; solo caja ve la cuenta del familiar",
+         "RN-10, RF-37", "Laboratorio y fundación denegados; médico sin estado de cuenta; caja con estado de cuenta",
          hay("no tiene permiso", r1) and hay("no tiene permiso", r2)
          and r3.status_code == 200 and "Estado de cuenta" not in r3.text
          and hay("Estado de cuenta", r4))
@@ -700,7 +700,7 @@ def guardar_registro():
 
     correctos = sum(1 for r in RESULTADOS if r["resultado"] == "CORRECTO")
     lineas = [
-        "# Registro de ejecucion del plan de pruebas",
+        "# Registro de ejecución del plan de pruebas",
         "",
         f"- Fecha: {datetime.now():%d/%m/%Y %H:%M}",
         f"- Sistema probado: {BASE}",
@@ -708,7 +708,7 @@ def guardar_registro():
         f"- Correctos: {correctos}",
         f"- Fallidos: {len(RESULTADOS) - correctos}",
         "",
-        "| ID | Area | Caso | Verifica | Resultado esperado | Resultado |",
+        "| ID | Área | Caso | Verifica | Resultado esperado | Resultado |",
         "|---|---|---|---|---|---|",
     ]
     for r in RESULTADOS:

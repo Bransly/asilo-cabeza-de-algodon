@@ -22,7 +22,7 @@ RUTAS_LIBRES = {"/salud"}
 
 if len(API_KEY) < 32:
     raise RuntimeError(
-        "Defina API_KEY_SERVICIOS (minimo 32 caracteres) en el archivo .env.")
+        "Defina API_KEY_SERVICIOS (mínimo 32 caracteres) en el archivo .env.")
 
 
 def exigir_clave_de_servicio(request: Request) -> None:
@@ -31,4 +31,4 @@ def exigir_clave_de_servicio(request: Request) -> None:
     recibida = request.headers.get("X-API-Key", "")
     if not secrets.compare_digest(recibida, API_KEY):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="Clave de servicio invalida o ausente")
+                            detail="Clave de servicio inválida o ausente")

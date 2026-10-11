@@ -120,16 +120,16 @@ class ReporteService:
             "titulo": "Informe de costos por cita",
             "subtitulo": f"{paciente.nombre} · familiar responsable: {paciente.familiar_nombre}",
             "periodo": self._periodo(desde, hasta),
-            "columnas": [columna("Visita"), columna("Fecha"), columna("Medico tratante"),
-                         columna("Consulta", True), columna("Examenes", True),
-                         columna("Medicamentos", True), columna("Ahorro fundacion", True),
+            "columnas": [columna("Visita"), columna("Fecha"), columna("Médico tratante"),
+                         columna("Consulta", True), columna("Exámenes", True),
+                         columna("Medicamentos", True), columna("Ahorro fundación", True),
                          columna("Total de la cita", True)],
             "filas": filas,
             "totales": [("Total de citas", str(len(filas))),
-                        ("Ahorro otorgado por la fundacion", quetzales(total_ahorro)),
+                        ("Ahorro otorgado por la fundación", quetzales(total_ahorro)),
                         ("Total cargado al familiar", quetzales(total_general))],
-            "nota": "El costo de cada cita incluye la consulta, los examenes de laboratorio "
-                    "y los medicamentos entregados, ya con el descuento de la fundacion.",
+            "nota": "El costo de cada cita incluye la consulta, los exámenes de laboratorio "
+                    "y los medicamentos entregados, ya con el descuento de la fundación.",
         }
 
     # ----------------------------------------------- 2. analisis medico
@@ -142,7 +142,7 @@ class ReporteService:
             {"fecha": fecha_larga(v.fecha),
              "medico": f"{v.medico.nombre} ({v.medico.especialidad.nombre})",
              "motivo": v.motivo,
-             "diagnostico": v.diagnostico or "Sin diagnostico registrado",
+             "diagnostico": v.diagnostico or "Sin diagnóstico registrado",
              "observaciones": v.observaciones or "—",
              "examenes": [(e.nombre, e.resultado or "Sin resultado") for e in v.examenes],
              "medicamentos": [(r.nombre, r.cantidad, r.indicaciones or "—", r.entregado)
@@ -150,7 +150,7 @@ class ReporteService:
             for v in historial
         ]
         return {
-            "titulo": "Reporte de analisis medico por paciente",
+            "titulo": "Reporte de análisis médico por paciente",
             "paciente": paciente,
             "diagnosticos": diagnosticos,
             "generado": datetime.now(),
@@ -184,7 +184,7 @@ class ReporteService:
             "titulo": "Reporte de cobros por paciente",
             "subtitulo": f"{paciente.nombre} · cuenta de {paciente.familiar_nombre}",
             "periodo": self._periodo(desde, hasta),
-            "columnas": [columna("Fecha"), columna("Tipo"), columna("Detalle del gasto medico"),
+            "columnas": [columna("Fecha"), columna("Tipo"), columna("Detalle del gasto médico"),
                          columna("Cantidad", True), columna("Subtotal", True),
                          columna("Descuento", True), columna("Total", True), columna("Estado")],
             "filas": filas,
@@ -192,7 +192,7 @@ class ReporteService:
                         ("Total facturado", quetzales(facturado)),
                         ("Cobrado", quetzales(pagado)),
                         ("Saldo pendiente", quetzales(facturado - pagado))],
-            "nota": "Cada linea es un gasto medico cargado a la cuenta del familiar.",
+            "nota": "Cada línea es un gasto médico cargado a la cuenta del familiar.",
         }
 
     # ------------------------------------------------ 4. pagos a la fundacion
@@ -234,18 +234,18 @@ class ReporteService:
         deuda_actual = facturado_historico - self.pagos_fundacion.total()
 
         return {
-            "titulo": "Reporte de pagos a la fundacion",
-            "subtitulo": "Servicios que la fundacion presto a los internos y pagos del asilo",
+            "titulo": "Reporte de pagos a la fundación",
+            "subtitulo": "Servicios que la fundación prestó a los internos y pagos del asilo",
             "periodo": self._periodo(desde, hasta),
             "columnas": [columna("Concepto"), columna("Detalle"), columna("Cantidad", True),
                          columna("Precio de lista", True), columna("Descuento", True),
                          columna("Monto", True)],
             "filas": filas,
             "totales": [("Ahorro por el convenio en el periodo", quetzales(ahorro)),
-                        ("Facturado por la fundacion en el periodo", quetzales(facturado)),
-                        ("Pagado a la fundacion en el periodo", quetzales(pagado)),
-                        ("Deuda actual con la fundacion", quetzales(deuda_actual))],
-            "nota": "Lo facturado por la fundacion ya incluye su descuento. La deuda es "
+                        ("Facturado por la fundación en el periodo", quetzales(facturado)),
+                        ("Pagado a la fundación en el periodo", quetzales(pagado)),
+                        ("Deuda actual con la fundación", quetzales(deuda_actual))],
+            "nota": "Lo facturado por la fundación ya incluye su descuento. La deuda es "
                     "independiente de si el familiar ya pago su cargo al asilo.",
         }
 
@@ -257,7 +257,7 @@ class ReporteService:
         total_donaciones = 0.0
         for origen, monto, cantidad in self.donaciones.total_por_origen(desde, hasta):
             total_donaciones += float(monto)
-            filas.append(["Donacion", ETIQUETA_ORIGEN.get(origen, str(origen)),
+            filas.append(["Donación", ETIQUETA_ORIGEN.get(origen, str(origen)),
                           str(cantidad), quetzales(float(monto))])
 
         cuotas = [c for c in self.cuotas.listar()
@@ -271,7 +271,7 @@ class ReporteService:
                   if c["estado"] == "PAGADO" and self._en_rango(c, desde, hasta)]
         total_cobros = sum(c["total"] for c in cargos)
         if cargos:
-            filas.append(["Cobro de servicios medicos", "Familiares de los internos",
+            filas.append(["Cobro de servicios médicos", "Familiares de los internos",
                           str(len(cargos)), quetzales(total_cobros)])
 
         total_gastos = self.gastos.total(desde, hasta)
@@ -281,7 +281,7 @@ class ReporteService:
 
         return {
             "titulo": "Reporte de entradas: donaciones y cobros",
-            "subtitulo": "Ingresos del asilo y su comparacion con los gastos del periodo",
+            "subtitulo": "Ingresos del asilo y su comparación con los gastos del periodo",
             "periodo": self._periodo(desde, hasta),
             "columnas": [columna("Concepto"), columna("Origen"),
                          columna("Movimientos", True), columna("Monto", True)],
@@ -291,10 +291,10 @@ class ReporteService:
                         ("Total de cobros por servicios", quetzales(total_cobros)),
                         ("Total de entradas", quetzales(total_entradas)),
                         ("Gastos operativos del periodo", quetzales(total_gastos)),
-                        ("Pagos a la fundacion del periodo", quetzales(total_pagos_fundacion)),
+                        ("Pagos a la fundación del periodo", quetzales(total_pagos_fundacion)),
                         ("Diferencia", quetzales(total_entradas - total_salidas))],
             "nota": "El asilo se sostiene con donaciones y con la cuota mensual que pagan "
-                    "los familiares. Esta comparacion permite fiscalizar el periodo.",
+                    "los familiares. Esta comparación permite fiscalizar el periodo.",
         }
 
     @staticmethod
@@ -331,16 +331,16 @@ class ReporteService:
                 ])
 
         return {
-            "titulo": "Reporte de examenes medicos realizados",
+            "titulo": "Reporte de exámenes médicos realizados",
             "subtitulo": f"{paciente.nombre}",
             "periodo": self._periodo(desde, hasta),
             "columnas": [columna("Fecha"), columna("Visita"), columna("Examen"),
                          columna("Solicitado por"), columna("Resultado"), columna("Estado")],
             "filas": filas,
-            "totales": [("Examenes solicitados", str(len(filas))),
+            "totales": [("Exámenes solicitados", str(len(filas))),
                         ("Con resultado cargado", str(con_resultado)),
                         ("Pendientes", str(len(filas) - con_resultado))],
-            "nota": "Incluye los examenes solicitados en todas las visitas medicas del interno.",
+            "nota": "Incluye los exámenes solicitados en todas las visitas médicas del interno.",
         }
 
     # -------------------------------------------- 7. medicamentos por paciente

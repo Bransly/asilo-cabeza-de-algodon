@@ -259,13 +259,13 @@ class RolUsuario(str, enum.Enum):
 
 ETIQUETA_ROL = {
     RolUsuario.ADMINISTRADOR: "Administrador",
-    RolUsuario.MEDICO_GENERAL: "Medico general",
-    RolUsuario.MEDICO_ESPECIALISTA: "Medico especialista",
-    RolUsuario.ENFERMERIA: "Enfermeria",
+    RolUsuario.MEDICO_GENERAL: "Médico general",
+    RolUsuario.MEDICO_ESPECIALISTA: "Médico especialista",
+    RolUsuario.ENFERMERIA: "Enfermería",
     RolUsuario.LABORATORIO: "Laboratorio",
     RolUsuario.FARMACIA: "Farmacia",
     RolUsuario.CAJA: "Caja",
-    RolUsuario.FUNDACION: "Fundacion",
+    RolUsuario.FUNDACION: "Fundación",
 }
 
 
@@ -346,9 +346,9 @@ ETIQUETA_ORIGEN = {
 }
 
 ETIQUETA_GASTO = {
-    CategoriaGasto.ENERGIA_ELECTRICA: "Energia electrica",
+    CategoriaGasto.ENERGIA_ELECTRICA: "Energía eléctrica",
     CategoriaGasto.AGUA: "Agua",
-    CategoriaGasto.ALIMENTACION: "Alimentacion",
+    CategoriaGasto.ALIMENTACION: "Alimentación",
     CategoriaGasto.MANTENIMIENTO: "Mantenimiento",
     CategoriaGasto.INSUMOS: "Insumos",
     CategoriaGasto.PERSONAL: "Personal",

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block titulo %}Caja - Asilo Cabeza de Algodon{% endblock %}
+{% block titulo %}Caja - Asilo Cabeza de Algodón{% endblock %}
 
 {% block seccion %}Caja{% endblock %}
 
@@ -47,7 +47,7 @@
   </li>
   <li class="nav-item">
     <button class="nav-link {{ 'active' if pest == 'fundacion' }}" data-bs-toggle="tab" data-bs-target="#panelFundacion">
-      Pagos a la fundacion</button>
+      Pagos a la fundación</button>
   </li>
 </ul>
 
@@ -65,7 +65,7 @@
                 {{ meses[numero]|capitalize }}</option>
             {% endfor %}
           </select>
-          <input aria-label="Anio" type="number" name="anio" value="{{ anio }}" class="form-control form-control-sm"
+          <input aria-label="Año" type="number" name="anio" value="{{ anio }}" class="form-control form-control-sm"
                  style="width:100px" min="2020" max="2100">
           <button class="btn btn-sm btn-outline-secondary">Ver</button>
         </form>
@@ -78,7 +78,7 @@
               <tr>
                 <th>Interno</th><th>Familiar responsable</th>
                 <th class="text-end">Monto</th><th>Estado</th>
-                <th>Fecha de pago</th><th class="text-end">Accion</th>
+                <th>Fecha de pago</th><th class="text-end">Acción</th>
               </tr>
             </thead>
             <tbody>
@@ -115,7 +115,7 @@
         </div>
         {% else %}
           <p class="text-muted">
-            Aun no se han generado las cuotas de este mes. El monto de cada cuota sale
+            Aún no se han generado las cuotas de este mes. El monto de cada cuota sale
             del expediente de cada interno.
           </p>
         {% endif %}
@@ -160,7 +160,7 @@
                     <td class="text-end">
                       <form method="post"
                             action="{{ url_for('eliminar_donacion', donacion_id=d.id) }}"
-                            onsubmit="return confirm('Se eliminara esta donacion de Q{{ '%.2f'|format(d.monto) }}. Esta accion no se puede deshacer.');">
+                            onsubmit="return confirm('Se eliminará esta donación de Q{{ '%.2f'|format(d.monto) }}. Esta acción no se puede deshacer.');">
                         <button class="btn btn-sm text-danger" title="Eliminar">&#128465;</button>
                       </form>
                     </td>
@@ -178,7 +178,7 @@
 
       <div class="col-lg-5">
         <div class="tarjeta">
-          <div class="tarjeta-titulo">Registrar donacion</div>
+          <div class="tarjeta-titulo">Registrar donación</div>
           <div class="p-3">
             <form method="post" action="{{ url_for('registrar_donacion') }}" class="row g-2">
               <div class="col-12">
@@ -192,7 +192,7 @@
               <div class="col-12">
                 <label for="caja_donante_2{{ "-" ~ loop.index if loop is defined }}" class="form-label">Donante</label>
                 <input id="caja_donante_2{{ "-" ~ loop.index if loop is defined }}" name="donante" class="form-control" required maxlength="150"
-                       placeholder="Nombre de la empresa, institucion o persona">
+                       placeholder="Nombre de la empresa, institución o persona">
               </div>
               <div class="col-6">
                 <label for="caja_monto_3{{ "-" ~ loop.index if loop is defined }}" class="form-label">Monto (Q)</label>
@@ -204,16 +204,16 @@
                 <input id="caja_fecha_4{{ "-" ~ loop.index if loop is defined }}" name="fecha" type="date" value="{{ hoy }}" class="form-control">
               </div>
               <div class="col-12">
-                <label for="caja_descripcion_5{{ "-" ~ loop.index if loop is defined }}" class="form-label">Descripcion</label>
+                <label for="caja_descripcion_5{{ "-" ~ loop.index if loop is defined }}" class="form-label">Descripción</label>
                 <input id="caja_descripcion_5{{ "-" ~ loop.index if loop is defined }}" name="descripcion" class="form-control" maxlength="300"
-                       placeholder="Especie, efectivo, destino de la donacion">
+                       placeholder="Especie, efectivo, destino de la donación">
               </div>
               <div class="col-12">
-                <label for="caja_recibo_6{{ "-" ~ loop.index if loop is defined }}" class="form-label">Numero de recibo</label>
+                <label for="caja_recibo_6{{ "-" ~ loop.index if loop is defined }}" class="form-label">Número de recibo</label>
                 <input id="caja_recibo_6{{ "-" ~ loop.index if loop is defined }}" name="recibo" class="form-control" maxlength="40">
               </div>
               <div class="col-12 mt-3">
-                <button class="btn btn-success w-100">Registrar donacion</button>
+                <button class="btn btn-success w-100">Registrar donación</button>
               </div>
             </form>
           </div>
@@ -233,7 +233,7 @@
             <div class="table-responsive">
               <table class="table table-sm align-middle mb-0">
                 <thead class="table-light">
-                  <tr><th>Fecha</th><th>Descripcion</th><th>Categoria</th>
+                  <tr><th>Fecha</th><th>Descripción</th><th>Categoría</th>
                       <th class="text-end">Monto</th><th></th></tr>
                 </thead>
                 <tbody>
@@ -250,7 +250,7 @@
                     <td class="text-end monto">Q{{ '%.2f'|format(g.monto) }}</td>
                     <td class="text-end">
                       <form method="post" action="{{ url_for('eliminar_gasto', gasto_id=g.id) }}"
-                            onsubmit="return confirm('Se eliminara este gasto de Q{{ '%.2f'|format(g.monto) }}. Esta accion no se puede deshacer.');">
+                            onsubmit="return confirm('Se eliminará este gasto de Q{{ '%.2f'|format(g.monto) }}. Esta acción no se puede deshacer.');">
                         <button class="btn btn-sm text-danger" title="Eliminar">&#128465;</button>
                       </form>
                     </td>
@@ -272,7 +272,7 @@
           <div class="p-3">
             <form method="post" action="{{ url_for('registrar_gasto') }}" class="row g-2">
               <div class="col-12">
-                <label for="caja_categoria_7{{ "-" ~ loop.index if loop is defined }}" class="form-label">Categoria</label>
+                <label for="caja_categoria_7{{ "-" ~ loop.index if loop is defined }}" class="form-label">Categoría</label>
                 <select id="caja_categoria_7{{ "-" ~ loop.index if loop is defined }}" name="categoria" class="form-select" required>
                   {% for valor, etiqueta in categorias %}
                     <option value="{{ valor }}">{{ etiqueta }}</option>
@@ -280,9 +280,9 @@
                 </select>
               </div>
               <div class="col-12">
-                <label for="caja_descripcion_8{{ "-" ~ loop.index if loop is defined }}" class="form-label">Descripcion</label>
+                <label for="caja_descripcion_8{{ "-" ~ loop.index if loop is defined }}" class="form-label">Descripción</label>
                 <input id="caja_descripcion_8{{ "-" ~ loop.index if loop is defined }}" name="descripcion" class="form-control" required maxlength="300"
-                       placeholder="Pago de energia electrica del mes">
+                       placeholder="Pago de energía eléctrica del mes">
               </div>
               <div class="col-6">
                 <label for="caja_monto_9{{ "-" ~ loop.index if loop is defined }}" class="form-label">Monto (Q)</label>
@@ -313,13 +313,13 @@
     <div class="row g-3 mb-3">
       <div class="col-md-4">
         <div class="kpi kpi-principal">
-          <div class="kpi-etiqueta">Deuda actual con la fundacion</div>
+          <div class="kpi-etiqueta">Deuda actual con la fundación</div>
           <div class="kpi-valor monto">Q{{ '%.2f'|format(fundacion.deuda) }}</div>
         </div>
       </div>
       <div class="col-md-4">
         <div class="kpi">
-          <div class="kpi-etiqueta">Facturado por la fundacion (con descuento)</div>
+          <div class="kpi-etiqueta">Facturado por la fundación (con descuento)</div>
           <div class="kpi-valor monto">Q{{ '%.2f'|format(fundacion.facturado) }}</div>
         </div>
       </div>
@@ -332,21 +332,21 @@
     </div>
     {% else %}
       <div class="alert alert-warning">
-        El servicio de cobros no esta disponible: no se puede calcular la deuda con la
-        fundacion ni registrar pagos en este momento.
+        El servicio de cobros no está disponible: no se puede calcular la deuda con la
+        fundación ni registrar pagos en este momento.
       </div>
     {% endif %}
 
     <div class="row g-4">
       <div class="col-lg-7">
         <div class="tarjeta">
-          <div class="tarjeta-titulo">Pagos realizados a la fundacion</div>
+          <div class="tarjeta-titulo">Pagos realizados a la fundación</div>
           <div class="p-3">
             {% if pagos_fundacion %}
             <div class="table-responsive">
               <table class="table table-sm align-middle mb-0">
                 <thead class="table-light">
-                  <tr><th>Fecha</th><th>Referencia</th><th>Descripcion</th>
+                  <tr><th>Fecha</th><th>Referencia</th><th>Descripción</th>
                       <th class="text-end">Monto</th></tr>
                 </thead>
                 <tbody>
@@ -363,7 +363,7 @@
               </table>
             </div>
             {% else %}
-              <p class="text-muted mb-0">Aun no se registran pagos a la fundacion.</p>
+              <p class="text-muted mb-0">Aún no se registran pagos a la fundación.</p>
             {% endif %}
           </div>
         </div>
@@ -371,10 +371,10 @@
 
       <div class="col-lg-5">
         <div class="tarjeta">
-          <div class="tarjeta-titulo">Registrar pago a la fundacion</div>
+          <div class="tarjeta-titulo">Registrar pago a la fundación</div>
           <div class="p-3">
             <p class="small text-muted">
-              Es el pago que el asilo hace a la fundacion por consultas, examenes y
+              Es el pago que el asilo hace a la fundación por consultas, exámenes y
               medicamentos. No es el cobro al familiar, que se registra en el expediente.
             </p>
             <form method="post" action="{{ url_for('registrar_pago_fundacion') }}" class="row g-2"
@@ -390,12 +390,12 @@
                 <input id="caja_fecha_13{{ "-" ~ loop.index if loop is defined }}" name="fecha" type="date" value="{{ hoy }}" max="{{ hoy }}" class="form-control">
               </div>
               <div class="col-12">
-                <label for="caja_referencia_14{{ "-" ~ loop.index if loop is defined }}" class="form-label">Referencia o numero de factura</label>
+                <label for="caja_referencia_14{{ "-" ~ loop.index if loop is defined }}" class="form-label">Referencia o número de factura</label>
                 <input id="caja_referencia_14{{ "-" ~ loop.index if loop is defined }}" name="referencia" class="form-control" required minlength="3" maxlength="60"
-                       placeholder="Factura FVD-0001 o boleta de deposito">
+                       placeholder="Factura FVD-0001 o boleta de depósito">
               </div>
               <div class="col-12">
-                <label for="caja_descripcion_15{{ "-" ~ loop.index if loop is defined }}" class="form-label">Descripcion</label>
+                <label for="caja_descripcion_15{{ "-" ~ loop.index if loop is defined }}" class="form-label">Descripción</label>
                 <input id="caja_descripcion_15{{ "-" ~ loop.index if loop is defined }}" name="descripcion" class="form-control" maxlength="300">
               </div>
               <div class="col-12 mt-3">

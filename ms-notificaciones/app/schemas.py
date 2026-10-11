@@ -32,7 +32,7 @@ class SolicitudMedicaNotificar(BaseModel):
     def medico_obligatorio_al_asignar(self):
         if self.tipo == TipoAviso.MEDICO_ASIGNADO and not (
                 self.medico_asignado and self.fecha_cita):
-            raise ValueError("El aviso de asignacion requiere el medico y la fecha de la cita")
+            raise ValueError("El aviso de asignación requiere el médico y la fecha de la cita")
         return self
 
 

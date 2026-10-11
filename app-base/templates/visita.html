@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% block titulo %}Visita medica #{{ visita.id }}{% endblock %}
+{% block titulo %}Visita médica #{{ visita.id }}{% endblock %}
 
-{% block seccion %}Visita medica{% endblock %}
+{% block seccion %}Visita médica{% endblock %}
 
 {% block contenido %}
 
 <div class="tarjeta mb-4">
   <div class="tarjeta-titulo d-flex justify-content-between align-items-center flex-wrap gap-2">
-    <span>Visita medica #{{ visita.id }} del {{ visita.fecha.strftime('%d/%m/%Y a las %H:%M') }}</span>
+    <span>Visita médica #{{ visita.id }} del {{ visita.fecha.strftime('%d/%m/%Y a las %H:%M') }}</span>
     <div>
       {% if visita.estado.value == 'ABIERTA' %}
         <span class="badge bg-warning text-dark">Abierta</span>
@@ -22,10 +22,10 @@
         <div class="dato">Interno</div>
         {% if puede_ver_expediente %}<a href="{{ url_for('expediente', paciente_id=visita.paciente.id) }}">{% endif %}
           {{ visita.paciente.nombre }}{% if puede_ver_expediente %}</a>{% endif %}
-        <div class="dato">{{ visita.paciente.edad }} anios, familiar {{ visita.paciente.familiar_nombre }}</div>
+        <div class="dato">{{ visita.paciente.edad }} años, familiar {{ visita.paciente.familiar_nombre }}</div>
       </div>
       <div class="col-md-4">
-        <div class="dato">Medico tratante</div>
+        <div class="dato">Médico tratante</div>
         <div>{{ visita.medico.nombre }}</div>
         <div class="dato">{{ visita.medico.especialidad.nombre }}</div>
       </div>
@@ -33,7 +33,7 @@
         <div class="dato">Motivo de la referencia</div>
         <div>{{ visita.motivo }}</div>
         {% if visita.solicitud and visita.solicitud.enfermero %}
-          <div class="dato mt-1">Acompania: {{ visita.solicitud.enfermero.nombre }}</div>
+          <div class="dato mt-1">Acompaña: {{ visita.solicitud.enfermero.nombre }}</div>
         {% endif %}
       </div>
     </div>
@@ -45,17 +45,17 @@
   <!-- Ficha del paciente, para el analisis del medico -->
   <div class="col-lg-4">
     <div class="tarjeta mb-4">
-      <div class="tarjeta-titulo">Ficha medica del interno</div>
+      <div class="tarjeta-titulo">Ficha médica del interno</div>
       <div class="p-3">
         {% if visita.paciente.ficha %}
-          <div class="dato">Psicopatologia</div>
+          <div class="dato">Psicopatología</div>
           <div class="texto-ficha mb-2">{{ visita.paciente.ficha.psicopatologia or '-' }}</div>
           <div class="dato">Padecimientos</div>
           <div class="texto-ficha mb-2">{{ visita.paciente.ficha.padecimientos or '-' }}</div>
           <div class="dato">Alergias</div>
           <div class="texto-ficha mb-2">{{ visita.paciente.ficha.alergias or '-' }}</div>
         {% else %}
-          <p class="text-muted small">Sin ficha medica.</p>
+          <p class="text-muted small">Sin ficha médica.</p>
         {% endif %}
 
         <div class="dato">Medicamentos permanentes</div>
@@ -81,7 +81,7 @@
             <div class="small">
               <strong>{{ v.fecha.strftime('%d/%m/%Y') }}</strong> &mdash; {{ v.medico.especialidad.nombre }}
             </div>
-            <div class="dato">{{ v.diagnostico or 'Sin diagnostico registrado' }}</div>
+            <div class="dato">{{ v.diagnostico or 'Sin diagnóstico registrado' }}</div>
           </div>
           {% endfor %}
         {% else %}
@@ -95,16 +95,16 @@
 
     <!-- Diagnostico -->
     <div class="tarjeta mb-4">
-      <div class="tarjeta-titulo">Diagnostico y observaciones</div>
+      <div class="tarjeta-titulo">Diagnóstico y observaciones</div>
       <div class="p-3">
         <form method="post" action="{{ url_for('guardar_diagnostico', visita_id=visita.id) }}">
           <div class="mb-2">
-            <label for="visita_diagnostico_1{{ "-" ~ loop.index if loop is defined }}" class="form-label">Diagnostico</label>
+            <label for="visita_diagnostico_1{{ "-" ~ loop.index if loop is defined }}" class="form-label">Diagnóstico</label>
             <textarea id="visita_diagnostico_1{{ "-" ~ loop.index if loop is defined }}" name="diagnostico" rows="2" class="form-control"
                       {% if visita.estado.value == 'CERRADA' %}disabled{% endif %}>{{ visita.diagnostico }}</textarea>
           </div>
           <div class="mb-3">
-            <label for="visita_observaciones_2{{ "-" ~ loop.index if loop is defined }}" class="form-label">Observaciones medicas</label>
+            <label for="visita_observaciones_2{{ "-" ~ loop.index if loop is defined }}" class="form-label">Observaciones médicas</label>
             <textarea id="visita_observaciones_2{{ "-" ~ loop.index if loop is defined }}" name="observaciones" rows="2" class="form-control"
                       {% if visita.estado.value == 'CERRADA' %}disabled{% endif %}>{{ visita.observaciones }}</textarea>
           </div>
@@ -121,7 +121,7 @@
 
     <!-- Examenes -->
     <div class="tarjeta mb-4">
-      <div class="tarjeta-titulo">Examenes de laboratorio</div>
+      <div class="tarjeta-titulo">Exámenes de laboratorio</div>
       <div class="p-3">
         {% if visita.examenes %}
         <table class="table table-sm align-middle">
@@ -147,7 +147,7 @@
           </tbody>
         </table>
         {% else %}
-          <p class="text-muted small">No se han solicitado examenes en esta visita.</p>
+          <p class="text-muted small">No se han solicitado exámenes en esta visita.</p>
         {% endif %}
 
         {% if visita.estado.value == 'ABIERTA' %}
@@ -175,7 +175,7 @@
           <div class="col-12">
             <div class="form-text">
               Al solicitarlo se carga el examen a la cuenta del familiar con el descuento
-              de la fundacion, y aparece en la bandeja del laboratorio.
+              de la fundación, y aparece en la bandeja del laboratorio.
             </div>
           </div>
         </form>
@@ -254,13 +254,13 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Cerrar visita medica</h5>
+        <h5 class="modal-title">Cerrar visita médica</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <p class="mb-2">La visita quedara como parte del historial del interno y ya no admitira cambios.</p>
+        <p class="mb-2">La visita quedará como parte del historial del interno y ya no admitirá cambios.</p>
         <p class="small text-muted mb-0">
-          No se puede cerrar sin diagnostico ni con examenes pendientes de resultado.
+          No se puede cerrar sin diagnóstico ni con exámenes pendientes de resultado.
         </p>
       </div>
       <div class="modal-footer">

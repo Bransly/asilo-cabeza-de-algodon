@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block titulo %}Laboratorio clinico{% endblock %}
+{% block titulo %}Laboratorio clínico{% endblock %}
 
-{% block seccion %}Laboratorio clinico{% endblock %}
+{% block seccion %}Laboratorio clínico{% endblock %}
 
 {% block contenido %}
 <div class="tarjeta mb-4">
   <div class="tarjeta-titulo d-flex justify-content-between align-items-center">
     <div>
-      Examenes pendientes de resultado
+      Exámenes pendientes de resultado
       <div class="dato fw-normal">
-        El paciente llega, se identifica como interno del asilo y realiza los examenes solicitados.
+        El paciente llega, se identifica como interno del asilo y realiza los exámenes solicitados.
       </div>
     </div>
     <span class="badge bg-warning text-dark">{{ pendientes|length }} pendientes</span>
@@ -27,9 +27,9 @@
               {% if puede_ver_expediente %}<a href="{{ url_for('expediente', paciente_id=e.visita.paciente.id) }}">{% endif %}
                 {{ e.visita.paciente.nombre }}{% if puede_ver_expediente %}</a>{% endif %}
             </div>
-            <div class="small">Medico: {{ e.visita.medico.nombre }}</div>
+            <div class="small">Médico: {{ e.visita.medico.nombre }}</div>
             <div class="small">
-              <a href="{{ url_for('visita', visita_id=e.visita.id) }}">Visita medica #{{ e.visita.id }}</a>
+              <a href="{{ url_for('visita', visita_id=e.visita.id) }}">Visita médica #{{ e.visita.id }}</a>
             </div>
             {% if e.indicaciones %}
               <div class="dato mt-1">Indicaciones: {{ e.indicaciones }}</div>
@@ -52,7 +52,7 @@
       </div>
       {% endfor %}
     {% else %}
-      <p class="text-muted mb-0">No hay examenes pendientes.</p>
+      <p class="text-muted mb-0">No hay exámenes pendientes.</p>
     {% endif %}
   </div>
 </div>
@@ -83,7 +83,7 @@
       </table>
     </div>
     {% else %}
-      <p class="text-muted mb-0">Todavia no se ha cargado ningun resultado.</p>
+      <p class="text-muted mb-0">Todavía no se ha cargado ningún resultado.</p>
     {% endif %}
   </div>
 </div>

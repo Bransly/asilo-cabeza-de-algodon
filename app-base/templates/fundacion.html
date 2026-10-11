@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block titulo %}Modulo de la fundacion{% endblock %}
+{% block titulo %}Módulo de la fundación{% endblock %}
 
-{% block seccion %}Solicitudes de atencion{% endblock %}
+{% block seccion %}Solicitudes de atención{% endblock %}
 
 {% block contenido %}
 <div class="tarjeta">
   <div class="tarjeta-titulo d-flex justify-content-between align-items-center flex-wrap gap-2">
     <div>
-      Solicitudes de atencion
+      Solicitudes de atención
       <div class="dato fw-normal">
-        Modulo que el asilo proporciona a la fundacion para asignar medico y horario.
+        Módulo que el asilo proporciona a la fundación para asignar médico y horario.
       </div>
     </div>
     <div class="btn-group btn-group-sm">
@@ -43,14 +43,14 @@
             </div>
             <div class="mt-1">
               {% if puede_ver_expediente %}<a href="{{ url_for('expediente', paciente_id=s.paciente.id) }}">{% endif %}{{ s.paciente.nombre }}{% if puede_ver_expediente %}</a>{% endif %}
-              <span class="dato">({{ s.paciente.edad }} anios)</span>
+              <span class="dato">({{ s.paciente.edad }} años)</span>
             </div>
             <div class="dato">Solicitada el {{ s.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</div>
             <div class="small mt-1"><strong>Especialidad:</strong> {{ s.especialidad.nombre }}</div>
             <div class="small"><strong>Motivo:</strong> {{ s.motivo }}</div>
             <div class="small"><strong>Estado del interno:</strong> {{ s.estado_paciente }}</div>
             {% if s.enfermero %}
-              <div class="small"><strong>Acompania:</strong> {{ s.enfermero.nombre }}</div>
+              <div class="small"><strong>Acompaña:</strong> {{ s.enfermero.nombre }}</div>
             {% endif %}
           </div>
 
@@ -60,7 +60,7 @@
                   class="row g-2 align-items-end">
               <input type="hidden" name="filtro" value="{{ filtro }}">
               <div class="col-md-5">
-                <label for="fundacion_medico_id_1{{ "-" ~ loop.index if loop is defined }}" class="form-label small">Medico que atendera</label>
+                <label for="fundacion_medico_id_1{{ "-" ~ loop.index if loop is defined }}" class="form-label small">Médico que atenderá</label>
                 <select id="fundacion_medico_id_1{{ "-" ~ loop.index if loop is defined }}" name="medico_id" class="form-select form-select-sm" required>
                   {% for m in medicos if m.especialidad_id == s.especialidad_id %}
                     <option value="{{ m.id }}" {% if s.medico_id == m.id %}selected{% endif %}>
@@ -88,7 +88,7 @@
               <div class="small mb-2">
                 Cita asignada a <strong>{{ s.medico.nombre }}</strong> para el
                 <strong>{{ s.fecha_asignada.strftime('%d/%m/%Y %H:%M') }}</strong>.
-                Al abrir la visita se cargara la consulta a la cuenta del familiar.
+                Al abrir la visita se cargará la consulta a la cuenta del familiar.
               </div>
               <form method="post" action="{{ url_for('abrir_visita', solicitud_id=s.id) }}"
                     class="row g-2 align-items-end">
@@ -106,7 +106,7 @@
                 <div class="col-md-4">
                   <button class="btn btn-sm btn-success w-100"
                           {% if not estado_servicios.costos %}disabled{% endif %}>
-                    Convertir en visita medica
+                    Convertir en visita médica
                   </button>
                 </div>
               </form>

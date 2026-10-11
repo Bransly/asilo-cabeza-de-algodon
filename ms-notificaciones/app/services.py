@@ -48,31 +48,31 @@ class NotificacionService:
         """
         fecha = datetime.now().strftime("%d/%m/%Y %H:%M")
         saludo = f"Estimado(a) {datos.familiar_nombre}:\n\n"
-        firma = "Atentamente,\nAsilo de Ancianos Cabeza de Algodon"
+        firma = "Atentamente,\nAsilo de Ancianos Cabeza de Algodón"
 
         if datos.tipo == TipoAviso.MEDICO_ASIGNADO:
-            asunto = f"Medico asignado - {datos.paciente_nombre}"
+            asunto = f"Médico asignado - {datos.paciente_nombre}"
             cita = datos.fecha_cita.strftime("%d/%m/%Y a las %H:%M")
             cuerpo = (
-                f"La fundacion asigno el medico que atendera a su familiar "
+                f"La fundación asignó el médico que atenderá a su familiar "
                 f"{datos.paciente_nombre}.\n\n"
-                f"Medico asignado: {datos.medico_asignado}\n"
+                f"Médico asignado: {datos.medico_asignado}\n"
                 f"Especialidad: {datos.especialidad}\n"
                 f"Fecha de la cita: {cita}\n"
                 f"Motivo de la referencia: {datos.motivo}\n"
                 f"Estado actual del paciente: {datos.estado_paciente}\n\n"
-                f"Un enfermero(a) del asilo acompanara a su familiar a la cita.\n\n"
+                f"Un enfermero(a) del asilo acompañará a su familiar a la cita.\n\n"
             )
         else:
-            asunto = f"Solicitud medica registrada - {datos.paciente_nombre}"
+            asunto = f"Solicitud médica registrada - {datos.paciente_nombre}"
             cuerpo = (
-                f"Le informamos que el dia {fecha} el medico general del asilo refirio a "
+                f"Le informamos que el día {fecha} el médico general del asilo refirió a "
                 f"su familiar {datos.paciente_nombre} a una consulta especializada.\n\n"
                 f"Especialidad a la que fue referido: {datos.especialidad}\n"
                 f"Motivo de la referencia: {datos.motivo}\n"
                 f"Estado actual del paciente: {datos.estado_paciente}\n\n"
-                f"La fundacion asignara el medico y el horario de la cita. Recibira otro "
-                f"correo con el nombre del medico en cuanto quede asignado.\n\n"
+                f"La fundación asignará el médico y el horario de la cita. Recibirá otro "
+                f"correo con el nombre del médico en cuanto quede asignado.\n\n"
             )
         return asunto, saludo + cuerpo + firma
 
@@ -123,7 +123,7 @@ class NotificacionService:
     def obtener(self, notificacion_id: int) -> Notificacion:
         notificacion = self.repo.obtener(notificacion_id)
         if notificacion is None:
-            raise ReglaNegocioError(f"No existe la notificacion {notificacion_id}", 404)
+            raise ReglaNegocioError(f"No existe la notificación {notificacion_id}", 404)
         return notificacion
 
     def reenviar(self, notificacion_id: int) -> Notificacion:

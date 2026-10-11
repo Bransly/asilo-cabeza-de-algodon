@@ -36,7 +36,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "")
 if len(app.secret_key) < 32:
     raise RuntimeError(
-        "Defina SECRET_KEY (minimo 32 caracteres) en el archivo .env. "
+        "Defina SECRET_KEY (mínimo 32 caracteres) en el archivo .env. "
         "Puede generarla con: python -c \"import secrets; print(secrets.token_hex(32))\"")
 
 app.config.update(
@@ -91,7 +91,7 @@ def encabezados_de_seguridad(respuesta):
 
 @app.errorhandler(413)
 def demasiado_grande(_error):
-    flash("La informacion enviada excede el tamanio permitido.", "danger")
+    flash("La información enviada excede el tamaño permitido.", "danger")
     return redirect(request.referrer or url_for("panel"))
 
 
@@ -141,7 +141,7 @@ def login():
 @app.post("/logout")
 def logout():
     AutenticacionService(request.sesion).cerrar_sesion()
-    flash("Sesion cerrada.", "success")
+    flash("Sesión cerrada.", "success")
     return volver("login")
 
 
@@ -155,7 +155,7 @@ def cambiar_contrasena():
         AutenticacionService(request.sesion).cambiar_contrasena(
             request.form.get("actual", ""), request.form.get("nueva", ""),
             request.form.get("confirmacion", ""))
-        flash("Contrasena actualizada.", "success")
+        flash("Contraseña actualizada.", "success")
         return volver("panel")
     except ErrorAutenticacion as error:
         flash(str(error), "danger")
@@ -195,8 +195,8 @@ def administrar_usuario(usuario_id: int, accion: str):
             auditoria.registrar("RESTABLECE_CONTRASENA", "Usuario", usuario_id, "EXITO",
                                 usuario.usuario)
             # La clave temporal se muestra una sola vez y no queda en la bitacora.
-            flash(f"Clave temporal de {usuario.usuario}: {temporal} . Entreguela en persona; "
-                  "el sistema le pedira cambiarla al ingresar.", "warning")
+            flash(f"Clave temporal de {usuario.usuario}: {temporal} . Entréguela en persona; "
+                  "el sistema le pedirá cambiarla al ingresar.", "warning")
         elif accion == "desbloquear":
             usuario = servicio.desbloquear(usuario_id)
             auditoria.registrar("DESBLOQUEA_USUARIO", "Usuario", usuario_id, "EXITO", usuario.usuario)
@@ -208,7 +208,7 @@ def administrar_usuario(usuario_id: int, accion: str):
             flash(f"Cuenta {usuario.usuario} {'activada' if usuario.activo else 'desactivada'}.",
                   "success")
         else:
-            flash("Accion no valida.", "danger")
+            flash("Acción no válida.", "danger")
     except ErrorNegocio as error:
         flash(str(error), "danger")
     return volver("usuarios")
@@ -322,7 +322,7 @@ def guardar_ficha(paciente_id: int):
         servicio.actualizar_ficha(paciente_id, request.form.to_dict())
         AutenticacionService(request.sesion).registrar(
             "EDITA_FICHA", "FichaMedica", paciente_id, "EXITO")
-        flash("Ficha medica actualizada.", "success")
+        flash("Ficha médica actualizada.", "success")
     except ErrorNegocio as error:
         flash(str(error), "danger")
     return volver("expediente", paciente_id=paciente_id)
@@ -362,8 +362,8 @@ def crear_solicitud():
     try:
         solicitud, advertencia = atencion.crear_solicitud(request.form.to_dict())
         flash(
-            f"Solicitud #{solicitud.id} enviada a la fundacion "
-            f"({solicitud.especialidad.nombre}). Se notifico a "
+            f"Solicitud #{solicitud.id} enviada a la fundación "
+            f"({solicitud.especialidad.nombre}). Se notificó a "
             f"{solicitud.paciente.familiar_nombre}.", "success")
         if advertencia:
             flash(advertencia, "warning")
@@ -416,7 +416,7 @@ def abrir_visita(solicitud_id: int):
     try:
         visita_medica, advertencia = atencion.convertir_en_visita(
             solicitud_id, request.form.get("tarifa_consulta_id", type=int))
-        flash(f"Visita medica #{visita_medica.id} abierta.", "success")
+        flash(f"Visita médica #{visita_medica.id} abierta.", "success")
         if advertencia:
             flash(advertencia, "warning")
         return volver("visita", visita_id=visita_medica.id)
@@ -433,7 +433,7 @@ def visita(visita_id: int):
     consultas = ConsultaService(request.sesion)
     visita_medica = atencion.visitas.obtener(visita_id)
     if visita_medica is None:
-        flash("La visita medica indicada no existe.", "danger")
+        flash("La visita médica indicada no existe.", "danger")
         return volver("panel")
 
     return render_template(
@@ -452,7 +452,7 @@ def guardar_diagnostico(visita_id: int):
     atencion = AtencionService(request.sesion)
     try:
         atencion.registrar_diagnostico(visita_id, request.form.to_dict())
-        flash("Diagnostico y observaciones guardados.", "success")
+        flash("Diagnóstico y observaciones guardados.", "success")
     except ErrorNegocio as error:
         flash(str(error), "danger")
     return volver("visita", visita_id=visita_id)
@@ -464,7 +464,7 @@ def cerrar_visita(visita_id: int):
     atencion = AtencionService(request.sesion)
     try:
         atencion.cerrar_visita(visita_id)
-        flash("Visita medica cerrada.", "success")
+        flash("Visita médica cerrada.", "success")
     except ErrorNegocio as error:
         flash(str(error), "danger")
     return volver("visita", visita_id=visita_id)
@@ -517,7 +517,7 @@ def cargar_resultado(examen_id: int):
     atencion = AtencionService(request.sesion)
     try:
         examen = atencion.cargar_resultado(examen_id, request.form.get("resultado", ""))
-        flash(f"Resultado cargado: {examen.nombre}. El medico ya puede consultarlo.",
+        flash(f"Resultado cargado: {examen.nombre}. El médico ya puede consultarlo.",
               "success")
     except ErrorNegocio as error:
         flash(str(error), "danger")
@@ -580,7 +580,7 @@ def revertir_pago(cargo_id: int):
         cargo = CobroService().revertir_pago(cargo_id, motivo)
         auditoria.registrar("REVIERTE_PAGO", "Cargo", cargo_id, "EXITO",
                             f"Q{cargo['total']:.2f}. Motivo: {motivo.strip()}")
-        flash("El pago se revirtio. El cargo vuelve a estar pendiente.", "success")
+        flash("El pago se revirtió. El cargo vuelve a estar pendiente.", "success")
     except ErrorNegocio as error:
         auditoria.registrar("REVIERTE_PAGO", "Cargo", cargo_id, "FALLIDO", str(error))
         flash(str(error), "danger")
@@ -657,9 +657,9 @@ def registrar_donacion():
         donacion = servicio.registrar_donacion(
             request.form.to_dict(), session.get("usuario_nombre", ""))
         AutenticacionService(request.sesion).registrar(
-            "REGISTRA_DONACION", "Donacion", donacion.id, "EXITO",
+            "REGISTRA_DONACION", "Donación", donacion.id, "EXITO",
             f"{donacion.donante} Q{donacion.monto:.2f}")
-        flash(f"Donacion registrada: {donacion.donante}, Q{donacion.monto:,.2f}.", "success")
+        flash(f"Donación registrada: {donacion.donante}, Q{donacion.monto:,.2f}.", "success")
     except (ErrorNegocio, ValueError, KeyError) as error:
         flash(str(error), "danger")
     return volver("caja")
@@ -672,8 +672,8 @@ def eliminar_donacion(donacion_id: int):
     try:
         donacion = servicio.eliminar_donacion(donacion_id)
         AutenticacionService(request.sesion).registrar(
-            "ELIMINA_DONACION", "Donacion", donacion_id, "EXITO", donacion.donante)
-        flash("Donacion eliminada.", "success")
+            "ELIMINA_DONACION", "Donación", donacion_id, "EXITO", donacion.donante)
+        flash("Donación eliminada.", "success")
     except ErrorNegocio as error:
         flash(str(error), "danger")
     return volver("caja")
@@ -719,7 +719,7 @@ def registrar_pago_fundacion():
         AutenticacionService(request.sesion).registrar(
             "PAGO_FUNDACION", "PagoFundacion", pago.id, "EXITO",
             f"{pago.referencia} Q{pago.monto:.2f}")
-        flash(f"Pago a la fundacion registrado: Q{pago.monto:,.2f} ({pago.referencia}).",
+        flash(f"Pago a la fundación registrado: Q{pago.monto:,.2f} ({pago.referencia}).",
               "success")
     except ErrorNegocio as error:
         flash(str(error), "danger")
@@ -763,27 +763,27 @@ def cobrar_cuota(cuota_id: int):
 REPORTES = {
     "costos-por-cita": {
         "titulo": "Costos por cita",
-        "descripcion": "Costo de cada cita del interno, con examenes y medicamentos.",
+        "descripcion": "Costo de cada cita del interno, con exámenes y medicamentos.",
         "paciente": True, "roles": ["CAJA", "MEDICO_GENERAL", "MEDICO_ESPECIALISTA"]},
     "analisis-medico": {
-        "titulo": "Analisis medico por paciente",
-        "descripcion": "Ficha medica, motivo de ingreso, diagnosticos y medicamentos.",
+        "titulo": "Análisis médico por paciente",
+        "descripcion": "Ficha médica, motivo de ingreso, diagnósticos y medicamentos.",
         "paciente": True, "roles": ["MEDICO_GENERAL", "MEDICO_ESPECIALISTA", "ENFERMERIA"]},
     "cobros-por-paciente": {
         "titulo": "Cobros por paciente",
-        "descripcion": "Cobros por rango de fechas con el detalle de cada gasto medico.",
+        "descripcion": "Cobros por rango de fechas con el detalle de cada gasto médico.",
         "paciente": True, "roles": ["CAJA"]},
     "pagos-fundacion": {
-        "titulo": "Pagos a la fundacion",
-        "descripcion": "Lo facturado, lo pagado y la deuda actual con la fundacion.",
+        "titulo": "Pagos a la fundación",
+        "descripcion": "Lo facturado, lo pagado y la deuda actual con la fundación.",
         "paciente": False, "roles": ["CAJA"]},
     "entradas": {
         "titulo": "Entradas: donaciones y cobros",
         "descripcion": "Ingresos del asilo comparados con los gastos del periodo.",
         "paciente": False, "roles": ["CAJA"]},
     "examenes-por-paciente": {
-        "titulo": "Examenes realizados",
-        "descripcion": "Examenes de laboratorio solicitados y sus resultados.",
+        "titulo": "Exámenes realizados",
+        "descripcion": "Exámenes de laboratorio solicitados y sus resultados.",
         "paciente": True, "roles": ["CAJA", "MEDICO_GENERAL", "MEDICO_ESPECIALISTA",
                                     "LABORATORIO"]},
     "medicamentos-por-paciente": {
@@ -817,7 +817,7 @@ def ver_reporte(clave: str):
         return volver("reportes")
     if rol != "ADMINISTRADOR" and rol not in definicion["roles"]:
         AutenticacionService(request.sesion).registrar(
-            "ACCESO_DENEGADO", "Reporte", None, "DENEGADO", f"Rol {rol} pidio {clave}")
+            "ACCESO_DENEGADO", "Reporte", None, "DENEGADO", f"Rol {rol} pidió {clave}")
         flash("Su rol no tiene permiso para consultar ese reporte.", "danger")
         return volver("reportes")
 
@@ -854,7 +854,7 @@ def ver_reporte(clave: str):
     }
     datos = generadores[clave]()
     if servicio.sin_cobros:
-        flash("El servicio de cobros no respondio: este reporte no incluye cargos.", "warning")
+        flash("El servicio de cobros no respondió: este reporte no incluye cargos.", "warning")
     return render_template("reporte_tabla.html", datos=datos, **comunes)
 
 
